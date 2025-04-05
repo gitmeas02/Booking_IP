@@ -19,7 +19,7 @@ const dateRange = ref('');
             <div class="search-controls">
                 <div class="destination-search">
                     <IconField>
-                        <InputText id="destinationInput" v-model="value1" placeholder="Enter the destination or property" />
+                        <InputText id="destinationInput" v-model="text" placeholder="Enter the destination or property" />
                         <InputIcon class="pi pi-search" />
                     </IconField>
                 </div>
