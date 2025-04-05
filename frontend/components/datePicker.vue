@@ -23,20 +23,21 @@ const dateRange = ref('');
                         <InputIcon class="pi pi-search" />
                     </IconField>
                 </div>
-                <div class="checkdate">
-                    <div id="checkIn" style="color: black;">Check In</div>
-                    <div id="checkOut" style="color: black;">Check Out</div>
-                </div>
                 <div class="date-range-picker">
                     <IconField class="custom-datepicker">
                         <DatePicker
                         v-model="dateRange"
+                        showIcon fluid iconDisplay="input"
                         selectionMode="range"
                         :manualInput="false"
+                        showButtonBar
                         placeholder="Select Date"
                         inputClass="custom-datepicker-input"
                         />
                     </IconField>
+                </div>
+                <div>
+                    
                 </div>
             </div>
         </div>
@@ -107,19 +108,13 @@ const dateRange = ref('');
     transform: translateY(-50%);
     pointer-events: none;
 }
-.checkdate{
-    display: flex;
-    margin-left: 40px;
-    gap:25px;
-    
-}
 .date-range-picker {
-    width: 100%;
+    width: 35%;
 }
 
 :deep(.custom-datepicker-input) {
     background-color: #ffffff;
-    color:black;
+    color:rgb(0, 95, 238);
     border: 1px solid #ced4da;
     text-align: center;
     border-radius: 6px;
