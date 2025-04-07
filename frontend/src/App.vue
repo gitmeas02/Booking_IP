@@ -1,13 +1,13 @@
 <script setup>
 import datePicker from '../src/components/datePicker.vue';
 import SettingPage from '../src/views/SettingPage.vue';
-import PersonalDetailPage from '../src/views/PersonalDetailPage.vue';
+import SettingDetailPage from './views/SettingDetailPage.vue';
 </script>
 
 <template>
   <!-- <datePicker/> -->
    <!-- <SettingPage/> -->
-    <PersonalDetailPage/>
+    <SettingDetailPage/>
 </template>
 
 <style scoped>
