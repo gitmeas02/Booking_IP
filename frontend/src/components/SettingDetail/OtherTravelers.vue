@@ -1,5 +1,5 @@
 <template>
-    <div class="container">
+    <div class="container-1">
         <div class="group">
             <h1 class="title">Other travelers</h1>
             <p class="subtitle">Add or edit info about the people you’re traveling with.</p>
@@ -8,8 +8,8 @@
             <span class="icon">+</span>
             <span>Add new traveler</span>
         </button>
-
     </div>
+
 </template>
 
 <script setup>
@@ -17,16 +17,13 @@
 </script>
 
 <style scoped>
-.container {
+.container-1 {
+    padding: 0;
+    background-color: #ffffff;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
-
-/* .main-group {
-    display: flex;
-    flex-direction: column;
-} */
 
 .group {
     display: flex;
@@ -66,5 +63,23 @@
 
 .icon {
     font-size: 1rem;
+}
+
+/* Responsive styles for small screens */
+@media (max-width: 640px) {
+    .add-button {
+        align-self: stretch;
+        /* full width */
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 14px;
+    }
 }
 </style>

@@ -32,6 +32,8 @@ import DetailRow from './DetailRow.vue'
     justify-content: space-between;
     align-items: center;
     margin-bottom: 32px;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .header h2 {
@@ -50,5 +52,27 @@ import DetailRow from './DetailRow.vue'
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
+}
+
+/* Responsive for small screens */
+@media (max-width: 640px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .header h2 {
+        font-size: 20px;
+    }
+
+    .header p {
+        font-size: 13px;
+    }
+
+    .profile-pic {
+        width: 64px;
+        height: 64px;
+    }
 }
 </style>

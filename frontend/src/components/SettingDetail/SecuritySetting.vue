@@ -38,6 +38,7 @@
 .header p {
     color: #666;
     margin-bottom: 24px;
+    font-size: 14px;
 }
 
 .item {
@@ -46,6 +47,7 @@
     align-items: flex-start;
     padding: 16px 0;
     border-top: 1px solid #eee;
+    gap: 16px;
 }
 
 .item p {
@@ -58,9 +60,23 @@
     color: #0071c2;
     font-weight: 500;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .link.delete {
     color: red;
+}
+
+/* Responsive layout for small screens */
+@media (max-width: 640px) {
+    .item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .link {
+        margin-top: 8px;
+        font-size: 15px;
+    }
 }
 </style>

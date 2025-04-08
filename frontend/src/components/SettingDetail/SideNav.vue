@@ -1,12 +1,8 @@
 <template>
   <div class="side-nav">
     <ul>
-      <li
-        v-for="(item, index) in items"
-        :key="index"
-        :class="{ active: selectedIndex === index }"
-        @click="handleClick(index)"
-      >
+      <li v-for="(item, index) in items" :key="index" :class="{ active: selectedIndex === index }"
+        @click="handleClick(index)">
         <Icon :icon="item.icon" class="icon" />
         {{ item.label }}
       </li>
@@ -47,8 +43,10 @@ const items = [
   padding: 16px 0;
   width: 250px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
+/* Items */
 ul {
   list-style: none;
   margin: 0;
@@ -80,5 +78,46 @@ li.active .icon {
 
 li:hover {
   background-color: #f5f5f5;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .side-nav {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  li {
+    font-size: 16px;
+    padding: 14px 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .side-nav {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    background: #fff;
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    /* Stack items vertically */
+    gap: 0;
+    padding: 0;
+  }
+
+  li {
+    padding: 12px 16px;
+    font-size: 15px;
+    border-bottom: 1px solid #eee;
+    border-radius: 0;
+  }
+
+  li:last-child {
+    border-bottom: none;
+  }
 }
 </style>
