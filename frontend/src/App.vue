@@ -1,9 +1,8 @@
 <script setup>
-
+import datepickerCard from './DatePicker/datepickerCard.vue'
 </script>
-
 <template>
-  <h1>Hello</h1>
+  <datepickerCard/>
 </template>
 
 <style scoped>
