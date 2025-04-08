@@ -1,4 +1,5 @@
 import Checkout from '@/views/Checkout.vue';
+import HistoryKeeper from '@/views/HistoryKeeper.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 const routes = [
     {
@@ -6,6 +7,11 @@ const routes = [
       name: 'Checkout',
       component: Checkout,
     },
+    {
+      path: '/success',
+      name: 'Success',
+      component:HistoryKeeper
+    }
 ]
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
