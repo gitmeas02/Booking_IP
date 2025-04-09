@@ -1,3 +1,4 @@
+import Admin from '@/views/Admin.vue';
 import Checkout from '@/views/Checkout.vue';
 import HistoryKeeper from '@/views/HistoryKeeper.vue';
 import { createRouter, createWebHistory } from 'vue-router';
@@ -11,6 +12,12 @@ const routes = [
       path: '/success',
       name: 'Success',
       component:HistoryKeeper
+    },
+
+    {
+      path:'/test',
+      name:'Test',
+      component: Admin
     }
 ]
 const router = createRouter({

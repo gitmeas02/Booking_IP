@@ -12,7 +12,7 @@
           class="h-full w-full object-cover"
         />
       </div>
-      <div class="flex items-start gap-3">
+      <div class="flex items-start gap-3 ">
         <MapPin class="h-5 w-5 text-primary mt-0.5" />
         <div>
           <h3 class="font-medium">Location</h3>
