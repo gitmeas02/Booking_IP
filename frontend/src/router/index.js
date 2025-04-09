@@ -1,3 +1,4 @@
+import Header from '@/components/Header.vue';
 import Checkout from '@/views/Checkout.vue';
 import HistoryKeeper from '@/views/HistoryKeeper.vue';
 import { createRouter, createWebHistory } from 'vue-router';
@@ -11,6 +12,11 @@ const routes = [
       path: '/success',
       name: 'Success',
       component:HistoryKeeper
+    },
+    {
+      path: '/header',
+      name: 'Header',
+      component:Header
     }
 ]
 const router = createRouter({
