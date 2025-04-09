@@ -27,7 +27,7 @@ const routes = [
       component:DateRangePicker
     },
     {
-      path:'/t',
+      path:'/tt',
       name:'t',
       component:Test1
     },

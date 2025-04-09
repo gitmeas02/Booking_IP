@@ -24,38 +24,49 @@
    
 
       <!-- Calendar Display -->
-      <section class="calendar-section">
-        <table class="booking-table">
-          <thead>
-            <tr>
-              <th class="room-header">Room</th>
-              <th v-for="day in visibleWeekDays" :key="day.date" class="day-header">
-                {{ day.name }}<br>{{ day.date.split('-')[2] }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="room in filteredRooms" :key="room.id">
-              <td class="room-info">
-                <div class="room-name">{{ room.name }}</div>
-                <div class="room-type">{{ room.type }} - {{ room.number }}</div>
-              </td>
-              <td 
-                  v-for="day in visibleWeekDays" 
-                  :key="day.date" 
-                  :class="getStatusClass(getRoomStatus(room, day.date))"
-                  :data-date="day.date" 
-                  @click="selectRoomDate(room, day.date)"
-                >
-                <div class="status-container">
-                  <div class="status-text">{{ getRoomStatus(room, day.date) }}</div>
-                  <div class="room-price">${{ getRoomPrice(room, day.date) || '—' }}</div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+      <section class="calendar-section overflow-x-auto pl-12 pr-12">
+  <table class="booking-table min-w-max table-auto w-full  border-collapse border border-gray-300">
+    <thead>
+      <tr>
+        <th class="room-header px-4 py-2 border border-gray-300">Room</th>
+        <th
+          v-for="day in visibleWeekDays"
+          :key="day.date"
+          class="day-header px-4 py-2 border border-gray-300"
+        >
+          {{ day.name }}<br>{{ day.date.split('-')[2] }}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="room in filteredRooms" :key="room.id">
+        <td class="room-info flex flex-row items-center space-x-4 py-2 pl-10 border border-gray-300">
+          <img :src="room.image" alt="Room Image" class="room-image w-24 h-24 object-cover rounded" />
+          <div> 
+            <div class="room-name font-semibold text-lg w-[300px] overflow-hidden">{{ room.name }}</div>
+            <div class="room-type text-sm text-gray-600">{{ room.type }} - {{ room.number }}</div>
+          </div>
+        </td>
+
+        <td
+          v-for="day in visibleWeekDays"
+          :key="day.date"
+          :class="getStatusClass(getRoomStatus(room, day.date))"
+          :data-date="day.date"
+          @click="selectRoomDate(room, day.date)"
+          class="px-4 py-2 cursor-pointer border border-gray-300"
+        >
+          <div class="status-container flex justify-center items-center flex-col">
+            <div class="status-text">{{ getRoomStatus(room, day.date) }}</div>
+            <div class="room-price">${{ getRoomPrice(room, day.date) || '—' }}</div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+
     </div>
 
     <!-- Bookings Modal -->
@@ -96,12 +107,12 @@
       </div>
     </div>
   </div>
+
 </template>
 
 <script>
 import { useRoomStore } from '@/store/store.js'
 import { onMounted, computed } from 'vue'
-
 export default {
   name: 'AdminDashboard',
   data() {
@@ -123,21 +134,23 @@ export default {
       rooms: [
         {
           id: 1,
-          name: 'Royal Palace',
+          name: 'Royal Palace cell to create visible room',
+          image: './src/assets/image.png',
           type: 'Queen Bed',
           number: '469',
           basePrice: 168,
           dynamicPricing: {},
           bookings: [
             { startDate: this.formatDate(new Date(2025, 3, 10)), 
-              endDate: this.formatDate(new Date(2025, 3, 12)), 
+              endDate: this.formatDate(new Date(2025, 3, 13)), 
               guest: 'Emma Wilson' }
           ],
-          blockedDates: [this.formatDate(new Date(2025, 3, 5))]
+          blockedDates: [this.formatDate(new Date(2025, 3, 5)),this.formatDate(new Date(2025, 3, 14)),]
         },
         {
           id: 2,
           name: 'Ocean View',
+          image: './src/assets/image.png',
           type: 'Deluxe Room',
           number: '201',
           basePrice: 220,
@@ -154,6 +167,7 @@ export default {
         {
           id: 3,
           name: 'Ocean View',
+          image: './src/assets/image.png',
           type: 'Deluxe Room',
           number: '201',
           basePrice: 220,
@@ -426,13 +440,14 @@ export default {
 /* Base Styles */
 .admin-dashboard {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  max-width: 1200px;
+  max-width: auto;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0;
   color: #333;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: auto;
 }
 
 .dashboard-header {
@@ -461,7 +476,7 @@ export default {
 .calendar-control-section {
   margin-bottom: 20px;
   background-color: white;
-  padding: 15px;
+  /* padding: 15px; */
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -600,7 +615,7 @@ button:disabled {
 }
 
 /* Calendar Table */
-.calendar-section {
+/* .calendar-section {
   background-color: white;
   border-radius: 8px;
   padding: 15px;
@@ -618,7 +633,6 @@ button:disabled {
 .booking-table th, 
 .booking-table td {
   border: 1px solid #e0e0e0;
-  padding: 12px;
   text-align: center;
   vertical-align: middle;
 }
@@ -653,7 +667,6 @@ button:disabled {
 }
 
 .status-container {
-  min-height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -675,7 +688,7 @@ button:disabled {
   font-weight: bold;
   font-size: 14px;
   color: #2e7d32;
-}
+} */
 
 /* Status Classes */
 .available {
@@ -871,4 +884,5 @@ button:disabled {
     display: none;
   }
 }
+
 </style>
