@@ -6,25 +6,48 @@
                 <label class="date-label">FROM</label>
                 <div class="date-input" @click="openCalendarForStart">
                     <span>{{ formatDate(startDate) || "Select date" }}</span>
-                    <CalendarIcon class="calendar-icon" />
+                    <i class="pi pi-calendar calendar-icon"></i>
                 </div>
             </div>
             <div class="date-input-container">
                 <label class="date-label">TO</label>
                 <div class="date-input" @click="openCalendarForEnd">
                     <span>{{ formatDate(endDate) || "Select date" }}</span>
-                    <CalendarIcon class="calendar-icon" />
+                    <i class="pi pi-calendar calendar-icon"></i>
                 </div>
             </div>
         </div>
 
         <!-- Calendar Popup -->
         <div v-if="isCalendarOpen" ref="calendarRef" class="calendar-popup">
-            <div class="calendar-header">
+            <!-- Enhanced Month/Year Navigation -->
+            <div class="calendar-navigation">
                 <button @click="prevMonth" class="nav-button" aria-label="Previous month">
                     <ChevronLeftIcon class="nav-icon" />
                 </button>
-                <h2 class="month-title">{{ getMonthName() }}</h2>
+                
+                <div class="month-year-selectors">
+                    <!-- Month Dropdown -->
+                    <div class="select-container">
+                        <select v-model="currentMonthIndex" class="month-select" @change="handleMonthChange">
+                            <option v-for="(month, index) in monthNames" :key="index" :value="index">
+                                {{ month }}
+                            </option>
+                        </select>
+                        <i class="pi pi-angle-down select-icon"></i>
+                    </div>
+                    
+                    <!-- Year Dropdown -->
+                    <div class="select-container">
+                        <select v-model="currentYearValue" class="year-select" @change="handleYearChange">
+                            <option v-for="year in availableYears" :key="year" :value="year">
+                                {{ year }}
+                            </option>
+                        </select>
+                        <i class="pi pi-angle-down select-icon"></i>
+                    </div>
+                </div>
+                
                 <button @click="nextMonth" class="nav-button" aria-label="Next month">
                     <ChevronRightIcon class="nav-icon" />
                 </button>
@@ -61,7 +84,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-
 const props = defineProps({
     initialStartDate: {
         type: Date,
@@ -70,6 +92,10 @@ const props = defineProps({
     initialEndDate: {
         type: Date,
         default: null
+    },
+    yearRange: {
+        type: Number,
+        default: 10
     }
 });
 
@@ -82,6 +108,54 @@ const currentMonth = ref(props.initialStartDate || new Date());
 const isCalendarOpen = ref(false);
 const selectingStartDate = ref(true);
 const calendarRef = ref(null);
+
+// Month and Year navigation
+const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June', 
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Computed properties for current month and year
+const currentMonthIndex = computed({
+    get: () => currentMonth.value.getMonth(),
+    set: (value) => {
+        currentMonth.value = new Date(
+            currentMonth.value.getFullYear(),
+            value,
+            1
+        );
+    }
+});
+
+const currentYearValue = computed({
+    get: () => currentMonth.value.getFullYear(),
+    set: (value) => {
+        currentMonth.value = new Date(
+            value,
+            currentMonth.value.getMonth(),
+            1
+        );
+    }
+});
+
+// Generate available years (current year ± yearRange)
+const availableYears = computed(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear - props.yearRange; i <= currentYear + props.yearRange; i++) {
+        years.push(i);
+    }
+    return years;
+});
+
+// Handle month and year changes
+const handleMonthChange = () => {
+    // The value is automatically updated via the computed property setter
+};
+
+const handleYearChange = () => {
+    // The value is automatically updated via the computed property setter
+};
 
 // Format date for display
 const formatDate = (date) => {
@@ -151,7 +225,7 @@ const calendarDays = computed(() => {
     const month = currentMonth.value.getMonth();
 
     // Get first day of month and last day of month
-    const firstDayOfMonth = new Date(year, month, 1);   
+    const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
 
     // Get day of week of first day (0 = Sunday, 1 = Monday, etc.)
@@ -212,11 +286,6 @@ const isCurrentMonth = (date) => {
     return date.getMonth() === currentMonth.value.getMonth();
 };
 
-const getMonthName = () => {
-    const options = { month: "long", year: "numeric" };
-    return currentMonth.value.toLocaleDateString("en-US", options);
-};
-
 // Close calendar when clicking outside
 const handleClickOutside = (event) => {
     if (calendarRef.value && !calendarRef.value.contains(event.target)) {
@@ -243,7 +312,6 @@ watch([startDate, endDate], () => {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     position: relative;
     width: 100%;
-
 }
 
 /* Input Fields Styling */
@@ -275,7 +343,6 @@ watch([startDate, endDate], () => {
     justify-content: space-between;
     cursor: pointer;
     font-size: 14px;
-    height: 14px;
 }
 
 .calendar-icon {
@@ -296,11 +363,53 @@ watch([startDate, endDate], () => {
     padding: 16px;
 }
 
-.calendar-header {
+/* Enhanced Month/Year Navigation */
+.calendar-navigation {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+}
+
+.month-year-selectors {
+    display: flex;
+    gap: 8px;
+}
+
+.select-container {
+    position: relative;
+}
+
+.month-select, .year-select {
+    appearance: none;
+    background: transparent;
+    border: none;
+    padding: 4px 24px 4px 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.month-select:hover, .year-select:hover {
+    background-color: #f3f4f6;
+}
+
+.month-select:focus, .year-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.2);
+}
+
+.select-icon {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: #6b7280;
+    pointer-events: none;
 }
 
 .nav-button {
@@ -310,19 +419,18 @@ watch([startDate, endDate], () => {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px;
+    padding: 8px;
     color: #6b7280;
+    border-radius: 4px;
+}
+
+.nav-button:hover {
+    background-color: #f3f4f6;
 }
 
 .nav-icon {
     width: 16px;
     height: 16px;
-}
-
-.month-title {
-    font-size: 16px;
-    font-weight: 600;
-    text-align: center;
 }
 
 /* Calendar Grid */
@@ -376,11 +484,21 @@ watch([startDate, endDate], () => {
     .date-inputs {
         flex-direction: column;
     }
-
+    
     .calendar-day {
         height: 28px;
         width: 28px;
         font-size: 12px;
+    }
+    
+    .month-year-selectors {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .month-select, .year-select {
+        font-size: 14px;
+        padding: 2px 20px 2px 6px;
     }
 }
 </style>
