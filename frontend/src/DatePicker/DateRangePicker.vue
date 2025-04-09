@@ -23,7 +23,7 @@
             <!-- Enhanced Month/Year Navigation -->
             <div class="calendar-navigation">
                 <button @click="prevMonth" class="nav-button" aria-label="Previous month">
-                    <ChevronLeftIcon class="nav-icon" />
+                    <i class="pi pi-arrow-left nav-icon"></i>
                 </button>
                 
                 <div class="month-year-selectors">
@@ -49,7 +49,7 @@
                 </div>
                 
                 <button @click="nextMonth" class="nav-button" aria-label="Next month">
-                    <ChevronRightIcon class="nav-icon" />
+                    <i class="pi pi-arrow-right nav-icon"></i>
                 </button>
             </div>
 
