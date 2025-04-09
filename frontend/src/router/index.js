@@ -1,3 +1,5 @@
+import DateRangePicker from '@/components/DateRangePicker.vue';
+import Test1 from '@/components/Test1.vue';
 import Admin from '@/views/Admin.vue';
 import Checkout from '@/views/Checkout.vue';
 import HistoryKeeper from '@/views/HistoryKeeper.vue';
@@ -18,7 +20,17 @@ const routes = [
       path:'/test',
       name:'Test',
       component: Admin
-    }
+    },
+    {
+      path:'/date',
+      name:'Date',
+      component:DateRangePicker
+    },
+    {
+      path:'/t',
+      name:'t',
+      component:Test1
+    },
 ]
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),

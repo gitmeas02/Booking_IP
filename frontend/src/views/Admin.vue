@@ -7,7 +7,7 @@
         View All Bookings
       </button>
     </header>
-
+    <button @click="scrollToToday" class="p-12 bg-amber-200 m-1">Today</button>
     <div class="dashboard-content">
       <!-- Calendar Navigation -->
       <section class="calendar-control-section">
@@ -21,51 +21,7 @@
         </div>
       </section>
 
-      <!-- Room Management Controls -->
-      <section class="management-controls">
-        <div class="control-panel">
-          <h3>Room Management</h3>
-          
-          <!-- Room Selection -->
-          <div class="form-group">
-            <label>Select Room:</label>
-            <select v-model="selectedRoomId" @change="loadRoomData">
-              <option value="">-- Select Room --</option>
-              <option v-for="room in filteredRooms" :key="room.id" :value="room.id">
-                {{ room.name }} ({{ room.type }} - {{ room.number }})
-              </option>
-            </select>
-          </div>
-
-          <!-- Date Selection -->
-          <div class="form-group">
-            <label>Select Date:</label>
-            <input type="date" v-model="selectedDate" :min="formatDate(new Date())">
-          </div>
-
-          <!-- Price Management -->
-          <div class="form-group">
-            <label>Set Price ($):</label>
-            <input type="number" v-model="roomPrice" min="0">
-            <button @click="updatePrice" :disabled="!selectedRoomId || !selectedDate">
-              Update Price
-            </button>
-          </div>
-
-          <!-- Availability Controls -->
-          <div class="form-group">
-            <label>Set Availability:</label>
-            <div class="button-group">
-              <button class="btn-block" @click="blockRoom" :disabled="!selectedRoomId || !selectedDate">
-                Block Room
-              </button>
-              <button class="btn-open" @click="openRoom" :disabled="!selectedRoomId || !selectedDate">
-                Open Room
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+   
 
       <!-- Calendar Display -->
       <section class="calendar-section">
@@ -85,11 +41,12 @@
                 <div class="room-type">{{ room.type }} - {{ room.number }}</div>
               </td>
               <td 
-                v-for="day in visibleWeekDays" 
-                :key="day.date" 
-                :class="getStatusClass(getRoomStatus(room, day.date))"
-                @click="selectRoomDate(room, day.date)"
-              >
+                  v-for="day in visibleWeekDays" 
+                  :key="day.date" 
+                  :class="getStatusClass(getRoomStatus(room, day.date))"
+                  :data-date="day.date" 
+                  @click="selectRoomDate(room, day.date)"
+                >
                 <div class="status-container">
                   <div class="status-text">{{ getRoomStatus(room, day.date) }}</div>
                   <div class="room-price">${{ getRoomPrice(room, day.date) || '—' }}</div>
@@ -161,6 +118,8 @@ export default {
       showBookingsModal: false,
       bookingsMonth: currentDate.getMonth(),
       bookingsYear: currentDate.getFullYear(),
+      selectedMonth: new Date().getMonth(),
+      selectedYear: new Date().getFullYear(),
       rooms: [
         {
           id: 1,
@@ -188,6 +147,22 @@ export default {
           bookings: [
             { startDate: this.formatDate(new Date(2025, 3, 8)), 
               endDate: this.formatDate(new Date(2025, 3, 10)), 
+              guest: 'John Smith' }
+          ],
+          blockedDates: []
+        },
+        {
+          id: 3,
+          name: 'Ocean View',
+          type: 'Deluxe Room',
+          number: '201',
+          basePrice: 220,
+          dynamicPricing: {
+            [this.formatDate(new Date(2025, 3, 15))]: 250
+          },
+          bookings: [
+            { startDate: this.formatDate(new Date(2025, 4, 8)), 
+              endDate: this.formatDate(new Date(2025, 4, 10)), 
               guest: 'John Smith' }
           ],
           blockedDates: []
@@ -396,7 +371,22 @@ export default {
       if (index > -1) {
         room.blockedDates.splice(index, 1);
       }
+    },
+    scrollToToday() {
+  const today = new Date();
+  this.currentWeekStart = this.getWeekStartDate(today); // ⬅️ reset week to current
+  this.updateMonthYear(); // ⬅️ update display headers
+
+  this.$nextTick(() => {
+    const todaySelector = `[data-date="${this.formatDate(today)}"]`;
+    const todayElement = document.querySelector(todaySelector);
+
+    if (todayElement) {
+      todayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  });
+}
+
   },
  
   setup() {
