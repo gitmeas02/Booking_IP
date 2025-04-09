@@ -1,44 +1,36 @@
 <script setup>
-import datePicker from './datePicker.vue'
-import { ref } from 'vue'
-import { Search } from '@element-plus/icons-vue'
-import {Edit} from '@element-plus/icons-vue'
-import selectRoom from './selectRoom.vue'
-
-
-const input2 = ref('')
-const value = ref('')
+    import DateRangePicker from './DateRangePicker.vue'
+    import selectRoom from './selectRoom.vue'
+    import { ref } from 'vue'
+    const value1 = ref(true)
+    
 </script>
 <template>
     <div class="container">
-        <div class="cardwrapper">
-            <div>
-                <h2>A PLACE TO CALL HOME ON YOUR NEXT ADVENTURE</h2>
+        <div class="wrapper">
+            <div id="title" style="text-align: center;">
+                <p>A PLACE TO CALL HOME ON YOUR NEXT ADVENTURE</p>
             </div>
-            <div class="flex gap-4 mb-4 items-center">
-                <el-input
-                v-model="input2"
-                style="width: 80%"
-                size="large"
-                placeholder="Enter The Destionation or Property"
-                :suffix-icon="Search"
-                />
-            </div>
-            <div class="date-select">
-                <div id="datepicker">
-                    <datePicker/>
+            <div class="content">
+                <div id="inputSearch">
+                    <div class="input-container">
+                        <input type="text" placeholder="Enter Your Destination or Property">
+                        <i id="search" class="pi pi-search"></i>
+                    </div>
                 </div>
-                <div id="roomselect">
-                    <selectRoom/>
+                <div class="datePickerContainer">
+                    <DateRangePicker/> 
                 </div>
-                
-            </div>
-            <div>
-                <el-button type="primary" size="large"> Search
-                    <el-icon class="el-icon--right">
-                        <Search />
-                    </el-icon>
-                </el-button>
+                <div class="selectRoom">
+                    <div style="margin-top: 20px;">
+                        <selectRoom/>
+                    </div>
+                    <div style="margin-top: 40px; margin-left: 10px;">
+                        Traveling with pet?
+                        <el-switch v-model="value1" />
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
@@ -46,39 +38,50 @@ const value = ref('')
 
 <style scoped>
     .container{
-        display:flex;
-        align-items: center;
+        display: flex;
         justify-content: center;
+        align-items: center;
+        width:100vw;
         height: 100vh;
     }
-    .cardwrapper{
-        padding:10px;
+    p{
+        font-size: 3vh;
         color:white;
-        text-align: center;
-        line-height: 2;
-        width:50%;
-        height: 45%;
-        border-radius: 40px;
+    }
+    .wrapper{
+        padding:50px;
+        border-radius: 36px;
         background: #0A2647;
-        box-shadow:  10px 10px 44px #b5b5b5,
-                    -10px -10px 44px #ffffff;
+        box-shadow:  23px 23px 50px #a4bbda,
+                    -23px -23px 50px #89acd3;
     }
-    h2{
-        line-height: 100px;
-    }
-    .date-select{
-        display:flex;
-        position:relative;
+    #inputSearch{
+        display: flex;
         justify-content: center;
-        flex-direction: row;
-        gap:36px;
+        margin-top:20px;
+        margin-bottom:20px;
     }
-    #roomselect{
+    .input-container {
+        position: relative;
+        width: 100%;
+    }
+    .input-container input {
+        width: 100%;
+        padding: 16px;
+        padding-left: 30px; 
+        border-radius: 12px;
+        border: none;
+    }
+    .input-container i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        color: #999;
+    }
+    .selectRoom{
         display:flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin-top: 24px;
+        color:white;
     }
-
 </style>
