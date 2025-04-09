@@ -1,10 +1,10 @@
 <script setup>
-import datepickerCard from './DatePicker/datepickerCard.vue'
-// import DateRangePicker from './DatePicker/DateRangePicker.vue'
+// import datepickerCard from './DatePicker/datepickerCard.vue'
+import productDetail from './ProductDetails/productDetail.vue';
 </script>
 <template>
-  <!-- <DateRangePicker/> -->
-  <datepickerCard/>
+  <!-- <datepickerCard/> -->
+  <productDetail/>
 </template>
 
 <style scoped>
