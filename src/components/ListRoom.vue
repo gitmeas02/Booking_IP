@@ -38,44 +38,7 @@
     <div class="room-list">
       <div class="room-detail">
         <span class="image"><img src="/src/assets/Bed/bed.png" alt="bed"></span>
-        <span class="box_detail">
-          <div class="name">
-            <div> 
-              <span>KHUN HOTEL</span>
-              <span>⭐⭐⭐⭐⭐</span>
-            </div>
-            <div>
-              <span>
-                <div>Review</div>
-                <div>4.5</div>
-              </span>
-              <span>Comments (123)</span>
-            </div>
-          </div>
-          <div class="location">
-            <span>Siem Reap</span>
-            <span>Show On Map </span>
-            <span>1.7 km from center</span>
-          </div>
-          <div class="price">
-            100$
-          </div>
-          <div class="bed">
-            <span>Size 40m</span>
-            <span>Beds: 1 beds</span>
-          </div>
-          <div class="function">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div class="view_hotel">
-            View Hotel
-          </div>
-        </span>
+        <RoomDetail/>
 
       </div>
 
@@ -144,7 +107,7 @@ export default {
 .container {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background-color: #FCFCFC;
   gap: 25px;
@@ -154,13 +117,12 @@ export default {
 
 .filter-section {
   display: flex;
+  justify-content: center; /* horizontal center */
+  align-items: center; /* vertical top */
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  
   width: 230px;
   padding: 10px;
-  margin: 0 auto;
+  margin: 0;
 }
 .filter-box {
   width: 100%;
@@ -233,14 +195,13 @@ export default {
   align-items: center;
   justify-content: space-between;
   background-color: rgb(255, 255, 255);
-  border: #666 1px solid;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: fit-content;
+  gap: 12px;
+  margin: 0px;
 }
 .image {
   width: 279px;
-  height: 215px;
+  height: 220px;
   overflow: hidden;
 }
 .image img {
@@ -252,10 +213,8 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 10px;
-  border-bottom: #666 1px solid;
+  justify-content: start;
+  width: fit-content;
 }
 
 .box-detail{

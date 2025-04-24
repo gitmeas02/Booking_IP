@@ -21,9 +21,7 @@
         <!-- Location info -->
         <div class="location-container">
             <a href="#" class="location-link">Siem Reap</a>
-            <a href="#" class="map-link">
-                <span class="map-icon">📍</span> Show On Map
-            </a>
+            <a href="#" class="map-link">Show On Map</a>
             <span class="distance-text">1.7 km from center</span>
         </div>
 
@@ -61,15 +59,18 @@
 import { Icon } from '@iconify/vue';
 export default {
     name: 'HotelCard',
+    components:{
+        Icon
+    },
     data() {
         return {
             amenities: [
-                { name: 'Hot water', icon: 'shower-outline-rounded' },
-                { name: 'Air Condition', icon: 'material-symbols:air' },
-                { name: 'Wi-fi', icon: 'material-symbols:wifi' },
-                { name: 'TV', icon: 'material-symbols:wifi' },
-                { name: 'Free Food', icon: 'material-symbols:fastfood-outline-rounded' },
-                { name: 'Phone Call', icon: 'material-symbols:deskphone-outline' }
+                { icon: 'material-symbols:shower-outline-rounded', name: 'Hot water' },
+                { icon: 'material-symbols:air', name: 'Air Condition' },
+                { icon: 'material-symbols:wifi', name: 'Wi-fi' },
+                { icon: 'material-symbols:wifi', name: 'TV' },
+                { icon: 'material-symbols:fastfood-outline-rounded', name: 'Free Food' },
+                { icon: 'material-symbols:deskphone-outline', name: 'Phone Call'  }
             ]
         }
     },
@@ -82,11 +83,12 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .hotel-card {
-    width: fit-content;
-    margin: 0;
-    padding: 5px;
+    width: 472px;
+    height: fit-content;
+    outline: 1px solid #dddede;
+    border-radius: 4px;
 }
 
 .hotel-header {
@@ -111,13 +113,13 @@ export default {
 
 .stars-container {
     display: flex;
-    margin-top: 4px;
 }
 
 .star-icon {
-    font-size: 20px;
+    display: inline-block;
+    font-size: 14px;
     color: #facc15;
-    margin-right: 2px;
+    line-height: 1;
 }
 
 .review-container {
@@ -148,6 +150,8 @@ export default {
 }
 
 .comments-link {
+    display: flex;
+    height: fit-content;
     color: #3b82f6;
     font-size: 10px;
     text-decoration: none;
@@ -168,7 +172,6 @@ export default {
     font-size: 14px;
     display: flex;
     align-items: center;
-    margin-right: 32px;
     text-decoration: none;
 }
 
@@ -181,7 +184,6 @@ export default {
     font-size: 14px;
     display: flex;
     align-items: center;
-    margin: 0 32px;
     text-decoration: none;
 }
 
@@ -189,17 +191,11 @@ export default {
     text-decoration: underline;
 }
 
-.map-icon {
-    display: inline;
-    margin-right: 8px;
-}
-
 .distance-text {
     color: #3b82f6;
     font-size: 14px;
     display: flex;
     align-items: center;
-    margin-left: 32px;
 }
 
 .price-container {
@@ -207,12 +203,14 @@ export default {
 }
 
 .price-text {
-    font-size: 16px;
+    display: flex;
+    height: fit-content;
+    font-size: 12px;
     margin: 0;
 }
 
 .room-info {
-    padding: 16px 0;
+    padding: 3px 12px;
 }
 
 .room-list {
@@ -221,36 +219,39 @@ export default {
 }
 
 .room-list-item {
-    font-size: 16px;
+    font-size: 12px;
 }
 
 .amenities-container {
-    padding: 16px 0;
+    padding: 0;
 }
 
 .amenities-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
+    gap: 12px 7px;
+    padding: 0 21px;
 }
 
 .amenity-item {
     display: flex;
     align-items: center;
+    height: fit-content;
     gap: 8px;
 }
 
 .amenity-icon {
-    font-size: 24px;
+    font-size: 20px;
 }
 
 .amenity-text {
+    display: flex;
     font-size: 10px;
     color: #1f2937;
 }
 
 .action-container {
-    margin-top: 24px;
+    padding: 4px 16px;
     display: flex;
     justify-content: flex-end;
 }
@@ -258,10 +259,11 @@ export default {
 .view-button {
     background-color: #2563eb;
     color: white;
-    font-size: 20px;
-    padding: 24px 32px;
+    font-size: 13px;
+    width: 88px;
+    height: 23px;
     border: none;
-    border-radius: 4px;
+    border-radius: 2px;
     cursor: pointer;
 }
 
