@@ -28,14 +28,14 @@
 
     <div class="value-display">
       <span class="value">
-        <div>MIN</div>
+        <div class="min">MIN</div>
         <div class="value-box">
           <span class="currency">USD</span>
           <span class="price">{{ minValue }}</span>
         </div>
       </span>
       <span class="value">
-        <div>Max</div>
+        <div class="max">Max</div>
         <div class="value-box">
           <span class="currency">USD</span>
           <span class="price">{{ maxValue }}</span>
@@ -109,7 +109,7 @@ export default {
 .slider-track {
   position: absolute;
   height: 100%;
-  background-color: #fe696a;
+  background-color: #9a9a9a;
   z-index: 1;
   border-radius: 5px;
   pointer-events: none;
@@ -141,7 +141,7 @@ input[type="range"]::-webkit-slider-thumb {
   height: 25px;
   width: 25px;
   background: white;
-  border: 3px solid #fe696a;
+  border: 3px solid gray;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -151,7 +151,7 @@ input[type="range"]::-moz-range-thumb {
   height: 25px;
   width: 25px;
   background: white;
-  border: 3px solid #fe696a;
+  border: 3px solid gray;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -159,12 +159,20 @@ input[type="range"]::-moz-range-thumb {
 .value-display {
   display: flex;
   justify-content: space-between;
-  font-weight: bold;
-  margin-top: 1rem;
+  align-items: center;
 }
 
 .value {
   font-size: 1.1rem;
+}
+
+.min{
+  padding-left: 10px;
+  text-align: left;
+}
+.max{
+  padding-right: 10px;
+  text-align: right;
 }
 
 .value-box {
@@ -176,6 +184,7 @@ input[type="range"]::-moz-range-thumb {
 
 .currency{
   width: fit-content;
+  padding: 2px;
 }
 
 .price{

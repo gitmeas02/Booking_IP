@@ -1,4 +1,6 @@
-import ListRoomView from '../views/ListRoomView.vue';
+import ListRoomView from '@/views/ListBookingView.vue';
+import ChatBox from '@/views/ChatBox.vue';
+import ListBookingView from '@/views/ListBookingView.vue';
 import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
@@ -7,6 +9,17 @@ const routes = [
     name: "ListRoomView",
     component: ListRoomView,
   },
+  {
+    path: "/chatbox",
+    name: "ChatBox",
+    component: ChatBox,
+  },
+  {
+    path: "/listbooking",
+    name: "ListBookingView",
+    component: ListBookingView,
+  },
+
 ];
 
 const router = createRouter({

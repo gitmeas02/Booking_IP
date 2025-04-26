@@ -1,24 +1,22 @@
 <template>
-    
-    <RoomDetail/>
-
-
+  <ListRoom/>
+  
+  
 </template>
 
 <script>
 
-import RoomDetail from '@/components/RoomDetail.vue';
+import ListRoom from '../components/ListRoom.vue';
+
 
 export default {
   components: {
-    RoomDetail,
+    ListRoom,
   },
 };
-
 
 </script>
 
 <style scoped>
-
 
 </style>
