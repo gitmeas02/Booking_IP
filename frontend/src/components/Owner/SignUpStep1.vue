@@ -2,13 +2,23 @@
     <div class="step-container">
         <h2>Create Partner Account</h2>
         <p>Create an account to list and manage your property.</p>
-        <input type="email" v-model="localEmail" placeholder="example@blabla.com" />
+        <div class="form-group">
+            <label>Email address</label>
+            <input type="email" v-model="localEmail" placeholder="example@blabla.com" />
+        </div>
         <button @click="goNext">Continue</button>
+
         <hr class="divider" />
-        <p class="signin-link">
-            Already have an account?
+        <div class="footer">
+            <p>
+                Already have an account?
+            </p>
             <router-link to="/signin">Sign In</router-link>
-        </p>
+        </div>
+        <div class="copyright">
+            <small>All rights reserved.</small>
+            <small>Copyright (2025-2025) - Pteas Khmer</small>
+        </div>
     </div>
 </template>
 
@@ -43,11 +53,15 @@ export default {
 <style scoped>
 .step-container {
     max-width: 400px;
-    margin: 4rem auto;              /* center on page with some top/bottom spacing */
-    padding: 2.5rem 2rem;           /* roomy padding */
-    background: #fff;               /* white card */
-    border-radius: 12px;            /* smooth corners */
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    margin: 4rem auto;
+    /* center on page with some top/bottom spacing */
+    padding: 2.5rem 2rem;
+    /* roomy padding */
+    background: #fff;
+    /* white card */
+    border-radius: 12px;
+    /* smooth corners */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     text-align: center;
     font-family: 'Arial', sans-serif;
 }
@@ -62,6 +76,17 @@ export default {
     color: #666;
     margin-bottom: 1.5rem;
     line-height: 1.4;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
 }
 
 /* separator line */
@@ -80,6 +105,19 @@ input[type="email"] {
     box-sizing: border-box;
     font-size: 1rem;
     margin-bottom: 1.5rem;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 0.85rem;
+    background-color: #332c2b;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
 }
 
 /* primary “Continue” button */
@@ -113,8 +151,20 @@ input[type="email"] {
 }
 
 /* smaller text under buttons */
-.signin-link {
-    font-size: 0.9rem;
-    color: #444;
+.footer {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.footer p {
+    margin-bottom: 1.5rem;
+    /* Add space BELOW the "Don't have an account?" */
+
+}
+
+.copyright {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: #9a9a9a;
 }
 </style>

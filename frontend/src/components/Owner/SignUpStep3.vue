@@ -2,49 +2,45 @@
   <div class="step-container">
     <h2>Create Partner Account</h2>
     <p>Use a minimum of 10 characters, including uppercase letters, lowercase letters and numbers</p>
-    
+
     <div class="form-group">
-      <input
-        type="password"
-        id="password"
-        v-model="localPassword"
-        placeholder="Password*"
-        @blur="validatePassword"
-        :class="{ 'error-input': passwordError }"
-      />
+      <div class="form-group-password">
+        <label>Password</label>
+        <input type="password" id="password" v-model="localPassword" placeholder="Password*" @blur="validatePassword"
+          :class="{ 'error-input': passwordError }" />
+      </div>
       <div class="eye-icon" @click="togglePasswordVisibility('password')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
       </div>
     </div>
     <p v-if="passwordError" class="error-message">{{ passwordError }}</p>
-    
+
     <div class="form-group">
-      <input
-        type="password"
-        id="confirmPassword"
-        v-model="localConfirmPassword"
-        placeholder="Confirm Password*"
-        @blur="validateConfirmPassword"
-        :class="{ 'error-input': confirmPasswordError }"
-      />
+      <div class="form-group-password">
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPassword" v-model="localConfirmPassword" placeholder="Confirm Password*"
+          @blur="validateConfirmPassword" :class="{ 'error-input': confirmPasswordError }" />
+      </div>
       <div class="eye-icon" @click="togglePasswordVisibility('confirm')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
       </div>
     </div>
     <p v-if="confirmPasswordError" class="error-message">{{ confirmPasswordError }}</p>
-    
+
     <button @click="validateAndSubmit">Next</button>
-    
-    <p class="copyright">
-      All right reserved.<br>
-      Copyright (2025-2025) - Pteas Khmer
-    </p>
+
+    <div class="copyright">
+      <small>All rights reserved.</small>
+      <small>Copyright (2025-2025) - Pteas Khmer</small>
+    </div>
   </div>
 </template>
 
@@ -96,47 +92,47 @@ export default {
     },
     validatePassword() {
       this.passwordError = '';
-      
+
       if (!this.localPassword) {
         this.passwordError = 'Password is required';
         return false;
       }
-      
+
       if (this.localPassword.length < 10) {
         this.passwordError = 'Password must be at least 10 characters long';
         return false;
       }
-      
+
       const hasUppercase = /[A-Z]/.test(this.localPassword);
       const hasLowercase = /[a-z]/.test(this.localPassword);
       const hasNumber = /[0-9]/.test(this.localPassword);
-      
+
       if (!hasUppercase || !hasLowercase || !hasNumber) {
         this.passwordError = 'Password must include uppercase letters, lowercase letters, and numbers';
         return false;
       }
-      
+
       return true;
     },
     validateConfirmPassword() {
       this.confirmPasswordError = '';
-      
+
       if (!this.localConfirmPassword) {
         this.confirmPasswordError = 'Please confirm your password';
         return false;
       }
-      
+
       if (this.localPassword !== this.localConfirmPassword) {
         this.confirmPasswordError = 'Passwords do not match';
         return false;
       }
-      
+
       return true;
     },
     validateAndSubmit() {
       const passwordValid = this.validatePassword();
       const confirmValid = this.validateConfirmPassword();
-      
+
       if (passwordValid && confirmValid) {
         this.$emit('submit-form');
       }
@@ -172,6 +168,11 @@ export default {
 .form-group {
   position: relative;
   margin-bottom: 0.25rem;
+}
+
+.form-group-password {
+  margin-bottom: 1rem;
+  text-align: left;
 }
 
 input[type="password"],
@@ -221,9 +222,8 @@ button {
 }
 
 .copyright {
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 2rem;
-  line-height: 1.4;
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: #9a9a9a;
 }
 </style>

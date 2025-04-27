@@ -137,22 +137,22 @@ input[type="text"] {
     cursor: pointer;
 }
 
-.btn-create {
+.footer {
     margin-top: 1rem;
+    text-align: center;
+}
+
+.footer p {
+    margin-bottom: 1.5rem; /* Add space BELOW the "Don't have an account?" */
+}
+
+.btn-create {
     background: none;
     border: 1px solid #2e2b2b;
     padding: 0.7rem 1rem;
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
-}
-
-.footer {
-    margin-top: 1rem;
-}
-
-.footer p {
-    margin: 0.5rem 0;
 }
 
 .copyright {
