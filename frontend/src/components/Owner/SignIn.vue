@@ -24,7 +24,7 @@
 
             <div class="footer">
                 <p>Don't have an account?</p>
-                <button class="btn-create">Create an Account</button>
+                <router-link to="/signup" class="btn-create">Create an Account</router-link>
             </div>
 
             <div class="copyright">
@@ -54,12 +54,16 @@ const handleSubmit = () => {
 </script>
 
 <style scoped>
+/* Fullscreen container */
 .container {
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #f5f5f5;
+    /* background: #f5f5f5; */
+    padding: 0; /* Ensure no unwanted margin/padding around the container */
+    margin: 0;
+    font-family: 'Arial', sans-serif;
 }
 
 .card {
@@ -69,6 +73,10 @@ const handleSubmit = () => {
     width: 400px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: auto; /* Ensure the card grows with content */
 }
 
 .title {

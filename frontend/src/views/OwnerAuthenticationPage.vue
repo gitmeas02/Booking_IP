@@ -59,6 +59,6 @@ export default {
 .auth-container {
     max-width: 500px;
     margin: auto;
-    padding: 2rem;
+    /* padding: 2rem; */
 }
 </style>
