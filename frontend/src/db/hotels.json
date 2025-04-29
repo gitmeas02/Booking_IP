@@ -1,0 +1,32 @@
+{
+    "hotels": [
+        {
+            "id": 1,
+            "name": "Royal Palace",
+            "location": "Paris, France",
+            "rooms": [
+                {
+                    "id": 101,
+                    "name": "Royal Room 1",
+                    "type": "Queen Bed",
+                    "hotelId": 1,
+                    "number": "469",
+                    "basePrice": 168,
+                    "taxes": 20,
+                    "image": ["./src/assets/image.png"],
+                    "bookings": [
+                        { "startDate": "2025-04-17", "endDate": "2025-04-18", "guest": "for 1 day" },
+                        { "startDate": "2025-04-19", "endDate": "2025-04-22", "guest": "19 20 21" },
+                        { "startDate": "2025-04-23", "endDate": "2025-04-26", "guest": "12 Wilson" }
+                    ],
+                    "blockedDates": [
+                        { "startDate": "2025-10-16", "endDate": "2025-10-17" },
+                        { "startDate": "2025-04-22", "endDate": "2025-04-23" },
+                        { "startDate": "2025-05-18", "endDate": "2025-05-21" },
+                        { "startDate": "2025-10-22", "endDate": "2025-10-23" }
+                    ]
+                }
+            ]
+        }
+    ]
+}

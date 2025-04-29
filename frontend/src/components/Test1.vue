@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ChevronRight, ChevronLeft } from 'lucide-vue-next'
 
 // Month labels
@@ -115,44 +115,40 @@ function generateWeek(startDate) {
 }
 
 // Room data
-const hotels = [
-  {
-    id: 1,
-    name: 'Royal Palace',
-    location: 'Paris, France',
-    rooms: [
-      {
-        id: 101,
-        name: 'Royal Room 1',
-        type: 'Queen Bed',
-        hotelId: 1,
-        number: '469',
-        basePrice: 168,
-        taxes: 20,
-        image: './src/assets/image.png',
-        bookings: [
-          { startDate: "2025-4-17", endDate: "2025-4-18", guest: 'for 1 day' },
-          { startDate: "2025-4-19", endDate: "2025-4-22", guest: '19 20 21' },
-          { startDate: "2025-4-23", endDate: "2025-4-26", guest: '12 Wilson' },
-        ],
-        blockedDates: [
-          { startDate: "2025-10-16", endDate: "2025-10-17" },
-          { startDate: "2025-5-18", endDate: "2025-5-21" },
-          { startDate: "2025-10-22", endDate: "2025-10-23" },
-        ]
-      }
-    ]
+const hotels = ref([])
+
+const isLoading = ref(false)
+
+async function fetchHotels() {
+  isLoading.value = true
+  try {
+    const response = await fetch('http://localhost:5000/hotels')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    hotels.value = data
+    rooms.value = hotels.value.flatMap(hotel =>
+      hotel.rooms.map(room => ({
+        ...room,
+        hotel: hotel.name
+      }))
+    )
+  } catch (error) {
+    console.error('Error fetching hotels:', error)
+    hotels.value = []
+    rooms.value = []
+  } finally {
+    isLoading.value = false
   }
-]
+}
 
-const rooms = hotels.flatMap(hotel =>
-  hotel.rooms.map(room => ({
-    ...room,
-    hotel: hotel.name
-  }))
-)
+const rooms = ref([])
 
-// Navigation
+onMounted(() => {
+  fetchHotels()
+})
+
 function previousWeek() {
   const newDate = new Date(calendarStart.value)
   newDate.setDate(newDate.getDate() - 7)
