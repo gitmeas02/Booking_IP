@@ -1,3 +1,4 @@
+import 'primeicons/primeicons.css'
 import './assets/main.css'
 
 import { createPinia } from 'pinia'
