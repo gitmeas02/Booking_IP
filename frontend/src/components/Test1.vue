@@ -145,10 +145,24 @@ function isDateBlocked(room, date) {
 }
 
 function getDayPrice(room, date) {
-  const dateStr = formatDate(date);
-  // Check for specific price for this date if you have that data
+  // const dateStr = formatDate(date);
+
+  // Loop over each price range to check for overlap
+  if (room.price && Array.isArray(room.price)) {
+    for (const range of room.price) {
+      const start = parseDate(range.startDate);
+      const end = parseDate(range.endDate);
+
+      if (date >= start && date <= end) {
+        return range.amount;
+      }
+    }
+  }
+
   return room.basePrice || 0;
 }
+
+
 
 // Room data
 const isLoading = ref(false);
@@ -245,8 +259,8 @@ function getBookingOffset(booking) {
     const adjustedStart = start < calendarStart.value ? calendarStart.value : start;
     const adjustedEnd = end > calendarEnd ? calendarEnd : end;
 
-    const offset = daysBetween(calendarStart.value, adjustedStart);
-    const length = daysBetween(adjustedStart, adjustedEnd) + 1;
+    const offset = daysBetween(calendarStart.value, adjustedStart-1)+1;
+    const length = daysBetween(adjustedStart, adjustedEnd-1) + 1;
     return { offset, length };
   } catch (err) {
     console.error("getBookingOffset error:", err);
@@ -267,8 +281,8 @@ function getBlockedOffset(blockedDate) {
     const adjustedStart = start < calendarStart.value ? calendarStart.value : start;
     const adjustedEnd = end > calendarEnd ? calendarEnd : end;
 
-    const offset = daysBetween(calendarStart.value, adjustedStart);
-    const length = daysBetween(adjustedStart, adjustedEnd) + 1;
+    const offset = daysBetween(calendarStart.value, adjustedStart-1)+1;
+    const length = daysBetween(adjustedStart, adjustedEnd-1) + 1;
     return { offset, length };
   } catch (err) {
     console.error("getBlockedOffset error:", err);
