@@ -1,94 +1,140 @@
 <template>
+
     <div class="hotel-card">
-        <!-- Hotel Header - Name and Rating -->
-        <div class="hotel-header">
-            <div class="hotel-name-container">
-                <h1 class="hotel-name">KHUN HOTEL</h1>
-                <div class="stars-container">
-                    <span class="star-icon" v-for="n in 5" :key="n">★</span>
+        <!-- Image -->
+        <div class="image">
+            <img :src="hotel.rooms[0].images[0]" alt="hotel image" class="img" />
+        </div>
+
+        <!-- Hotel Info -->
+        <div class="hotel-card-info">
+            <!-- Hotel Header - Name and Rating -->
+            <div class="hotel-header">
+                <div class="hotel-name-container">
+                    <h1 class="hotel-name">{{ hotel.name }}</h1>
+                    <div class="stars-container">
+                        <span class="star-icon" v-for="n in hotel.stars" :key="n">★</span>
+                    </div>
+                </div>
+
+                <div class="review-container">
+                    <div class="review-score-container">
+                        <span class="review-text">Review Score</span>
+                        <div class="score-badge">{{ hotel.reviewScore }}</div>
+                    </div>
+                    <a href="#" class="comments-link">Comments ({{ hotel.commentsCount }})</a>
                 </div>
             </div>
 
-            <div class="review-container">
-                <div class="review-score-container">
-                    <span class="review-text">Review Score</span>
-                    <div class="score-badge">4.5</div>
-                </div>
-                <a href="#" class="comments-link">Comments (123)</a>
+            <!-- Location info -->
+            <div class="location-container">
+                <a href="#" class="location-link">{{ hotel.location.city }}</a>
+                <a href="#" class="map-link">Show On Map</a>
+                <span class="distance-text">{{ hotel.location.distanceFromCenter }} from center</span>
             </div>
-        </div>
 
-        <!-- Location info -->
-        <div class="location-container">
-            <a href="#" class="location-link">Siem Reap</a>
-            <a href="#" class="map-link">Show On Map</a>
-            <span class="distance-text">1.7 km from center</span>
-        </div>
+            <!-- Price -->
+            <div class="price-container">
+                <div class="price-text">US$ {{ hotel.price }}</div>
+            </div>
 
-        <!-- Price -->
-        <div class="price-container">
-            <div class="price-text">US$ 100</div>
-        </div>
+            <!-- Room info -->
+            <div class="room-info">
+                <ul class="room-list">
+                    <li v-for="(room, rIndex) in hotel.rooms" :key="rIndex" class="room-list-item">
+                        Size {{ room.size }}
+                    </li>
+                    <li v-for="(room, rIndex) in hotel.rooms" :key="rIndex" class="room-list-item">
+                        Beds: {{ room.beds }}
+                    </li>
+                </ul>
+            </div>
 
-        <!-- Room info -->
-        <div class="room-info">
-            <ul class="room-list">
-                <li class="room-list-item">Size 40m²</li>
-                <li class="room-list-item">Beds: 1 beds</li>
-            </ul>
-        </div>
-
-        <!-- Amenities -->
-        <div class="amenities-container">
-            <div class="amenities-list">
-                <div class="amenity-item" v-for="(amenity, index) in amenities" :key="index">
-                    <Icon :icon="amenity.icon" class="amenity-icon" />
-                    <span class="amenity-text">{{ amenity.name }}</span>
+            <!-- Amenities -->
+            <div class="amenities-container">
+                <div class="amenities-list">
+                    <div class="amenity-item" v-for="(amenity, aIndex) in hotel.amenities" :key="aIndex">
+                        <Icon :icon="icons[amenity]" class="amenity-icon" />
+                        <span class="amenity-text">{{ amenity }}</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Action button -->
-        <div class="action-container">
-            <button class="view-button" @click="viewHotel">View Hotel</button>
+            <!-- Action button -->
+            <div class="action-container">
+                <button class="view-button" @click="viewHotel(hotel.id)">View Hotel</button>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
 import { Icon } from '@iconify/vue';
+
 export default {
     name: 'HotelCard',
-    components:{
+    components: {
         Icon
     },
-    data() {
-        return {
-            amenities: [
-                { icon: 'material-symbols:shower-outline-rounded', name: 'Hot water' },
-                { icon: 'material-symbols:air', name: 'Air Condition' },
-                { icon: 'material-symbols:wifi', name: 'Wi-fi' },
-                { icon: 'material-symbols:wifi', name: 'TV' },
-                { icon: 'material-symbols:fastfood-outline-rounded', name: 'Free Food' },
-                { icon: 'material-symbols:deskphone-outline', name: 'Phone Call'  }
-            ]
+    props: {
+        hotel: {
+            type: Object,
+
+            required: true
         }
     },
-    methods: {
-        viewHotel() {
-            console.log('View hotel details');
-            // Add navigation logic here
-        }
-    }
-}
+
+    data() {
+        return {
+            icons: {
+                "Air Conditioning": "material-symbols:air",
+                "TV": "material-symbols:tv",
+                "Mini Bar": "mdi:glass-cocktail",
+                "Free Breakfast": "material-symbols:fastfood-outline-rounded",
+                "Free Wi-Fi": "material-symbols:wifi",
+                "Hot Water": "material-symbols:shower-outline-rounded",
+                "Phone Call": "material-symbols:deskphone-outline",
+            }
+
+        };
+
+    },
+
+
+
+
+
+};
 </script>
+
 
 <style scoped>
 .hotel-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+    width: fit-content;
+}
+
+.image {
+    width: 279px;
+    height: 220px;
+    overflow: hidden;
+}
+
+.image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hotel-card-info {
     width: 472px;
     height: fit-content;
     outline: 1px solid #dddede;
     border-radius: 4px;
+    height: 220px;
 }
 
 .hotel-header {

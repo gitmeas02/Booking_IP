@@ -192,4 +192,6 @@ input[type="range"]::-moz-range-thumb {
   text-align: center;
   border-left: black 1px solid;
 }
+
+
 </style>

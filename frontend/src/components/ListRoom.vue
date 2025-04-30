@@ -27,27 +27,14 @@
 
         <div class="filter-price">
           <TwoThumbSlider/>
-          
         </div>
 
 
-
-
     </div>
-
     <div class="room-list">
-      <div class="room-detail">
-        <span class="image"><img src="/src/assets/Bed/bed.png" alt="bed"></span>
-        <RoomDetail/>
+<!--    single room    -->
 
-      </div>
-
-      <div class="room-detail">
-        <span class="image"><img src="/src/assets/Bed/bed.png" alt="bed"></span>
-        <RoomDetail/>
-
-      </div>
-
+      <Test v-for="( hotel, index) in hotels"  :key="index" :hotel="hotel" />
     </div>
 
   </div>
@@ -58,15 +45,17 @@
 import TwoThumbSlider from './TwoThumbSlider.vue'
 import { Icon } from "@iconify/vue";
 import { ref, computed } from 'vue'
-import RoomDetail from './RoomDetail.vue';
+import Test from './HotelCard.vue';
+
+
 
 
 
 export default {
   components: {
     TwoThumbSlider,
-    RoomDetail,
-    Icon
+    Icon,
+    Test
   },
 
   setup() {
@@ -82,12 +71,147 @@ export default {
       { name: 'Resort', count: 45 },
       { name: 'Hostel', count: 12 },
     ];
+    const hotels=ref([
+                {
+                    id: 1,
+                    name: "Hotel 1",
+                    stars: 5,
+                    reviewScore: 4.5,
+                    commentsCount: 10,
+                    location_image: "url",
+                    location: {
+                        city: "Phnom Penh",
+                        distanceFromCenter: "1.7 km"
+                    },
+                    comments: ["Free breakfast", "Free Wi-Fi"],
+                    price: 100,
+                    rooms: [
+                        {
+                            id: 1,
+                            name: "Room 1",
+                            size: "40m²",
+                            beds: "1 bed",
+                            images: [
+                                '/Bed/bed.png',
+                            ],
+                            price: 100,
+                            rating: 4.5,
+                            reviews: 10,
+                            type: "King Bed",
+                            details: "This is a king bed room with a beautiful view.",
+                            amenities: ["Air Conditioning", "TV", "Mini Bar", "Free Breakfast", "Free Wi-Fi"],
+                        }
+                    ],
+                    amenities: ["Air Conditioning", "TV", "Mini Bar", "Free Breakfast", "Free Wi-Fi"],
+                },
+                {
+                    id: 2,
+                    name: "Hotel 2",
+                    stars: 4,
+                    reviewScore: 4.2,
+                    commentsCount: 25,
+                    location_image: "url",
+                    location: {
+                        city: "Siem Reap",
+                        distanceFromCenter: "2.3 km"
+                    },
+                    comments: ["Great location", "Friendly staff"],
+                    price: 80,
+                    rooms: [
+                        {
+                            id: 2,
+                            name: "Room 2",
+                            size: "35m²",
+                            beds: "2 beds",
+                            images: [
+                                '/Bed/bed.png',
+                                
+                            ],
+                            price: 80,
+                            rating: 4.2,
+                            reviews: 25,
+                            type: "Double Bed",
+                            details: "A cozy room with modern amenities.",
+                            amenities: ["Air Conditioning", "TV", "Free Wi-Fi", "Mini Bar"],
+                        }
+                    ],
+                    amenities: ["Air Conditioning", "TV", "Mini Bar", "Free Wi-Fi"],
+                },
+                {
+                    id: 3,
+                    name: "Hotel 3",
+                    stars: 3,
+                    reviewScore: 3.8,
+                    commentsCount: 15,
+                    location_image: "url",
+                    location: {
+                        city: "Battambang",
+                        distanceFromCenter: "3.5 km"
+                    },
+                    comments: ["Affordable price", "Clean rooms"],
+                    price: 60,
+                    rooms: [
+                        {
+                            id: 3,
+                            name: "Room 3",
+                            size: "30m²",
+                            beds: "1 bed",
+                            images: [
+                                '/Bed/bed.png',
+                                
+                            ],
+                            price: 60,
+                            rating: 3.8,
+                            reviews: 15,
+                            type: "Single Bed",
+                            details: "A budget-friendly room with basic facilities.",
+                            amenities: ["Air Conditioning", "Free Wi-Fi"],
+                        }
+                    ],
+                    amenities: ["Air Conditioning", "Free Wi-Fi"],
+                },
+                {
+                    id: 4,
+                    name: "Hotel 4",
+                    stars: 5,
+                    reviewScore: 4.9,
+                    commentsCount: 50,
+                    location_image: "url",
+                    location: {
+                        city: "Sihanoukville",
+                        distanceFromCenter: "0.5 km"
+                    },
+                    comments: ["Luxurious stay", "Amazing view"],
+                    price: 200,
+                    rooms: [
+                        {
+                            id: 4,
+                            name: "Room 4",
+                            size: "50m²",
+                            beds: "1 king bed",
+                            images: [
+                                '/Bed/bed.png',
+                               
+                            ],
+                            price: 200,
+                            rating: 4.9,
+                            reviews: 50,
+                            type: "King Suite",
+                            details: "A luxurious suite with a stunning ocean view.",
+                            amenities: ["Air Conditioning", "TV", "Mini Bar", "Free Breakfast", "Free Wi-Fi", "Hot Water"],
+                        }
+                    ],
+                    amenities: ["Air Conditioning", "TV", "Mini Bar", "Free Breakfast", "Free Wi-Fi", "Hot Water"],
+                }
+            ]);
+
 
     const displayedProperties = computed(() =>
       showMore.value ? properties : properties.slice(0, limit)
     );
 
     return {
+      hotels,
       selected,
       showMore,
       limit,
@@ -95,11 +219,11 @@ export default {
       displayedProperties,
     };
   },
+
+
+ 
+  
 };
-
-
-
-
 
 </script>
 
@@ -198,23 +322,6 @@ export default {
   width: fit-content;
   gap: 12px;
   margin: 0px;
-}
-.image {
-  width: 279px;
-  height: 220px;
-  overflow: hidden;
-}
-.image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.room-detail {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: start;
-  width: fit-content;
 }
 
 .box-detail{
