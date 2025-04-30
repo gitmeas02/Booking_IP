@@ -79,7 +79,6 @@ export default {
     props: {
         hotel: {
             type: Object,
-
             required: true
         }
     },

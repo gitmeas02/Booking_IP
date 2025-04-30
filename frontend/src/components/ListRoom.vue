@@ -92,7 +92,7 @@ export default {
                             size: "40m²",
                             beds: "1 bed",
                             images: [
-                                '/Bed/bed.png',
+                                './src/assets/Bed/bed.png',
                             ],
                             price: 100,
                             rating: 4.5,
@@ -124,7 +124,7 @@ export default {
                             size: "35m²",
                             beds: "2 beds",
                             images: [
-                                '/Bed/bed.png',
+                                './src/assets//Bed/bed.png',
                                 
                             ],
                             price: 80,
@@ -157,7 +157,7 @@ export default {
                             size: "30m²",
                             beds: "1 bed",
                             images: [
-                                '/Bed/bed.png',
+                                './src/assets/Bed/bed.png',
                                 
                             ],
                             price: 60,
@@ -190,7 +190,7 @@ export default {
                             size: "50m²",
                             beds: "1 king bed",
                             images: [
-                                '/Bed/bed.png',
+                                './src/assets/Bed/bed.png',
                                
                             ],
                             price: 200,
