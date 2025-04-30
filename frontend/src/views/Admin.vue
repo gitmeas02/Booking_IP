@@ -93,8 +93,8 @@
                 :class="['calendar-day', { 'other-month': !day.isCurrentMonth }]"
               >
                 <div class="day-number">{{ day.date.getDate() }}</div>
-                <div 
-                  v-for="booking in getBookingsForDay(day.date)" 
+                <div
+                  v-for="booking in getBookingsForDay(day.date)"
                   :key="`${booking.roomId}-${booking.startDate}`"
                   class="booking-event"
                 >
