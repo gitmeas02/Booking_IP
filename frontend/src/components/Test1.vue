@@ -221,6 +221,7 @@ function updateCalendar() {
 
 // Day click handler
 function handleDayClick(event, room, day, dayIndex) {
+  console.log(`Clicked on room ${room.name} on ${formatDate(day.date)}`);
   const action = prompt("Enter 'price' to update price or 'block' to block the room:");
   
   if (action === 'price') {
