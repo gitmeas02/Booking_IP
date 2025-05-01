@@ -6,7 +6,7 @@ import Test1 from "@/components/Test1.vue";
 import ProductDetail from "@/ProductDetails/productDetail.vue";
 import Admin from "@/views/Admin.vue";
 import Checkout from "@/views/Checkout.vue";
-import HistoryKeeper from "@/views/HistoryKeeper.vue";
+// import HistoryKeeper from "@/views/HistoryKeeper.vue";
 import SignUpPage from "@/views/Owner/SignUpPage.vue";
 import OwnerAuthenticationPage from "@/views/OwnerAuthenticationPage.vue";
 import OwnerPropertyPage from "@/views/OwnerPropertyPage.vue";
@@ -21,6 +21,8 @@ import SignUpOwner2 from "@/components/Owner/SignUpStep2.vue";
 import SignUpOwner3 from "@/components/Owner/SignUpStep3.vue";
 import SettingPage from "@/views/SettingPage.vue";
 import SettingDetailPage from "@/views/SettingDetailPage.vue";
+// import BookingSummary from "@/components/BookingSummary.vue";
+import AuthenticationPage from "@/views/AuthenticationPage.vue";
 const routes = [
   {
     path: "/",
@@ -128,6 +130,11 @@ const routes = [
     name: "SettingDetail",
     component: SettingDetailPage,
   },
+  {
+    path: "/summary",
+    name: "Booking Summary",
+    component: AuthenticationPage,
+  }
 ];
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

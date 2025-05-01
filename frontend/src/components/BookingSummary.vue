@@ -6,113 +6,97 @@
       <div class="p-6">
         <div class="space-y-4">
           <div>
-            <h3 class="font-bold text-2xl ">Khun Hotel</h3>
-            <p class="text-muted-foreground">Siem Reap, Cambodia</p>
-            <p class="text-sm mt-1">Luxury boutique hotel near Angkor Wat</p>
+            <h3 class="font-bold text-2xl ">{{ hotelName}}</h3>
+            <p class="text-muted-foreground">{{ location }}</p>
+            <p class="text-sm mt-1">{{ near }}</p>
           </div>
           
           <div class="border-t pt-4">
             <div class="flex justify-between py-1">
               <span>Check-in</span>
-              <span class="font-medium">April 10, 2025</span>
+              <span class="font-medium">{{formatDate(checkin)}}</span>
             </div>
             <div class="flex justify-between py-1">
               <span>Check-out</span>
-              <span class="font-medium">April 13, 2025</span>
+              <span class="font-medium">{{formatDate(checkout)}}</span>
             </div>
             <div class="flex justify-between py-1">
               <span>Nights</span>
-              <span class="font-medium">3</span>
+              <span class="font-medium">{{ nights }}</span>
             </div>
             <div class="flex justify-between py-1">
               <span>Room Type</span>
-              <span class="font-medium">Deluxe Double</span>
+              <span class="font-medium">{{ roomType }}</span>
             </div>
             <div class="flex justify-between py-1">
               <span>Guests</span>
-              <span class="font-medium">2 Adults</span>
+              <span class="font-medium"><span>{{ guest}}</span> Adults</span>
             </div>
           </div>
           
           <div class="border-t pt-4">
             <div class="flex justify-between py-1">
               <span>Room Rate</span>
-              <span>$100 × 3 nights</span>
+              <span>${{roomRate}}  × {{nights}} nights</span>
             </div>
             <div class="flex justify-between py-1">
               <span>Taxes & Fees</span>
-              <span>$45</span>
+              <span>${{ taxes }}</span>
             </div>
           </div>
           
           <div class="border-t pt-4">
             <div class="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span>$345</span>
+              <span>${{ total }}</span>
             </div>
             <p class="text-sm text-muted-foreground mt-2">Includes all taxes and fees</p>
           </div>
         </div>
         <div class="text-sm space-y-2">
           <p class="font-medium">Cancellation Policy</p>
-          <p>Free cancellation until April 7, 2025. After that, the first night will be charged.</p>
+          <p>Free cancellation until <span>{{formatDate(cancellation) }}</span> After that, the first night will be charged.</p>
         </div>
       </div>
     </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 export default {
-    
-  setup() {
-    const form = ref({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      specialRequests: '',
-      terms: false,
-    });
+   props:{
+    hotelName:String,
+    location:String,
+    near:String,
+    checkin:Date,
+    checkout:Date,
+    roomType:String,
+    guest:Number,
+    nights:Number,
+    roomRate:{
+      type: Number,
+      default:0.0
+    },
+    taxes:Number,
+    cancellation:Date
+   },
+   setup(props) {
+    const formatDate = (date) =>
+      date
+        ? new Date(date).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : '';
 
-    const errors = ref({});
-
-    const validate = () => {
-      errors.value = {};
-
-      if (!form.value.firstName) {
-        errors.value.firstName = 'First name is required';
-      }
-      if (!form.value.lastName) {
-        errors.value.lastName = 'Last name is required';
-      }
-      if (!form.value.email) {
-        errors.value.email = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(form.value.email)) {
-        errors.value.email = 'Invalid email';
-      }
-      if (!form.value.phone) {
-        errors.value.phone = 'Phone number is required';
-      }
-      if (!form.value.terms) {
-        errors.value.terms = 'You must accept the terms';
-      }
-
-      return Object.keys(errors.value).length === 0;
-    };
-
-    const onSubmit = () => {
-      if (validate()) {
-        console.log('Form submitted:', form.value);
-      }
-    };
+    const total = computed(() => (props.roomRate * props.nights) + props.taxes);
 
     return {
-      form,
-      errors,
-      onSubmit,
+      formatDate ,
+      total
     };
-  },
+  }
 };
 </script>

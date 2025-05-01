@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { CreditCard,CircleDollarSign,QrCode } from 'lucide-vue-next';
 
 // Define reactive variables for form inputs
 const firstName = ref("");
@@ -7,16 +8,25 @@ const lastName = ref("");
 const email = ref("");
 const phoneNumber = ref("");
 const specialRequests = ref("");
-const selectedPayment = ref("");
+const selectedPayment = ref("card");
 const cardNumber = ref("");
 const expiryDate = ref("");
 const cvv = ref("");
 const agreeToTerms = ref(false);
-import { QrCode } from 'lucide-vue-next';
-import { CreditCard } from 'lucide-vue-next';
-// import { Landmark } from 'lucide-vue-next';
-import { CircleDollarSign } from 'lucide-vue-next';
- 
+const pets=ref("")
+defineExpose({
+  firstName,
+  lastName,
+  email,
+  phoneNumber,
+  specialRequests,
+  selectedPayment,
+  cardNumber,
+  expiryDate,
+  cvv,
+  agreeToTerms,
+  pets
+});
 
 </script>
 
@@ -29,35 +39,35 @@ import { CircleDollarSign } from 'lucide-vue-next';
       <!-- First Name -->
       <div>
         <label class="block text-sm font-semibold mb-2">First Name</label>
-        <input type="text" placeholder="John" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input type="text" placeholder="John" v-model="firstName" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
 
       <!-- Last Name -->
       <div>
         <label class="block text-sm font-semibold mb-2">Last Name</label>
-        <input type="text" placeholder="Doe" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input type="text" placeholder="Doe" v-model="lastName" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
 
       <!-- Email -->
       <div>
         <label class="block text-sm font-semibold mb-2">Email</label>
-        <input type="email" placeholder="john.doe@example.com" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input type="email" placeholder="john.doe@example.com" v-model="email" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
 
       <!-- Phone Number -->
       <div>
         <label class="block text-sm font-semibold mb-2">Phone Number</label>
-        <input type="tel" placeholder="+855 123 456 789" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input type="tel" placeholder="+855 123 456 789" v-model="phoneNumber" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
     </div>
 
     <!-- Special Requests -->
     <div>
       <label class="block text-sm font-semibold mb-2">Special Requests</label>
-      <textarea placeholder="Any special requests?" rows="3" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      <textarea v-model="specialRequests" placeholder="Any special requests?" rows="3" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
     </div>
    <div class="flex flex-row items-start space-x-3 justify-start space-y-0 mt-6">
-    <input type="radio" name="" id="" style="accent-color: oklch(28.2% 0.091 267.935); color: white; width: 20px; height: 20px;">
+    <input type="radio" v-model="pets" name="" id="" style="accent-color: oklch(28.2% 0.091 267.935); color: white; width: 20px; height: 20px;">
     <p class="space-y-1 leading-none">
       Travel with pets</p>
    </div>
@@ -94,16 +104,16 @@ import { CircleDollarSign } from 'lucide-vue-next';
     <div v-if="selectedPayment === 'card'" class="space-y-4">
       <div>
         <label class="block font-medium mb-1">Card Number</label>
-        <input type="text" class="w-full border p-2 rounded-md" placeholder="4242 4242 4242 4242" />
+        <input type="text" v-model="cardNumber" class="w-full border p-2 rounded-md" placeholder="4242 4242 4242 4242" />
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block font-medium mb-1">Expiry Date</label>
-          <input type="text" class="w-full border p-2 rounded-md" placeholder="MM/YY" />
+          <input type="text" v-model="expiryDate" class="w-full border p-2 rounded-md" placeholder="MM/YY" />
         </div>
         <div>
           <label class="block font-medium mb-1">CVV</label>
-          <input type="text" class="w-full border p-2 rounded-md" placeholder="123" />
+          <input type="text" v-model="cvv" class="w-full border p-2 rounded-md" placeholder="123" />
         </div>
       </div>
     </div>
@@ -145,9 +155,7 @@ import { CircleDollarSign } from 'lucide-vue-next';
       policy
       </div>
     </div>
-   <div class="mr-16 ml-16 mt-8">
-    <button type="submit" class="w-full btn bg-blue-950 p-2 text-white ">Complete Booking</button>
-   </div>
+ 
   </div>
 </div>
 

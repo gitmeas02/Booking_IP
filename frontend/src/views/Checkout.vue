@@ -78,26 +78,90 @@
     class="grid responsive-grid mt-8 mb-4 mx-4 md:mx-16 items-start grid-cols-1 md:grid-cols-3 gap-8"
   >
     <div class="min-w-[300px] w-full">
-      <BookingSummary />
+      <BookingSummary 
+      :hotelName="bookingDetails.hotelName" 
+                      :location="bookingDetails.location"
+                      :near="bookingDetails.near"
+                      :checkin="bookingDetails.checkin"
+                      :checkout="bookingDetails.checkout"
+                      :roomType="bookingDetails.roomType"
+                      :guest="bookingDetails.guest"
+                      :nights="bookingDetails.nights"
+                      :roomRate="bookingDetails.roomRate"
+                      :taxes="bookingDetails.taxes"
+                      :cancellation="bookingDetails.cancellation"
+      />
     </div>
     <div class="md:col-span-2">
-      <FormInfo />
+      <FormInfo  ref="formInfoRef"/>
+      <div class="mr-16 ml-16 mt-8">
+    <button 
+    type="button" 
+    @click="submitForm"  class="w-full btn bg-blue-950 p-2 text-white ">Complete Booking</button>
+   </div>
     </div>
+    
   </div>
+  
 </template>
-<script>
+<script setup>
 import FormInfo from "@/components/FormInfo.vue";
 import BookingSummary from "@/components/BookingSummary.vue";
 import { MapPin, Shield, Bed } from "lucide-vue-next";
-export default {
-  name: "Checkout",
-  components: {
-    BookingSummary,
-    FormInfo,
-    Bed,
-    MapPin,
-    Shield,
-  },
+import { ref } from "vue";
+ 
+  const formInfoRef = ref(null);
+  const bookingDetails = {
+  hotelName: "Khun Hotel",
+  location: "Siem Reap, Cambodia",
+  near: "Luxury boutique hotel near Angkor Wat",
+  checkin: new Date("2025-04-10"),
+  checkout: new Date("2025-04-13"),
+  roomType: "Deluxe Double",
+  guest: 2,
+  nights: 3,
+  roomRate: 100,
+  taxes: 45,
+  cancellation: new Date("2025-04-07"),
 };
+  const submitForm=()=>{
+    const bookingSummaryData = {
+    hotelName: bookingDetails.hotelName,
+    location: bookingDetails.location,
+    near: bookingDetails.near,
+    checkin: bookingDetails.checkin,
+    checkout: bookingDetails.checkout,
+    roomType: bookingDetails.roomType,
+    guest: bookingDetails.guest,
+    nights: bookingDetails.nights,
+    roomRate: bookingDetails.roomRate,
+    taxes: bookingDetails.taxes,
+    cancellation: bookingDetails.cancellation,
+  };
+  const formInfoData = {
+    firstName: formInfoRef.value.firstName,
+    lastName: formInfoRef.value.lastName,
+    email: formInfoRef.value.email,
+    phoneNumber: formInfoRef.value.phoneNumber,
+    specialRequests: formInfoRef.value.specialRequests,
+    selectedPayment: formInfoRef.value.selectedPayment,
+    cardNumber: formInfoRef.value.cardNumber,
+    expiryDate: formInfoRef.value.expiryDate,
+    cvv: formInfoRef.value.cvv,
+    agreeToTerms: formInfoRef.value.agreeToTerms,
+  };
+  if (formInfoData.agreeToTerms) {
+    // Combine both form data and booking summary data
+    const completeData = {
+      ...bookingSummaryData,
+      ...formInfoData,
+    };
+    console.log("✅ All Booking + Form Data:",completeData)
+  } else {
+    console.log("User did not agree to the terms.");
+  }
+}
+  
+
 </script>
 <style scoped></style>
