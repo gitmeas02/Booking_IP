@@ -21,11 +21,13 @@ import SignUpOwner2 from "@/components/Owner/SignUpStep2.vue";
 import SignUpOwner3 from "@/components/Owner/SignUpStep3.vue";
 import SettingPage from "@/views/SettingPage.vue";
 import SettingDetailPage from "@/views/SettingDetailPage.vue";
+import Header from '@/components/LandingPage/HeadingBar.vue'
+import Homepage from '@/components/LandingPage/Homepage.vue'
 const routes = [
   {
     path: "/",
-    name: "Checkout",
-    component: Checkout,
+    name: "Homepage",
+    component: Homepage,
   },
   {
     path: "/admin",
