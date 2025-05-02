@@ -22,118 +22,125 @@ import SignUpOwner2 from '@/components/Owner/SignUpStep2.vue';
 import SignUpOwner3 from '@/components/Owner/SignUpStep3.vue';
 import SettingPage from '@/views/SettingPage.vue';
 import SettingDetailPage from '@/views/SettingDetailPage.vue';
+import AuthenticationPage from '@/views/AuthenticationPage.vue';
 const routes = [
-    {
-      path: '/',
-      name: 'Checkout',
-      component: Checkout,
-    },
-    {
-      path:'/admin',
-      name: 'Admin',
-      component:Test1
-    },
-    {
-      path:'/test1',
-      name:'Test1',
-      component:Admin
-    },
-    {
-        path: '/success',
-        name: 'Success',
-        component:HistoryKeeper
-    },
-    { 
-      path: '/listroom',
-      name: "Hotel Card",
-      component: ListRoom,
-    },
-    { 
-      path: '/list-booking',
-      name: "List Booking",
-      component: ListBooking,
-    },
-    
-      { 
-        path: '/currrent-booking',
-        name: "Current Booking",
-        component: Current_Future_Past,
-      },
-    {
-      path:'/products-details',
-      name:'ProductsDetails',
-      component:ProductDetail
-    },
-    { path: '/owner',
-      name: 'OwnerAuthentication',
-      component: OwnerAuthenticationPage
-    },
-    {
-      path: '/signup',
-      name: 'SignUp',
-      component: SignUpPage
-    },
-    {
-      path: '/ownerproperty',
-      name: 'OwnerProperty',
-      component: OwnerPropertyPage
-    },
-    {
+  {
+    path: '/',
+    name: 'Checkout',
+    component: Checkout,
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: Test1
+  },
+  {
+    path: '/test1',
+    name: 'Test1',
+    component: Admin
+  },
+  {
+    path: '/success',
+    name: 'Success',
+    component: HistoryKeeper
+  },
+  {
+    path: '/listroom',
+    name: "Hotel Card",
+    component: ListRoom,
+  },
+  {
+    path: '/list-booking',
+    name: "List Booking",
+    component: ListBooking,
+  },
+
+  {
+    path: '/currrent-booking',
+    name: "Current Booking",
+    component: Current_Future_Past,
+  },
+  {
+    path: '/products-details',
+    name: 'ProductsDetails',
+    component: ProductDetail
+  },
+  {
+    path: '/owner',
+    name: 'OwnerAuthentication',
+    component: OwnerAuthenticationPage
+  },
+  {
+    path: '/signup',
+    name: 'SignUp',
+    component: SignUpPage
+  },
+  {
+    path: '/ownerproperty',
+    name: 'OwnerProperty',
+    component: OwnerPropertyPage
+  },
+  {
     path: '/chat',
     name: "Chat",
     component: Chatbox,
-    },
-    {
-      path: '/user-login',
-      name: "UserLogin",
-      component: SignIn,
-      },
-      {
-        path: '/user-signup',
-        name: "UserSignUp",
-        component: SignUp,
-        },
-        {
-        path: '/user-forgot-password',
-        name: "UserForgotPassword",
-        component: ForgotPassword,
-        },
-        {
-          path: '/owner-signin',
-          name: "Owner SignIn",
-          component: SignInOwner,
-        },
-        {
-          path: '/owner-signup',
-          name: "OwnerSignUp",
-          component: SignUpOwner1,
-          },
-          {
-            path: '/owner-signup2',
-            name: "OwnerSignUp2",
-            component: SignUpOwner2,
-            },
-            {
-              path: '/owner-signup3',
-              name: "OwnerSignUp3",
-              component: SignUpOwner3,
-              },
-              {
-                path: '/setting-user',
-                name: "SettingUser",
-                component: SettingPage,
-                },
-                {
-                  path: '/setting-details',
-                  name: "SettingDetail",
-                  component:SettingDetailPage,
-                  },
+  },
+  {
+    path: '/user-login',
+    name: "UserLogin",
+    component: SignIn,
+  },
+  {
+    path: '/user-signup',
+    name: "UserSignUp",
+    component: SignUp,
+  },
+  {
+    path: '/user-forgot-password',
+    name: "UserForgotPassword",
+    component: ForgotPassword,
+  },
+  {
+    path: '/owner-signin',
+    name: "Owner SignIn",
+    component: SignInOwner,
+  },
+  {
+    path: '/owner-signup',
+    name: "OwnerSignUp",
+    component: SignUpOwner1,
+  },
+  {
+    path: '/owner-signup2',
+    name: "OwnerSignUp2",
+    component: SignUpOwner2,
+  },
+  {
+    path: '/owner-signup3',
+    name: "OwnerSignUp3",
+    component: SignUpOwner3,
+  },
+  {
+    path: '/setting-user',
+    name: "SettingUser",
+    component: SettingPage,
+  },
+  {
+    path: '/setting-details',
+    name: "SettingDetail",
+    component: SettingDetailPage,
+  },
+  {
+    path: '/authenticationpage',
+    name: "AuthenticationPage",
+    component: AuthenticationPage
+  }
 
 
 
 ]
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes,
-  });
-  export default router;
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+});
+export default router;
