@@ -1,9 +1,10 @@
 <script setup>
-    import DateRangePicker from '@/components/Datepicker/DateRangePicker.vue'
-    import selectRoom from '@/components/Datepicker/selectRoom.vue'
     import { ref } from 'vue'
-    const value1 = ref(true)
+    import DateRangePicker from './DateRangePicker.vue';
+    import SelectRoom from './SelectRoom.vue';
     
+    const value1 = ref(true)
+   
 </script>
 <template>
     <div class="container">
@@ -24,7 +25,7 @@
                 </div>
                 <div class="selectRoom">
                     <div style="margin-top: 20px;">
-                        <selectRoom/>
+                        <SelectRoom/>
                     </div>
                     <div style="margin-top: 40px; margin-left: 10px;">
                         Traveling with pet?
