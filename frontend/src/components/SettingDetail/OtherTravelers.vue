@@ -1,85 +1,18 @@
 <template>
-    <div class="container-1">
-        <div class="group">
-            <h1 class="title">Other travelers</h1>
-            <p class="subtitle">Add or edit info about the people you’re traveling with.</p>
+    <div class="flex flex-col min-h-screen bg-white p-0">
+        <div class="flex flex-col mb-6">
+            <h1 class="text-2xl font-bold mb-2">Other travelers</h1>
+            <p class="text-gray-500 mb-6">Add or edit info about the people you’re traveling with.</p>
         </div>
-        <button class="add-button">
-            <span class="icon">+</span>
+
+        <button
+            class="flex items-center gap-2 bg-blue-600 text-white py-2 px-5 rounded-lg font-medium hover:bg-blue-800 transition-all self-end sm:self-stretch sm:justify-center">
+            <span class="text-lg">+</span>
             <span>Add new traveler</span>
         </button>
     </div>
-
 </template>
 
 <script setup>
 // Add any interactivity here later if needed
 </script>
-
-<style scoped>
-.container-1 {
-    padding: 0;
-    background-color: #ffffff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.group {
-    display: flex;
-    flex-direction: column;
-}
-
-.title {
-    font-size: 1.75rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.subtitle {
-    color: #6b7280;
-    margin-bottom: 1.5rem;
-}
-
-.add-button {
-    height: 2.5rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #2563eb;
-    color: white;
-    padding: 0.5rem 1.25rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-    align-self: flex-end;
-}
-
-.add-button:hover {
-    background-color: #1e40af;
-}
-
-.icon {
-    font-size: 1rem;
-}
-
-/* Responsive styles for small screens */
-@media (max-width: 640px) {
-    .add-button {
-        align-self: stretch;
-        /* full width */
-        justify-content: center;
-        font-size: 16px;
-    }
-
-    .title {
-        font-size: 1.5rem;
-    }
-
-    .subtitle {
-        font-size: 14px;
-    }
-}
-</style>

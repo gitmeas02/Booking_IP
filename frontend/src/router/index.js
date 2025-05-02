@@ -23,6 +23,8 @@ import SignUpOwner3 from '@/components/Owner/SignUpStep3.vue';
 import SettingPage from '@/views/SettingPage.vue';
 import SettingDetailPage from '@/views/SettingDetailPage.vue';
 import AuthenticationPage from '@/views/AuthenticationPage.vue';
+import OwnerPropertyCategoryPage from '@/views/OwnerPropertyCategoryPage.vue';
+import OwnerPropertyLocationPage from '@/views/OwnerPropertyLocationPage.vue';
 const routes = [
   {
     path: '/',
@@ -134,6 +136,16 @@ const routes = [
     path: '/authenticationpage',
     name: "AuthenticationPage",
     component: AuthenticationPage
+  },
+  {
+    path: '/ownerpropertycategorypage',
+    name: 'OwnerPropertyCategoryPage',
+    component: OwnerPropertyCategoryPage
+  },
+  {
+    path: '/ownerpropertylocationpage',
+    name: 'OwnerPropertyLocationPage',
+    component: OwnerPropertyLocationPage
   }
 
 

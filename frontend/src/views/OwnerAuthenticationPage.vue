@@ -1,14 +1,10 @@
 <template>
-    <div class="auth-container">
-        
+    <div class="max-w-md mx-auto">
         <div v-if="isSignIn">
-            
             <SignInPage @goToSignUp="switchToSignUp" />
         </div>
-
         <div v-else>
-            
-            <SignUpPage/>
+            <SignUpPage />
         </div>
     </div>
 </template>
@@ -54,11 +50,3 @@ export default {
     },
 };
 </script>
-
-<style scoped>
-.auth-container {
-    max-width: 500px;
-    margin: auto;
-    /* padding: 2rem; */
-}
-</style>

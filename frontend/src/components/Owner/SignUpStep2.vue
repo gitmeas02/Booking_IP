@@ -1,21 +1,33 @@
 <template>
-    <div class="step-container">
-        <h2>Enter Your Details</h2>
-        <p>Your full name and phone number are needed to ensure the security of your account.</p>
-        <div class="form-group">
-            <label>First Name</label>
-            <input type="text" v-model="localFirstName" placeholder="First Name" />
+    <div class="max-w-md mx-auto my-16 p-8 bg-white rounded-lg shadow-xl text-center font-sans">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-2">Enter Your Details</h2>
+        <p class="text-gray-600 mb-6">Your full name and phone number are needed to ensure the security of your account.
+        </p>
+
+        <div class="form-group mb-4 text-left">
+            <label class="block text-sm text-gray-700 mb-2">First Name</label>
+            <input type="text" v-model="localFirstName" placeholder="First Name"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <div class="form-group">
-            <label>Last Name</label>
-            <input type="text" v-model="localLastName" placeholder="Last Name" />
+
+        <div class="form-group mb-4 text-left">
+            <label class="block text-sm text-gray-700 mb-2">Last Name</label>
+            <input type="text" v-model="localLastName" placeholder="Last Name"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <div class="form-group">
-            <label>Phone Number</label>
-            <input type="text" v-model="localPhone" placeholder="Phone Number" />
+
+        <div class="form-group mb-4 text-left">
+            <label class="block text-sm text-gray-700 mb-2">Phone Number</label>
+            <input type="text" v-model="localPhone" placeholder="Phone Number"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <button @click="goNext">Next</button>
-        <div class="copyright">
+
+        <button @click="goNext"
+            class="w-full py-3 bg-gray-800 text-white rounded-lg font-medium text-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Next
+        </button>
+
+        <div class="copyright text-center text-xs text-gray-500 mt-6">
             <small>All rights reserved.</small>
             <small>Copyright (2025-2025) - Pteas Khmer</small>
         </div>
@@ -67,72 +79,5 @@ export default {
 </script>
 
 <style scoped>
-.step-container {
-    max-width: 400px;
-    margin: 4rem auto;
-    /* center on page with top/bottom spacing */
-    padding: 2.5rem 2rem;
-    /* roomy padding */
-    background: #fff;
-    /* white card */
-    border-radius: 12px;
-    /* smooth corners */
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    text-align: center;
-    font-family: 'Arial', sans-serif;
-}
-
-.step-container h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-    color: #2e2e2e;
-}
-
-.step-container p {
-    color: #666;
-    margin-bottom: 1.5rem;
-    line-height: 1.4;
-}
-
-.form-group{
-    margin-bottom: 1rem;
-    text-align: left;
-}
-
-.form-group label {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-/* full-width inputs with consistent spacing */
-input[type="text"] {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-/* primary “Next” button */
-button {
-    display: block;
-    width: 100%;
-    padding: 0.85rem;
-    background-color: #332c2b;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.copyright {
-    margin-top: 1.5rem;
-    font-size: 0.8rem;
-    color: #9a9a9a;
-}
+/* Tailwind CSS handles all the styling, no additional styles needed */
 </style>

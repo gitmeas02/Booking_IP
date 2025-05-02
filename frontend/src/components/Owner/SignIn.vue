@@ -1,33 +1,42 @@
 <template>
-    <div class="container">
-        <div class="card">
-            <h2 class="title">Sign In Partner Account</h2>
-            <p class="subtitle">Login to your account to list and manage your property</p>
+    <div class="min-h-screen flex justify-center items-center p-0 m-0 font-sans bg-gray-100">
+        <div class="card bg-white p-8 rounded-lg shadow-lg w-96 flex flex-col justify-between space-y-6">
+            <h2 class="title text-2xl font-bold text-gray-800 mb-2">Sign In Partner Account</h2>
+            <p class="subtitle text-sm text-gray-500 mb-6">Login to your account to list and manage your property</p>
 
-            <form @submit.prevent="handleSubmit">
+            <form @submit.prevent="handleSubmit" class="space-y-4">
                 <div class="form-group">
-                    <label>Email address</label>
-                    <input type="email" v-model="email" placeholder="example@blabla.com" required />
+                    <label class="block text-sm text-gray-700">Email address</label>
+                    <input type="email" v-model="email" placeholder="example@blabla.com" required
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
 
                 <div class="form-group">
-                    <label>Password</label>
-                    <div class="password-input">
+                    <label class="block text-sm text-gray-700">Password</label>
+                    <div class="relative">
                         <input :type="showPassword ? 'text' : 'password'" v-model="password"
-                            placeholder="Enter your password" required />
-                        <span class="toggle" @click="togglePassword">👁️</span>
+                            placeholder="Enter your password" required
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                            @click="togglePassword">
+                            👁️
+                        </span>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-signin">Sign In</button>
+                <button type="submit"
+                    class="w-full py-3 bg-gray-800 text-white rounded-lg font-medium text-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Sign In
+                </button>
             </form>
 
-            <div class="footer">
-                <p>Don't have an account?</p>
-                <router-link to="/signup" class="btn-create">Create an Account</router-link>
+            <div class="footer text-center">
+                <p class="text-sm">Don't have an account?</p>
+                <router-link to="/signup" class="text-sm text-blue-500 font-semibold hover:underline">Create an
+                    Account</router-link>
             </div>
 
-            <div class="copyright">
+            <div class="copyright text-center text-xs text-gray-500 mt-6">
                 <small>All rights reserved.</small>
                 <small>Copyright (2025-2025) - Pteas Khmer</small>
             </div>
@@ -54,110 +63,5 @@ const handleSubmit = () => {
 </script>
 
 <style scoped>
-/* Fullscreen container */
-.container {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* background: #f5f5f5; */
-    padding: 0; /* Ensure no unwanted margin/padding around the container */
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-}
-
-.card {
-    background: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    width: 400px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: auto; /* Ensure the card grows with content */
-}
-
-.title {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: #2e2e2e;
-}
-
-.subtitle {
-    font-size: 0.9rem;
-    color: #7a7a7a;
-    margin-bottom: 1.5rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-    text-align: left;
-}
-
-.form-group label {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-input[type="email"],
-input[type="password"],
-input[type="text"] {
-    width: 100%;
-    padding: 0.7rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-sizing: border-box;
-}
-
-.password-input {
-    position: relative;
-}
-
-.password-input .toggle {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-}
-
-.btn-signin {
-    background-color: #2e2b2b;
-    color: #fff;
-    padding: 0.8rem;
-    width: 100%;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    margin-top: 1rem;
-    cursor: pointer;
-}
-
-.footer {
-    margin-top: 1rem;
-    text-align: center;
-}
-
-.footer p {
-    margin-bottom: 1.5rem; /* Add space BELOW the "Don't have an account?" */
-}
-
-.btn-create {
-    background: none;
-    border: 1px solid #2e2b2b;
-    padding: 0.7rem 1rem;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.copyright {
-    margin-top: 1.5rem;
-    font-size: 0.8rem;
-    color: #9a9a9a;
-}
+/* Tailwind CSS handles all styling */
 </style>
