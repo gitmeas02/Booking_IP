@@ -1,82 +1,46 @@
-<!-- components/PersonalDetail/SecuritySettings.vue -->
 <template>
-    <div>
-        <div class="header">
-            <h2>Security settings</h2>
-            <p>Change your security settings, set up secure authentication, or delete your account.</p>
+    <div class="p-4">
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-2">Security settings</h2>
+            <p class="text-gray-600 text-sm">
+                Change your security settings, set up secure authentication, or delete your account.
+            </p>
         </div>
-        <div class="item">
+
+        <div class="border-t py-4 flex justify-between items-start gap-4">
             <div>
-                <strong>Two-factor authentication</strong>
-                <p>Increase your account’s security by setting up two-factor authentication.</p>
+                <strong class="font-semibold">Two-factor authentication</strong>
+                <p class="text-gray-600 text-sm mt-1">
+                    Increase your account’s security by setting up two-factor authentication.
+                </p>
             </div>
-            <a href="#" class="link">Set up</a>
+            <a href="#" class="text-blue-600 font-medium text-sm">Set up</a>
         </div>
-        <div class="item">
+
+        <div class="border-t py-4 flex justify-between items-start gap-4">
             <div>
-                <strong>Active sessions</strong>
-                <p>Signing out will log you out from all devices except this one. This can take up to 10 minutes.</p>
+                <strong class="font-semibold">Active sessions</strong>
+                <p class="text-gray-600 text-sm mt-1">
+                    Signing out will log you out from all devices except this one. This can take up to 10 minutes.
+                </p>
             </div>
-            <a href="#" class="link">Sign out</a>
+            <a href="#" class="text-blue-600 font-medium text-sm">Sign out</a>
         </div>
-        <div class="item">
+
+        <div class="border-t py-4 flex justify-between items-start gap-4">
             <div>
-                <strong>Delete account</strong>
-                <p>Permanently delete your account</p>
+                <strong class="font-semibold">Delete account</strong>
+                <p class="text-gray-600 text-sm mt-1">Permanently delete your account</p>
             </div>
-            <a href="#" class="link delete">Delete account</a>
+            <a href="#" class="text-red-600 font-medium text-sm">Delete account</a>
         </div>
     </div>
 </template>
 
+<script setup>
+// Add functionality or methods if needed
+</script>
+
 <style scoped>
-.header h2 {
-    margin: 0;
-    font-size: 22px;
-}
-
-.header p {
-    color: #666;
-    margin-bottom: 24px;
-    font-size: 14px;
-}
-
-.item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 16px 0;
-    border-top: 1px solid #eee;
-    gap: 16px;
-}
-
-.item p {
-    margin: 4px 0 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.link {
-    color: #0071c2;
-    font-weight: 500;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.link.delete {
-    color: red;
-}
-
-/* Responsive layout for small screens */
-@media (max-width: 640px) {
-    .item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .link {
-        margin-top: 8px;
-        font-size: 15px;
-    }
-}
+/* Tailwind CSS handles the layout, no need for additional custom CSS */
 </style>

@@ -1,9 +1,12 @@
 <template>
-    <div class="card">
-        <Icon :icon="icon" width="24" height="24" />
-        <h2 class="title">{{ title }}</h2>
-        <p class="description">{{ description }}</p>
-        <button class="cta-button">List your properties</button>
+    <div
+        class="card flex flex-col justify-between items-center max-w-xs p-6 rounded-lg shadow-md bg-white text-center h-64">
+        <Icon :icon="icon" width="32" height="32" />
+        <h2 class="title text-xl font-semibold mb-3">{{ title }}</h2>
+        <p class="description text-sm text-gray-600 mb-5">{{ description }}</p>
+        <button class="cta-button bg-gray-800 text-white py-2 px-4 rounded-lg font-medium mt-auto hover:bg-gray-700">
+            List your properties
+        </button>
     </div>
 </template>
 
@@ -27,46 +30,5 @@ defineProps({
 </script>
 
 <style scoped>
-.card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center; /* Center content horizontally */
-    max-width: 300px;
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    background-color: white;
-    font-family: sans-serif;
-    height: 225px; /* Set a fixed height for the card */
-}
-
-.title {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 12px;
-}
-
-.description {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 20px;
-}
-
-.cta-button {
-    background-color: #2d2d2d;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    margin-top: auto; /* Pushes button to the bottom */
-}
-
-.cta-button:hover {
-    background-color: #1f1f1f;
-}
+/* Tailwind handles all the styling, no need for custom CSS */
 </style>
-

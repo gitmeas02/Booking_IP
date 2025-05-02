@@ -1,11 +1,11 @@
 <template>
     <div>
-        <div class="header">
+        <div class="flex justify-between items-center mb-8 gap-4 flex-wrap">
             <div>
-                <h2>Personal details</h2>
-                <p>Update your info and find out how it’s used</p>
+                <h2 class="text-2xl font-semibold mb-1">Personal details</h2>
+                <p class="text-gray-600 text-sm">Update your info and find out how it’s used</p>
             </div>
-            <img class="profile-pic" src="../../assets/images/4x6.JPG" alt="Profile" />
+            <img class="w-12 h-12 rounded-full object-cover" src="../../assets/images/4x6.JPG" alt="Profile" />
         </div>
 
         <DetailRow label="Name" value="KhunMeas" />
@@ -27,52 +27,5 @@ import DetailRow from './DetailRow.vue'
 </script>
 
 <style scoped>
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.header h2 {
-    margin: 0;
-    font-size: 22px;
-}
-
-.header p {
-    margin-top: 4px;
-    color: #666;
-    font-size: 14px;
-}
-
-.profile-pic {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-/* Responsive for small screens */
-@media (max-width: 640px) {
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: left;
-    }
-
-    .header h2 {
-        font-size: 20px;
-    }
-
-    .header p {
-        font-size: 13px;
-    }
-
-    .profile-pic {
-        width: 64px;
-        height: 64px;
-    }
-}
+/* Tailwind already covers styles, so no additional custom styles needed */
 </style>

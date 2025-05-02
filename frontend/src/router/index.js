@@ -24,6 +24,8 @@ import SettingDetailPage from "@/views/SettingDetailPage.vue";
 import Header from '@/components/LandingPage/HeadingBar.vue'
 import Homepage from '@/components/LandingPage/Homepage.vue'
 import AuthenticationPage from '@/views/AuthenticationPage.vue';
+import OwnerPropertyCategoryPage from '@/views/OwnerPropertyCategoryPage.vue';
+import OwnerPropertyLocationPage from '@/views/OwnerPropertyLocationPage.vue';
 const routes = [
   {
     path: '/',
@@ -135,6 +137,16 @@ const routes = [
     path: '/authenticationpage',
     name: "AuthenticationPage",
     component: AuthenticationPage
+  },
+  {
+    path: '/ownerpropertycategorypage',
+    name: 'OwnerPropertyCategoryPage',
+    component: OwnerPropertyCategoryPage
+  },
+  {
+    path: '/ownerpropertylocationpage',
+    name: 'OwnerPropertyLocationPage',
+    component: OwnerPropertyLocationPage
   }
 
 
