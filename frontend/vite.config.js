@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
-
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
@@ -11,7 +12,12 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     tailwindcss(),
-  ],
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
+    }),  ],
   server:{
     port:3000,
     proxy:{

@@ -10,6 +10,6 @@
     <Current_Future_Past/>
 </template>
 <script setup>
-import HistoryBar from "@/components/HistoryBar.vue";
-import Current_Future_Past from "@/components/Current_Future_Past.vue";
+import HistoryBar from "@/components/History/HistoryBar.vue";
+import Current_Future_Past from "@/components/History/Current_Future_Past_Component.vue";
 </script>
