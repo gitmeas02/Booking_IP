@@ -1,5 +1,4 @@
 import Homepage from "@/views/Homepage.vue";
-import ListBooking from "@/components/ListBooking.vue";
 import ListRoomPage from "@/views/ListRoomPage.vue";
 import HistoryKeeper from "@/views/HistoryKeeper.vue";
 import SettingDetailPage from "@/views/SettingDetailPage.vue";
@@ -44,11 +43,6 @@ const routes = [
     path: "/listroom",
     name: "Hotel Card",
     component: ListRoomPage,
-  },
-  {
-    path: "/list-booking",
-    name: "List Booking",
-    component: ListBooking,
   },
   {
     path: "/products-details",
