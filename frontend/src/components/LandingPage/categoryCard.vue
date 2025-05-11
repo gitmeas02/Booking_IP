@@ -1,7 +1,7 @@
 <template>
     <div class="p-4">
         <div
-            class="relative w-60 h-70 rounded-lg bg-amber-600 overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 shadow-lg"
+            class="relative w-60 h-[17.5rem] rounded-lg bg-amber-600 overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 shadow-lg"
             role="button"
             tabindex="0"
             @click="handleClick"

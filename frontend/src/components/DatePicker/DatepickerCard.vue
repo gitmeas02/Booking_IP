@@ -1,7 +1,7 @@
 <script setup>
     import { ref } from 'vue'
     import DateRangePicker from './DateRangePicker.vue';
-    import SelectRoom from './SelectRoom.vue';
+    import SelectRoom from './selectRoom.vue';
     
     const value1 = ref(true)
    
