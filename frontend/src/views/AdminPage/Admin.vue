@@ -4,26 +4,41 @@
   <div class="flex items-center justify-between p-4 bg-white shadow-md">
     <div class="calendar-header flex items-center gap-4">
       <ChevronLeft @click="previousWeek" class="cursor-pointer" />
-      <h2 class="text-lg font-semibold">{{ months[selectedMonth] }} {{ selectedYear }}</h2>
+      <h2 class="text-lg font-semibold">
+        {{ months[selectedMonth] }} {{ selectedYear }}
+      </h2>
       <ChevronRight @click="nextWeek" class="cursor-pointer" />
     </div>
   </div>
 
   <div class="overflow-x-auto">
     <div class="min-w-max">
-      <div class="grid grid-cols-[200px_repeat(7,1fr)] border-b text-sm font-semibold text-center bg-gray-100">
+      <div
+        class="grid grid-cols-[200px_repeat(7,1fr)] border-b text-sm font-semibold text-center bg-gray-100"
+      >
         <div class="border-r p-2">Rooms</div>
         <div v-for="(day, i) in days" :key="i" class="border-r p-2">
           <div class="flex flex-col items-center leading-tight">
-            <div class="font-semibold text-gray-800">{{ getDayLabel(day.date).weekday }}</div>
-            <div class="text-sm text-gray-600">{{ getDayLabel(day.date).day }}</div>
+            <div class="font-semibold text-gray-800">
+              {{ getDayLabel(day.date).weekday }}
+            </div>
+            <div class="text-sm text-gray-600">
+              {{ getDayLabel(day.date).day }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-for="(room, index) in rooms" :key="index" class="grid grid-cols-[200px_repeat(7,1fr)] text-center border-b relative">
+      <div
+        v-for="(room, index) in rooms"
+        :key="index"
+        class="grid grid-cols-[200px_repeat(7,1fr)] text-center border-b relative"
+      >
         <div class="flex items-center gap-2 p-2 border-r bg-white">
-          <img :src="room.image?.[0] || 'https://via.placeholder.com/40'" class="w-10 h-10 rounded object-cover" />
+          <img
+            :src="room.image?.[0] || 'https://via.placeholder.com/40'"
+            class="w-10 h-10 rounded object-cover"
+          />
           <div>
             <div class="font-bold">{{ room.hotel }}</div>
             <div class="text-xs text-gray-500">{{ room.name }}</div>
@@ -37,36 +52,51 @@
             class="border-r text-xs text-gray-700 flex items-center justify-center relative z-0"
             :class="{
               'bg-gray-100': isDateBlocked(room, day.date),
-              'cursor-pointer': true
+              'bg-red-100': isDateBooked(room, day.date),
+              'cursor-pointer': !isDateBooked(room, day.date),
+              'cursor-not-allowed': isDateBooked(room, day.date),
             }"
             @click="(e) => handleDayClick(e, room, day, i)"
           >
             {{ getDayPrice(room, day.date) }}$
           </div>
 
-          <template v-for="(booking, i) in room.bookings" :key="'booking-'+i">
+          <template v-for="(booking, i) in room.bookings" :key="'booking-' + i">
             <div
               v-if="getBookingOffset(booking)"
               class="absolute top-2 h-10 text-xs font-medium rounded-full px-2 flex items-center text-white z-10"
               :class="'bg-blue-500'"
               :style="{
-                left: `${getBookingOffset(booking).offset * (100 / days.length)}%`,
-                width: `${getBookingOffset(booking).length * (100 / days.length)}%`
+                left: `${
+                  getBookingOffset(booking).offset * (100 / days.length)
+                }%`,
+                width: `${
+                  getBookingOffset(booking).length * (100 / days.length)
+                }%`,
               }"
             >
-              {{ booking.guest }} ({{ getBookingOffset(booking).length }} nights)
+              {{ booking.guest }} ({{ getBookingOffset(booking).length }}
+              nights)
             </div>
           </template>
 
-          <template v-for="(blockedDate, i) in room.blockedDates" :key="'blocked-'+i">
+          <template
+            v-for="(blockedDate, i) in room.blockedDates"
+            :key="'blocked-' + i"
+          >
             <div
               v-if="getBlockedOffset(blockedDate)"
-              class="absolute top-2 h-10 text-xs font-medium rounded-full px-2 flex items-center text-white z-10"
+              class="absolute top-2 h-10 text-xs font-medium rounded-full px-2 flex items-center text-white z-10 cursor-pointer"
               :class="'bg-gray-500'"
               :style="{
-                left: `${getBlockedOffset(blockedDate).offset * (100 / days.length)}%`,
-                width: `${getBlockedOffset(blockedDate).length * (100 / days.length)}%`
+                left: `${
+                  getBlockedOffset(blockedDate).offset * (100 / days.length)
+                }%`,
+                width: `${
+                  getBlockedOffset(blockedDate).length * (100 / days.length)
+                }%`,
               }"
+              @click.stop="handleBlockedDateClick(room, blockedDate)"
             >
               Blocked
               <span v-if="getBlockedOffset(blockedDate).length > 1">
@@ -76,18 +106,42 @@
           </template>
         </div>
       </div>
+
+      <ControllDateRoom
+        v-if="showPopup"
+        :roomImage="selectedRoom.image?.[0] || 'https://via.placeholder.com/40'"
+        :startDate="selectedStartDate"
+        :endDate="selectedEndDate"
+        :hotelName="'Khun Hotel'"
+        :roomDetail="'King bed room 0101'"
+        :displayDate="'Saturday/1/2025'"
+        :initialPrice="selectedPrice"
+        :initialStatus="selectedStatus"
+        @cancel="showPopup = false"
+        @update="handleUpdate"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
-import { ChevronRight, ChevronLeft } from 'lucide-vue-next';
-
+import { onMounted, ref, computed } from "vue";
+import { ChevronRight, ChevronLeft } from "lucide-vue-next";
+import ControllDateRoom from "@/components/AdminComponents/ControllDateRoom.vue";
 // Month labels
 const months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 // Calendar state
@@ -109,25 +163,25 @@ const days = computed(() => {
 
 // Improved getDayLabel function
 function getDayLabel(date) {
-  const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return {
     weekday: weekdayNames[date.getDay()],
     day: date.getDate(),
     month: date.getMonth(),
-    year: date.getFullYear()
+    year: date.getFullYear(),
   };
 }
 
 // Utils
 function formatDate(date) {
   const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
 function parseDate(dateStr) {
-  const parts = dateStr.split('-').map(Number);
+  const parts = dateStr.split("-").map(Number);
   return new Date(parts[0], parts[1] - 1, parts[2]);
 }
 
@@ -136,14 +190,21 @@ function daysBetween(start, end) {
   return Math.floor((end - start) / msPerDay);
 }
 
-function isDateBlocked(room, date) {
-  if (!room.blockedDates) return false;
+function isDateBooked(room, date) {
+  if (!room.bookings) return false;
   const dateStr = formatDate(date);
-  return room.blockedDates.some(blocked => 
-    dateStr >= blocked.startDate && dateStr <= blocked.endDate
+  return room.bookings.some(
+    (booking) => dateStr >= booking.startDate && dateStr < booking.endDate
   );
 }
 
+function isDateBlocked(room, date) {
+  if (!room.blockedDates) return false;
+  const dateStr = formatDate(date);
+  return room.blockedDates.some(
+    (blocked) => dateStr >= blocked.startDate && dateStr < blocked.endDate
+  );
+}
 function getDayPrice(room, date) {
   // const dateStr = formatDate(date);
 
@@ -159,40 +220,38 @@ function getDayPrice(room, date) {
     }
   }
 
-  return room.basePrice || 0;
+  return room.basePrice || range.amount;
 }
-
-
 
 // Room data
 const isLoading = ref(false);
 const hotels = ref([]);
 const rooms = ref([]);
 
+import axios from 'axios';
+
 async function fetchHotels() {
   isLoading.value = true;
   try {
-    const response = await fetch('http://localhost:5000/hotels');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
+    const response = await axios.get("api/hotels");
+    const data = response.data;
     hotels.value = data;
-    rooms.value = hotels.value.flatMap(hotel =>
-      hotel.rooms.map(room => ({
+    rooms.value = hotels.value.flatMap((hotel) =>
+      hotel.rooms.map((room) => ({
         ...room,
         hotel: hotel.name,
-        hotelId: hotel.id
+        hotelId: hotel.id,
       }))
     );
   } catch (error) {
-    console.error('Error fetching hotels:', error);
+    console.error("Error fetching hotels:", error);
     hotels.value = [];
     rooms.value = [];
   } finally {
     isLoading.value = false;
   }
 }
+
 
 // Calendar navigation
 function previousWeek() {
@@ -220,30 +279,55 @@ function updateCalendar() {
 }
 
 // Day click handler
+const showPopup = ref(false);
+const selectedStartDate = ref("");
+const selectedEndDate = ref("");
+const selectedStatus = ref("");
+const selectedPrice = ref(0);
+const selectedRoom = ref(null);
 function handleDayClick(event, room, day, dayIndex) {
-  console.log(`Clicked on room ${room.name} on ${formatDate(day.date)}`);
-  const action = prompt("Enter 'price' to update price or 'block' to block the room:");
-  
-  if (action === 'price') {
-    const newPrice = prompt("Enter the new price:", room.basePrice);
-    if (newPrice) {
-      // Here you would update the price in your data store
-      console.log(`Updated price for room ${room.name} on ${formatDate(day.date)} to ${newPrice}`);
-    }
-  } else if (action === 'block') {
-    const isBlocked = isDateBlocked(room, day.date);
-    if (isBlocked) {
-      if (confirm("This date is already blocked. Unblock it?")) {
-        // Here you would unblock the date in your data store
-        console.log(`Unblocked room ${room.name} on ${formatDate(day.date)}`);
-      }
-    } else {
-      if (confirm("Block this room for the selected date?")) {
-        // Here you would block the date in your data store
-        console.log(`Blocked room ${room.name} on ${formatDate(day.date)}`);
-      }
-    }
+  // Don't proceed if the date is booked
+  if (isDateBooked(room, day.date)) {
+    return;
   }
+
+  // Check if we're clicking on a blocked date overlay
+  const isClickingBlockedOverlay = event.target.closest(".bg-gray-500");
+  if (isClickingBlockedOverlay) {
+    return; // Let the blocked date handler take care of it
+  }
+
+  // Set start date to clicked day
+  selectedStartDate.value = formatDate(day.date);
+
+  // Set end date to next day (1 night stay)
+  const nextDay = new Date(day.date);
+  nextDay.setDate(day.date.getDate() + 1);
+  selectedEndDate.value = formatDate(nextDay);
+
+  selectedStatus.value = isDateBlocked(room, day.date)
+    ? "blocked"
+    : "available";
+  selectedPrice.value = getDayPrice(room, day.date);
+  showPopup.value = true;
+  selectedRoom.value = room;
+}
+function handleBlockedDateClick(room, blockedDate) {
+  selectedStartDate.value = blockedDate.startDate;
+  selectedEndDate.value = blockedDate.endDate;
+  selectedStatus.value = "blocked";
+  selectedPrice.value = getDayPrice(room, parseDate(blockedDate.startDate));
+  showPopup.value = true;
+  selectedRoom.value = room;
+}
+function closePopup() {
+  popupVisible.value = false;
+}
+
+function savePopupData(data) {
+  console.log("Saving new data:", data);
+  // TODO: Update room's price array or send to backend
+  closePopup();
 }
 
 // Offset calculations
@@ -257,11 +341,12 @@ function getBookingOffset(booking) {
 
     if (start > calendarEnd || end < calendarStart.value) return null;
 
-    const adjustedStart = start < calendarStart.value ? calendarStart.value : start;
+    const adjustedStart =
+      start < calendarStart.value ? calendarStart.value : start;
     const adjustedEnd = end > calendarEnd ? calendarEnd : end;
 
-    const offset = daysBetween(calendarStart.value, adjustedStart-1)+1;
-    const length = daysBetween(adjustedStart, adjustedEnd-1) + 1;
+    const offset = daysBetween(calendarStart.value, adjustedStart - 1) + 1;
+    const length = daysBetween(adjustedStart, adjustedEnd - 1) + 1;
     return { offset, length };
   } catch (err) {
     console.error("getBookingOffset error:", err);
@@ -279,11 +364,12 @@ function getBlockedOffset(blockedDate) {
 
     if (start > calendarEnd || end < calendarStart.value) return null;
 
-    const adjustedStart = start < calendarStart.value ? calendarStart.value : start;
+    const adjustedStart =
+      start < calendarStart.value ? calendarStart.value : start;
     const adjustedEnd = end > calendarEnd ? calendarEnd : end;
 
-    const offset = daysBetween(calendarStart.value, adjustedStart-1)+1;
-    const length = daysBetween(adjustedStart, adjustedEnd-1) + 1;
+    const offset = daysBetween(calendarStart.value, adjustedStart - 1) + 1;
+    const length = daysBetween(adjustedStart, adjustedEnd - 1) + 1;
     return { offset, length };
   } catch (err) {
     console.error("getBlockedOffset error:", err);

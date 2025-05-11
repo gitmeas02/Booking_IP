@@ -315,67 +315,6 @@ const props = defineProps({
           >
             MESSAGE
           </button>
-        </div>
-        
-        <!-- Booking Details -->
-        <div class="p-6 bg-white rounded-[12px] w-full md:w-1/2">
-          <h3 class="text-md font-bold text-gray-700 mb-4">Your booking details</h3>
-          <div class="">
-            <div class="flex items-center justify-between">
-              <img
-                :src="booking.hotel.rooms[0].images[1].url"
-                :alt="booking.hotel.rooms[0].type"
-                class="w-20 h-20 object-cover rounded-md"
-              />
-              <div class="ml-3 text-sm">
-                <p class="font-medium">{{ booking.hotel.name }}</p>
-                <p>{{ booking.hotel.rooms[0].type }}</p>
-                <div class="flex items-center mt-1">
-                  <Star class="h-3 w-3 text-yellow-500 mr-1" />
-                  <span class="text-xs">{{ booking.hotel.rating.toFixed(1) }} · {{ booking.hotel.reviews }} reviews</span>
-                </div>
-
-                <a
-                  :href="getGoogleMapsLink(booking.hotel.address.fullAddress)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-sm font-medium text-hotel-primary hover:underline mt-2 inline-flex items-center px-2 py-1 bg-gray-100 rounded-md transition-all hover:bg-gray-200"
-                >
-                  <MapPin class="h-4 w-4 mr-1" />
-                  Get directions
-                </a>
-              </div>
-            </div>
-
-            <p class="text-sm font-medium mt-4">Room Type: {{ booking.hotel.rooms[0].type }}</p>
-          </div>
-          
-          <!-- Checkin and Checkout -->
-          <div class="grid grid-cols-2 gap-4 mb-2">
-            <div>
-              <p class="text-xs text-gray-500">Check-in</p>
-              <p class="font-medium">{{ formatDate(booking.checkIn.date) }}</p>
-              <p class="text-xs text-gray-500">{{ booking.checkIn.time }}</p>
-            </div>
-
-            <div>
-              <p class="text-xs text-gray-500">Check-out</p>
-              <p class="font-medium">{{ formatDate(booking.checkOut.date) }}</p>
-              <p class="text-xs text-gray-500">{{ booking.checkOut.time }}</p>
-            </div>
-          </div>
-          
-          <!--  -->
-          <div class="mb-2">
-            <p class="text-xs text-gray-500">Total length of stay:</p>
-            <p class="font-medium">{{ calculateTotalNights(booking.checkIn.date, booking.checkOut.date) }} nights</p>
-          </div>
-          
-          <!--  -->
-          <div class="mb-4">
-            <p class="text-xs text-gray-500">You selected</p>
-            <p class="font-medium">1 room for {{ booking.adults }} adults</p>
-          </div>
           
           <!--  -->
           <div class="border-t border-gray-200 pt-4">
@@ -411,6 +350,77 @@ const props = defineProps({
               {{ booking.paid ? "Paid" : "Payment Pending" }}
             </div>
           </div>
+          <!--  -->
+        </div>
+        
+        <!-- Booking Details -->
+        <div class="p-6 bg-white rounded-[12px] w-full md:w-1/2">
+          <h3 class="text-md font-bold text-gray-700 mb-4">Your booking details</h3>
+          <div class="">
+            <div class="flex items-center justify-between">
+              <img
+                :src="booking.hotel.rooms[0].images[1].url"
+                :alt="booking.hotel.rooms[0].type"
+                class="w-20 h-20 object-cover rounded-md"
+              />
+              <div class="ml-3 text-sm">
+                <p class="font-medium">{{ booking.hotel.name }}</p>
+                <p>{{ booking.hotel.rooms[0].type }}</p>
+                <div class="flex items-center mt-1">
+                  <Star class="h-3 w-3 text-yellow-500 mr-1" />
+                  <span class="text-xs">{{ booking.hotel.rating.toFixed(1) }} · {{ booking.hotel.reviews }} reviews</span>
+                </div>
+
+                <a
+                  :href="getGoogleMapsLink(booking.hotel.address.fullAddress)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sm font-medium text-hotel-primary hover:underline mt-2 inline-flex items-center px-2 py-1 bg-gray-100 rounded-md transition-all hover:bg-gray-200"
+                >
+                  <MapPin class="h-4 w-4 mr-1" />
+                  Get directions
+                </a>
+              </div>
+            </div>
+
+            <p class="text-sm font-medium mt-4">Room Type: {{ booking.hotel.rooms[0].type }}</p>
+            <p class="text-sm font-medium mt-4">Booking Id: <span class="text-lg font-bold ">{{ booking.bookingId }}</span></p>
+          </div>
+          
+          <!-- Checkin and Checkout -->
+          <div class="grid grid-cols-2 gap-4 mb-2">
+            <div>
+              <p class="text-xs text-gray-500">Check-in</p>
+              <p class="font-medium">{{ formatDate(booking.checkIn.date) }}</p>
+              <p class="text-xs text-gray-500">{{ booking.checkIn.time }}</p>
+            </div>
+
+            <div>
+              <p class="text-xs text-gray-500">Check-out</p>
+              <p class="font-medium">{{ formatDate(booking.checkOut.date) }}</p>
+              <p class="text-xs text-gray-500">{{ booking.checkOut.time }}</p>
+            </div>
+          </div>
+          
+          <!--  -->
+          <div class="mb-2">
+            <p class="text-xs text-gray-500">Total length of stay:</p>
+            <p class="font-medium">{{ calculateTotalNights(booking.checkIn.date, booking.checkOut.date) }} nights</p>
+          </div>
+          
+          <!--  -->
+          <div class="mb-4">
+            <p class="text-xs text-gray-500">You selected</p>
+            <p class="font-medium">1 room for {{ booking.adults }} adults</p>
+          </div>
+          
+          <!--  -->
+     
+          <button
+            class="w-full border border-red-300 text-red-700 py-2 px-4 rounded-md hover:bg-gray-100 transition-all mt-10"
+          >
+            REQUEST TO CANCELLATION
+          </button>
         </div>
       </div>
     </template>
@@ -489,7 +499,9 @@ const props = defineProps({
                 </div>
               </div>
             </div>
+            
           </div>
+       
         </div>
       </div>
     </template>
