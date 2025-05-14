@@ -31,6 +31,10 @@ import OwnerPropertyDetailPage3 from '@/views/OwnerPropertyDetailPage3.vue';
 import OwnerPropertyDetailPage4 from '@/views/OwnerPropertyDetailPage4.vue';
 import OwnerPropertyDetailConfirmationPage from '@/views/OwnerPropertyDetailConfirmationPage.vue';
 import OwnerPropertyDetailPhotoPage from '@/views/OwnerPropertyDetailPhotoPage.vue';
+import OwnerPropertyDetailPaymentPage from '@/views/OwnerPropertyDetailPaymentPage.vue';
+import OwnerPropertyDetailInvoicePage from '@/views/OwnerPropertyDetailInvoicePage.vue';
+import OwnerPropertyDetailPartnerPage from '@/views/OwnerPropertyDetailPartnerPage.vue';
+import OwnerPropertyDetailLastConfirmPage from '@/views/OwnerPropertyDetailLastConfirmPage.vue';
 const routes = [
   {
     path: '/',
@@ -183,6 +187,28 @@ const routes = [
     name: 'OwnerPropertyDetailPagePhoto',
     component: OwnerPropertyDetailPhotoPage
   },
+  {
+    path: '/ownerpropertydetailpage/payment',
+    name: 'OwnerPropertyDetailPaymentPage',
+    component: OwnerPropertyDetailPaymentPage
+  },
+  {
+    path: '/ownerpropertydetailpage/invoice',
+    name: 'OwnerPropertyDetailInvoice',
+    component: OwnerPropertyDetailInvoicePage
+  },
+  {
+    path: '/ownerpropertydetailpage/partnerverification',
+    name: 'OwnerPropertyDetailPartner',
+    component: OwnerPropertyDetailPartnerPage
+  },
+  {
+    path: '/ownerpropertydetailpage/lastconfirmation',
+    name: 'OwnerPropertyDetailLastConfirmation',
+    component: OwnerPropertyDetailLastConfirmPage
+  },
+
+
 
 
 
