@@ -33,7 +33,7 @@ class OwnerController extends Controller
 
         // Create owner application
         $application = OwnerApplication::create([
-            'user_id'         => auth()->id(),
+            'user_id'         => $user->id,
             'property_type'   => $request->property_type,
             'property_name'   => $request->property_name,
             'description'     => $request->description,

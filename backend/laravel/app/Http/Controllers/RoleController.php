@@ -20,7 +20,7 @@ class RoleController extends Controller
 }
 public function switchRole(Request $request)
 {
-    $user = auth()->user();
+    $user = $request->user();
 
     // Validate role
     $request->validate([
@@ -45,7 +45,7 @@ public function switchRole(Request $request)
  */
 public function getUserRoles(Request $request)
 {
-    $user = auth()->user();
+    $user = $request->user();
     return response()->json([
         'roles' => $user->roles->pluck('name'),
     ]);
