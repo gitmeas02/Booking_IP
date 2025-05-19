@@ -13,15 +13,19 @@ return new class extends Migration
     {
         Schema::create('owner_applications', function (Blueprint $table) {
             $table->id();
+            // Foreign key to users
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); 
-            $table->string('property_type'); //
+                        
             $table->string('property_name');
             $table->text('description')->nullable();
-            $table->string('location');
+            
+            // Foreign key to application_location
             $table->integer('star_rating')->nullable(); // e.g., 3 stars
             $table->boolean('is_pet_allowed')->default(false);
+
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('property_status', ['active', 'inactive'])->default('active');
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });

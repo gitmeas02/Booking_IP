@@ -33,8 +33,17 @@ class User extends Authenticatable
     }
     public function ownerApplication()
     {
-        return $this->hasOne(OwnerApplication::class);
+        return $this->hasMany(OwnerApplication::class);
     }
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+    public function booking(){
+        return $this->hasMany(Booking::class);
+    }
+
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',

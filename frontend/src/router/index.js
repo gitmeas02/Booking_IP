@@ -13,11 +13,6 @@ import AuthenticationPage from "@/views/Authentication/AuthenticationPage.vue";
 
 import Admin from "@/views/AdminPage/Admin.vue";
 import OwnerPropertyPage from "@/views/OwnerPropertyPage.vue";
-import SignInOwner from "@/views/OwnerLogin/SignIn.vue";
-import SignUpStep1 from "@/views/OwnerLogin/SignUpStep1.vue";
-import SignUpStep2 from "@/views/OwnerLogin/SignUpStep2.vue";
-import SignUpStep3 from "@/views/OwnerLogin/SignUpStep3.vue";
-
 
 import Chatbox from "@/views/ChatBox.vue";
 
@@ -33,11 +28,18 @@ const routes = [
     path: "/current-past-booked",
     name: "CurrentPastBooking",
     component: HistoryKeeper,
+    meta: {
+      requiresAuth: true ,
+      roles: ['user'] 
+    }
   },
   {
     path: "/checkout",
     name: "Success",
     component: CheckoutPage,
+    meta:{requiresAuth:true,
+      roles: ['user'] 
+    }
   },
   {
     path: "/listroom",
@@ -58,11 +60,19 @@ const routes = [
     path: "/setting",
     name: "SettingUser",
     component: SettingPage,
+    meta: {
+      requiresAuth: true ,
+      roles: ['user']
+    }
   },
   {
     path: "/setting-details",
     name: "SettingDetail",
     component: SettingDetailPage,
+    meta: {
+      requiresAuth: true ,
+      requiresRole: 'user' // Only accessible by user role
+    }
   },
   {
     path: "/authentication",
@@ -89,38 +99,71 @@ const routes = [
 
 
   {
-    path: "/admin",
-    name: "Admin",
+    path: "/owner", // Only accessible by owner role
+    name: "Owner",
     component: Admin,
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'] 
+    }
   },
-  {
-    path: "/signin-owner",
-    name: "SignIn Owner",
-    component: SignInOwner,
-  },
-  {
-    path: "/signup-owner1",
-    name: "SignUpStep1",
-    component: SignUpStep1,
-  },
-  {
-    path: "/signup-owner2",
-    name: "SignUpStep2",
-    component: SignUpStep2,
-  },
-  {
-    path: "/signup-owner3",
-    name: "SignUpStep3",
-    component: SignUpStep3,
-  },
+    // Catch-all route - redirects to home
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/'
+    },
   {
     path: "/owner-property",
     name: "OwnerProperty",
     component: OwnerPropertyPage,
+    meta:{requiresAuth:true,roles: ['owner'] }
   },
 ];
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
+// Navigation guards
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  const isAuthenticated = !!token
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next({ name: 'SignIn' })
+
+  } else if (to.meta.guestOnly && isAuthenticated) {
+    next({ name: 'SettingUser' }) // fixed name here
+
+  } else {
+    next()
+  }
+})
+
+
+// Error handling
+router.onError((error) => {
+  console.error('Navigation error:', error);
+  router.push('/');
+});
+
 export default router;
+
+
+// if (to.meta.requiresAuth && !token) {
+//   // If route requires authentication but user is not logged in
+//   return next('/login'); // Redirect to login page
+// }
+
+// if (to.meta.requiresRole && to.meta.requiresRole !== userRole) {
+//   // If the user doesn't have the required role for the route
+//   if (userRole === 'user') {
+//     return next('/setting'); // Redirect user to setting page
+//   }
+//   if (userRole === 'owner') {
+//     return next('/owner-dashboard'); // Redirect owner to dashboard
+//   }
+//   return next('/property-register'); // If no role or other roles, redirect to property register page
+// }
+
+// next(); // Allow navigation to route
+// });

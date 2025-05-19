@@ -12,6 +12,17 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        if (!Role::where('name', 'user')->exists()) {
+        return response()->json([
+            'message' => 'Registration is currently unavailable. Please try again later.'
+        ], 503); // 503 Service Unavailable
+        }
+        if (Role::count() === 0) {
+        return response()->json([
+            'message' => 'Registration is currently unavailable. Please try again later.'
+        ], 503);
+          }
+
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
@@ -25,8 +36,7 @@ class AuthController extends Controller
         ]);
     
         // $userRole = Role::where('name', 'company')->firstOrFail();
-         $userRole = Role::where('name', 'user')->firstOrFail();
-
+        $userRole = Role::where('name', 'user')->firstOrFail();
         $user->roles()->attach($userRole->id);
     
 
@@ -63,6 +73,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'roles' => $user->roles->pluck('name'),
+            'applications' => $user->ownerApplication()->get(),
         ]);
     }
 

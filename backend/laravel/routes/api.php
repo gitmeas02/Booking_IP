@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
 // use App\Models\OwnerApplication;
+use App\Http\Controllers\RoomTypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,3 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/apply-owner', [OwnerController::class, 'apply']);
     Route::post('/approve-owner/{id}', [OwnerController::class, 'approve']); // Optional for admin
 });
+
+//
+Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
+    Route::post('/property/{id}/room', [RoomTypeController::class, 'store']);
+    Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
+});
+

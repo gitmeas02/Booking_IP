@@ -54,7 +54,6 @@
 
 <script>
 import { Icon } from '@iconify/vue'
-
 export default {
     name: 'SignUp',
     components: {
@@ -68,11 +67,34 @@ export default {
         }
     },
     methods: {
-        handleSignUp() {
-            // Add registration logic here
-            console.log('Name:', this.name)
-            console.log('Email:', this.email)
-            console.log('Password:', this.password)
+         async handleSignUp() {
+            try {
+        const response = await axios.post('/login', {
+          email: this.email,
+          password: this.password
+        })
+
+        const token = response.data.access_token
+        const user = response.data.user
+
+        // Save token and user info
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+
+        // ✅ Set default Axios auth header
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+        // 🔁 Redirect user based on role or to dashboard
+        if (user.role === 'owner') {
+          this.$router.push('/owner')
+        } else {
+          this.$router.push('/')
+        }
+
+      } catch (error) {
+        alert(error.response?.data?.message || 'Sign up failed.')
+        console.error(error)
+      }
         }
     }
 }

@@ -48,29 +48,47 @@
     </div>
 </template>
 
-<script>
-import { Icon } from '@iconify/vue'
+<script setup>
+import { ref } from 'vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+const email = ref('');
+const password = ref('');
+const error = ref('');
+const router = useRouter();
+// Backend base URL
+const API_BASE_URL = 'http://localhost:8100';
 
-export default {
-    name: 'SignIn',
-    components: {
-        Icon, 
-    },
-    data() {
-        return {
-            email: '',
-            password: ''
-        }
-    },
-    methods: {
-        handleSignIn() {
-            // Add login logic here
-            console.log('Email:', this.email)
-            console.log('Password:', this.password)
-        }
+const handleSignIn = async () => {
+  error.value = '';
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/login`, {
+      email: email.value,
+      password: password.value
+    });
+
+    const token = response.data.token;
+
+    // Store token (in localStorage or Pinia/Vuex)
+    localStorage.setItem('token', token);
+
+    console.log('Login successful', response.data);
+    router.push('/setting');
+    // Redirect or fetch user info...
+  } catch (err) {
+    console.error('Login failed', err);
+    if (err.response?.status === 422) {
+      error.value = err.response.data.message || 'Invalid credentials.';
+    } else {
+      error.value = 'Login failed.';
     }
-}
+  }
+};
 </script>
+
+
+
 
 <style scoped>
 .container {

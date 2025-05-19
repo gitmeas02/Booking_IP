@@ -4,7 +4,7 @@
       <div class="profile">
         <img src="../assets/images/4x6.JPG" alt="Profile" class="profile-image" />
         <div>
-          <h2 class="profile-name">Hi, MengHour</h2>
+          <h2 class="profile-name">Hi,  {{user?.name|| 'Guest' }}</h2>
           <p class="profile-member">Member since 2024</p>
         </div>
       </div>
@@ -73,6 +73,38 @@ const cards = [
     ]
   }
 ]
+import { ref, onMounted } from 'vue';
+  import axios from 'axios';
+  
+  const user = ref(null);
+  const error = ref('');
+  const API_BASE_URL = 'http://localhost:8100';
+  
+  const getUser = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token is found');
+      }
+      const response = await axios.get(
+        `${API_BASE_URL}/api/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      user.value = response.data.user;
+      console.log('User data:', user.value);
+    } catch (error) {
+      console.error('Failed to fetch user', error);
+      error.value = 'Failed to fetch user data.';
+    }
+  };
+  
+  onMounted(() => {
+    getUser();
+  });
 </script>
 
 

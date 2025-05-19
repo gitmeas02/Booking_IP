@@ -111,7 +111,7 @@
 </template>
 
 <script>
-import { useRoomStore } from '@/store/store.js'
+import { useRoomStore } from '@/stores/store.js'
 import { onMounted, computed } from 'vue'
 export default {
   name: 'AdminDashboard',

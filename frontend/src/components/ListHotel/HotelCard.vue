@@ -54,7 +54,8 @@
             <div class="amenities-container">
                 <div class="amenities-list">
                     <div class="amenity-item" v-for="(amenity, aIndex) in hotel.amenities" :key="aIndex">
-                        <Icon :icon="icons[amenity]" class="amenity-icon" />
+                        <!-- <Icon :icon="icons[amenity]" class="amenity-icon" /> -->
+                         <component :is="icons[amenity]" class="w-4 h-4 text-gray-600" />
                         <span class="amenity-text">{{ amenity }}</span>
                     </div>
                 </div>
@@ -68,7 +69,7 @@
     </div>
 </template>
 
-<script>
+<!-- <script>
 import { Icon } from '@iconify/vue';
 
 export default {
@@ -104,6 +105,34 @@ export default {
 
 
 };
+</script> -->
+<script setup>
+import {
+  AirVent,
+  Tv,
+  Wine,
+  Coffee,
+  Wifi,
+  ShowerHead,
+  Phone
+} from 'lucide-vue-next'
+
+const props = defineProps({
+  hotel: {
+    type: Object,
+    required: true
+  }
+})
+
+const icons = {
+  "Air Conditioning": AirVent,
+  "TV": Tv,
+  "Mini Bar": Wine,
+  "Free Breakfast": Coffee,
+  "Free Wi-Fi": Wifi,
+  "Hot Water": ShowerHead,
+  "Phone Call": Phone
+}
 </script>
 
 

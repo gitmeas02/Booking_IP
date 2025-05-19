@@ -24,11 +24,13 @@ class OwnerController extends Controller
 
         // Prevent duplicate pending/approved applications
         $existing = OwnerApplication::where('user_id', $user->id)
+            ->where('property_name', $request->property_name)
+            ->where('location', $request->location)
             ->whereIn('status', ['pending', 'approved'])
             ->first();
 
         if ($existing) {
-            return response()->json(['message' => 'You already have a pending or approved application.'], 409);
+            return response()->json(['message' => 'You already have a pending or approved and the same location onapplication.Please different info'], 409);
         }
 
         // Create owner application
