@@ -3,6 +3,8 @@ import ChatBox from '@/views/ChatBox.vue';
 import ListBookingView from '@/views/ListBookingView.vue';
 import { createRouter, createWebHistory } from "vue-router";
 import Test from '@/components/HotelCard.vue';
+import UploadProperty from '@/views/UploadProperty.vue';
+import testing from '@/views/testing.vue';
 
 const routes = [
   {
@@ -24,8 +26,13 @@ const routes = [
     path: "/testing",
     name: "testing",
     component: Test,
+  },
+  {
+    path: "/uploadproperty",
+    name: "UploadProperty",
+    component: UploadProperty,
   }
-
+  
 ];
 
 const router = createRouter({
