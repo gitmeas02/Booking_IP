@@ -18,6 +18,7 @@ import Chatbox from "@/views/ChatBox.vue";
 
 
 import { createRouter, createWebHistory } from "vue-router";
+import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
 const routes = [
   {
     path: "/",
@@ -55,6 +56,11 @@ const routes = [
     path: "/chat",
     name: "Chat",
     component: Chatbox,
+  },
+    {
+    path: "/uplaodproperty",
+    name: "uplaodproperty",
+    component: UploadProperty,
   },
   {
     path: "/setting",
@@ -116,7 +122,9 @@ const routes = [
     path: "/owner-property",
     name: "OwnerProperty",
     component: OwnerPropertyPage,
-    meta:{requiresAuth:true,roles: ['owner'] }
+    meta:{
+      requiresAuth:true,roles: ['user','owner']
+    }
   },
 ];
 const router = createRouter({
@@ -128,16 +136,24 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const isAuthenticated = !!token
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'SignIn' })
-
-  } else if (to.meta.guestOnly && isAuthenticated) {
-    next({ name: 'SettingUser' }) // fixed name here
-
-  } else {
-    next()
+  if(token){
+    if(to.path.startsWith('/authentication')){
+      return next('/setting');
+    }
+    // If route requires authentication
+    if (to.meta.requiresAuth) {
+      return next(); // authenticated, allow access
+    }
+    } else {
+    // If not logged in and trying to access a protected route
+    if (to.meta.requiresAuth) {
+      return next('/authentication/signin');
+    }
   }
-})
+
+  next(); // default allow
+});
+
 
 
 // Error handling

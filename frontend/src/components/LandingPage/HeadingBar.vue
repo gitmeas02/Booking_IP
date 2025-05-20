@@ -1,12 +1,12 @@
 <template>
     <header class="flex justify-between items-center p-4 shadow bg-white">
-        <img src="../../assets/logo.png" alt="Logo" class="h-10" />
+        <RouterLink to="/"><img src="../../assets/logo.png" alt="Logo" class="h-10" /></RouterLink>
         <nav class="flex items-center gap-6">
             <CircleDollarSign/>
             <CircleHelp/>
             <ShoppingCart/>
             <!-- // :to="isOwnerLoggedIn ? '/owner' : '/authentication/SignIn'" -->
-            <RouterLink to="/setting"><button class="bg-[#4B2B2B] text-white px-4 py-2 rounded">Your Property</button></RouterLink>
+            <RouterLink to="/owner-property"><button class="bg-[#4B2B2B] text-white px-4 py-2 rounded">Your Property</button></RouterLink>
             <RouterLink to="/authentication/signin">
             <User />
             </RouterLink>
