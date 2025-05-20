@@ -1,78 +1,51 @@
 <template>
-  <div class="step-container">
-    <h2>Create Partner Account</h2>
-    <p>
-      Use a minimum of 10 characters, including uppercase letters, lowercase
-      letters and numbers
-    </p>
+  <div class="max-w-md mx-auto my-16 p-8 bg-white rounded-lg shadow-xl text-center font-sans">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Create Partner Account</h2>
+    <p class="text-gray-600 mb-6">Use a minimum of 10 characters, including uppercase letters, lowercase letters and
+      numbers</p>
 
-    <div class="form-group">
-      <div class="form-group-password">
-        <label>Password</label>
-        <input
-          type="password"
-          id="password"
-          v-model="localPassword"
-          placeholder="Password*"
-          @blur="validatePassword"
-          :class="{ 'error-input': passwordError }"
-        />
+    <div class="form-group mb-4 text-left">
+      <label class="block text-sm text-gray-700 mb-2">Password</label>
+      <div class="relative">
+        <input type="password" id="password" v-model="localPassword" placeholder="Password*" @blur="validatePassword"
+          :class="{ 'border-red-500': passwordError }"
+          class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+          @click="togglePasswordVisibility('password')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </div>
       </div>
-      <div class="eye-icon" @click="togglePasswordVisibility('password')">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-      </div>
+      <p v-if="passwordError" class="text-red-500 text-xs mt-1">{{ passwordError }}</p>
     </div>
-    <p v-if="passwordError" class="error-message">{{ passwordError }}</p>
 
-    <div class="form-group">
-      <div class="form-group-password">
-        <label>Confirm Password</label>
-        <input
-          type="password"
-          id="confirmPassword"
-          v-model="localConfirmPassword"
-          placeholder="Confirm Password*"
-          @blur="validateConfirmPassword"
-          :class="{ 'error-input': confirmPasswordError }"
-        />
+    <div class="form-group mb-4 text-left">
+      <label class="block text-sm text-gray-700 mb-2">Confirm Password</label>
+      <div class="relative">
+        <input type="password" id="confirmPassword" v-model="localConfirmPassword" placeholder="Confirm Password*"
+          @blur="validateConfirmPassword" :class="{ 'border-red-500': confirmPasswordError }"
+          class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+          @click="togglePasswordVisibility('confirm')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </div>
       </div>
-      <div class="eye-icon" @click="togglePasswordVisibility('confirm')">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-      </div>
+      <p v-if="confirmPasswordError" class="text-red-500 text-xs mt-1">{{ confirmPasswordError }}</p>
     </div>
-    <p v-if="confirmPasswordError" class="error-message">
-      {{ confirmPasswordError }}
-    </p>
 
-    <button @click="validateAndSubmit">Next</button>
+    <button @click="validateAndSubmit"
+      class="w-full py-3 bg-gray-800 text-white rounded-lg font-medium text-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      Next
+    </button>
 
-    <div class="copyright">
+    <div class="copyright text-center text-xs text-gray-500 mt-6">
       <small>All rights reserved.</small>
       <small>Copyright (2025-2025) - Pteas Khmer</small>
     </div>
@@ -205,88 +178,5 @@ export default {
 </script>
 
 <style scoped>
-.step-container {
-  max-width: 400px;
-  margin: 4rem auto;
-  padding: 2.5rem 2rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  font-family: "Arial", sans-serif;
-}
-
-.step-container h2 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-  color: #2e2e2e;
-}
-
-.step-container p {
-  color: #666;
-  margin-bottom: 1.5rem;
-  line-height: 1.4;
-}
-
-.form-group {
-  position: relative;
-  margin-bottom: 0.25rem;
-}
-
-.form-group-password {
-  margin-bottom: 1rem;
-  text-align: left;
-}
-
-input[type="password"],
-input[type="text"] {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-  font-size: 1rem;
-  margin-bottom: 1rem;
-}
-
-input.error-input {
-  border-color: #e74c3c;
-}
-
-.eye-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #666;
-}
-
-button {
-  display: block;
-  width: 100%;
-  padding: 0.85rem;
-  background-color: #332c2b;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 0.5rem;
-}
-
-.error-message {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin-top: -0.5rem;
-  margin-bottom: 1rem;
-  text-align: left;
-}
-
-.copyright {
-  margin-top: 1.5rem;
-  font-size: 0.8rem;
-  color: #9a9a9a;
-}
+/* Tailwind CSS handles all the styling, no additional styles needed */
 </style>

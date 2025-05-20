@@ -22,14 +22,14 @@ import Card from '@/components/SettingCard.vue'
 
 const cards = [
   {
-    title: "Payment Info",
+    title: 'Payment Info',
     items: [
       { label: 'Rewards & Wallet', icon: 'mdi:wallet' },
       { label: 'Payment methods', icon: 'ri:bank-card-line' }
     ]
   },
   {
-    title: "Manage account",
+    title: 'Manage account',
     items: [
       { label: 'Personal details', icon: 'ic:baseline-person' },
       { label: 'Security Settings', icon: 'ri:lock-2-line' },
@@ -37,14 +37,14 @@ const cards = [
     ]
   },
   {
-    title: "Preferences",
+    title: 'Preferences',
     items: [
       { label: 'Customization preferences', icon: 'ri:settings-3-line' },
       { label: 'Email preferences', icon: 'ic:baseline-email' }
     ]
   },
   {
-    title: "Travel activity",
+    title: 'Travel activity',
     items: [
       { label: 'Trips and bookings', icon: 'mdi:calendar-check' },
       { label: 'Saved Lists', icon: 'mdi:bookmark-outline' },
@@ -52,7 +52,7 @@ const cards = [
     ]
   },
   {
-    title: "Help and Support",
+    title: 'Help and Support',
     items: [
       { label: 'Contact Customer Service', icon: 'ri:customer-service-2-line' },
       { label: 'Safety resource center', icon: 'ri:shield-keyhole-line' },
@@ -60,17 +60,15 @@ const cards = [
     ]
   },
   {
-    title: "Legal and Privacy",
+    title: 'Legal and Privacy',
     items: [
       { label: 'Privacy and Policy', icon: 'ri:shield-check-line' },
       { label: 'Content guidelines', icon: 'ri:article-line' }
     ]
   },
   {
-    title: "Manage your property",
-    items: [
-      { label: 'List your property', icon: 'mdi:home-plus-outline' }
-    ]
+    title: 'Manage your property',
+    items: [{ label: 'List your property', icon: 'mdi:home-plus-outline' }]
   }
 ]
 import { ref, onMounted } from 'vue';
