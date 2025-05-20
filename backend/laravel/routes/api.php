@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/switch-role', [RoleController::class, 'switchRole']);
 Route::get('/user-roles', [RoleController::class, 'getUserRoles']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(callback: function () {
     Route::post('/apply-owner', [OwnerController::class, 'apply']);
     Route::post('/approve-owner/{id}', [OwnerController::class, 'approve']); // Optional for admin
 });
