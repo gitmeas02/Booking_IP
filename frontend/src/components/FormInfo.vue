@@ -16,7 +16,6 @@ import { QrCode } from 'lucide-vue-next';
 import { CreditCard } from 'lucide-vue-next';
 // import { Landmark } from 'lucide-vue-next';
 import { CircleDollarSign } from 'lucide-vue-next';
- 
 
 </script>
 
