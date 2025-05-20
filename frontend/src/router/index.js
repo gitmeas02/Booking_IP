@@ -16,10 +16,12 @@ import OwnerPropertyPage from "@/views/OwnerPropertyPage.vue";
 
 import Chatbox from "@/views/ChatBox.vue";
 
+import index2 from "./index2";
 
 import { createRouter, createWebHistory } from "vue-router";
 import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
 const routes = [
+  ...index2,
   {
     path: "/",
     name: "Homepage",
@@ -170,7 +172,6 @@ export default router;
 //   // If route requires authentication but user is not logged in
 //   return next('/login'); // Redirect to login page
 // }
-
 // if (to.meta.requiresRole && to.meta.requiresRole !== userRole) {
 //   // If the user doesn't have the required role for the route
 //   if (userRole === 'user') {
