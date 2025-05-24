@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('application_location', function (Blueprint $table) {
+        Schema::create('application_locations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('owner_application_id'); // FK to track ownership
-            $table->foreign('owner_application_id')->references('id')->on('owner_applications')->onDelete('cascade');
+            // $table->unsignedBigInteger('owner_application_id'); // FK to track ownership
+            $table->foreignId('application_id')->constrained('owner_applications')->onDelete('cascade');
             $table->string('apartment_floor')->nullable(); // optional if not every property has a floor
             $table->string('country');
             $table->string('city');
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('application_location');
+        Schema::dropIfExists('application_locations');
     }
 };

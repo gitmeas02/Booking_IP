@@ -20,7 +20,7 @@ class OwnerApplication extends Model
         'expires_at',
     ];
 
-       /**
+    /**
      * The user who submitted the application.
      */
     public function user()
@@ -31,7 +31,7 @@ class OwnerApplication extends Model
     /**
      * Owner's personal information.
      */
-    public function personalInfo() 
+    public function personalInfo()
     {
         return $this->hasOne(OwnerPersonalInfo::class, 'application_id');
     }
@@ -39,7 +39,7 @@ class OwnerApplication extends Model
     /**
      * Application location details.
      */
-    public function location() 
+    public function location()
     {
         return $this->hasOne(ApplicationLocation::class, 'application_id');
     }
@@ -47,7 +47,7 @@ class OwnerApplication extends Model
     /**
      * Amenities selected in the application.
      */
-    public function amenities() 
+    public function amenities()
     {
         return $this->hasMany(ApplicationAmenity::class, 'application_id');
     }
@@ -55,7 +55,7 @@ class OwnerApplication extends Model
     /**
      * Service options selected (e.g., breakfast, parking).
      */
-    public function services() 
+    public function services()
     {
         return $this->hasOne(ApplicationService::class, 'application_id');
     }
@@ -63,7 +63,7 @@ class OwnerApplication extends Model
     /**
      * Photos uploaded for the application.
      */
-    public function photos() 
+    public function photos()
     {
         return $this->hasMany(ApplicationPhoto::class, 'application_id');
     }
@@ -71,7 +71,7 @@ class OwnerApplication extends Model
     /**
      * House rules defined by the owner.
      */
-    public function houseRules() 
+    public function houseRules()
     {
         return $this->hasMany(HouseRule::class, 'application_id');
     }
@@ -79,15 +79,20 @@ class OwnerApplication extends Model
     /**
      * Accepted payment methods.
      */
-    public function paymentMethods() 
+    public function paymentMethods()
     {
         return $this->hasOne(PaymentMethodAccept::class, 'application_id');
+    }
+
+    public function payment()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /**
      * Room types added for this application.
      */
-    public function roomTypes() 
+    public function roomTypes()
     {
         return $this->hasMany(RoomType::class, 'owner_application_id');
     }
@@ -95,7 +100,7 @@ class OwnerApplication extends Model
     /**
      * Feedback left by users for this property.
      */
-    public function feedbacks() 
+    public function feedbacks()
     {
         return $this->hasMany(Feedback::class, 'owner_application_id');
     }
@@ -103,11 +108,8 @@ class OwnerApplication extends Model
     /**
      * Commissions generated for this application.
      */
-    public function commissions() 
+    public function commissions()
     {
         return $this->hasMany(Commission::class, 'owner_application_id');
     }
-
-
-
 }

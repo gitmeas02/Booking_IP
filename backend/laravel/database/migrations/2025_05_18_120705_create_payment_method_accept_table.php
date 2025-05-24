@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payment_method_accept', function (Blueprint $table) {
+        Schema::create('payment_method_accepts', function (Blueprint $table) {
             $table->id();
             // Foreign key to owner_applications
             $table->unsignedBigInteger('application_id');
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payment_method_accept');
+        Schema::dropIfExists('payment_method_accepts');
     }
 };
