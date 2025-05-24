@@ -1,3 +1,4 @@
+import ApplyOwnerPage from "@/views/ApplyOwnerPage.vue";
 import OwnerPropertyCategoryPage from "@/views/OwnerPropertyCategoryPage.vue";
 import OwnerPropertyDetailConfirmationPage from "@/views/OwnerPropertyDetailConfirmationPage.vue";
 import OwnerPropertyDetailInvoicePage from "@/views/OwnerPropertyDetailInvoicePage.vue";
@@ -72,6 +73,11 @@ export default[
     name: 'OwnerPropertyDetailLastConfirmation',
     component: OwnerPropertyDetailLastConfirmPage
   },
+  {
+    path: '/applyowner',
+    name: 'ApplyOwner',
+    component: ApplyOwnerPage
+  }
 
 
 

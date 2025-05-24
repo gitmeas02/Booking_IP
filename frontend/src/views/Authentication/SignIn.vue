@@ -49,43 +49,56 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
-const email = ref('');
-const password = ref('');
-const error = ref('');
-const router = useRouter();
-// Backend base URL
-const API_BASE_URL = 'http://localhost:8100';
+import { ref } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth' // 👈 import your auth store
+
+const email = ref('')
+const password = ref('')
+const error = ref('')
+const router = useRouter()
+const auth = useAuthStore() // 👈 use the store
+
+const API_BASE_URL = 'http://localhost:8100'
 
 const handleSignIn = async () => {
-  error.value = '';
+  error.value = ''
 
   try {
     const response = await axios.post(`${API_BASE_URL}/api/login`, {
       email: email.value,
       password: password.value
-    });
+    })
 
-    const token = response.data.token;
+    const token = response.data.token
 
-    // Store token (in localStorage or Pinia/Vuex)
-    localStorage.setItem('token', token);
+    // ✅ Store token
+    localStorage.setItem('token', token)
 
-    console.log('Login successful', response.data);
-    router.push('/setting');
-    // Redirect or fetch user info...
-  } catch (err) {
-    console.error('Login failed', err);
-    if (err.response?.status === 422) {
-      error.value = err.response.data.message || 'Invalid credentials.';
+    // ✅ Fetch user info + roles
+    await auth.fetchUser()
+
+    console.log('Login successful', response.data)
+
+    // ✅ Navigate based on role
+    if (auth.roles.includes('owner')) {
+      router.push('/owner/dashboard')
     } else {
-      error.value = 'Login failed.';
+      router.push('/setting') // or a general user dashboard
+    }
+
+  } catch (err) {
+    console.error('Login failed', err)
+    if (err.response?.status === 422) {
+      error.value = err.response.data.message || 'Invalid credentials.'
+    } else {
+      error.value = 'Login failed.'
     }
   }
-};
+}
 </script>
+
 
 
 
