@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4">
+    <!-- <div class="p-4"> -->
         <div
             class="relative w-60 h-[17.5rem] rounded-lg bg-amber-600 overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 shadow-lg"
             role="button"
@@ -15,7 +15,7 @@
                 <p class="text-lg text-blue-50 font-bold">{{ label }}</p>
             </div>
         </div>
-    </div>
+    <!-- </div> -->
 </template>
 
 <script setup>

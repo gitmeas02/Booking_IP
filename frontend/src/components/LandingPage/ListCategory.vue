@@ -1,20 +1,20 @@
 <template>
-    <div class="p-14 pt-8">
+    <div class="p-14 pt-8 w-screen">
         <h2 class="font-semibold text-2xl text-gray-800">Discover Your Favourite Stay</h2>
-        <div class="w-[102rem] ml-18 flex overflow-x-auto space-x-4 py-4 scrollbar-none" style="scrollbar-width: none; -ms-overflow-style: none;">
-            <categoryCard
-            v-for="(item, index) in categoryList"
-            :key="index"
-            :image="item.image"
-            :label="item.label"
-            class="flex-shrink-0 w-64"
+        <div class="flex overflow-x-auto space-x-4 py-4 scrollbar-none w-full" style="scrollbar-width: none; -ms-overflow-style: none;">
+            <LandingCard
+                v-for="(item, index) in categoryList"
+                :key="index"
+                :image="item.image"
+                :label="item.label"
+                class="flex-shrink-0 w-60"
             />
         </div>
     </div>
 </template>
 
 <script setup>
-import categoryCard from './categoryCard.vue';
+import LandingCard from './LandingCard.vue';
 const categoryList = [
     {
         image: "https://images.unsplash.com/photo-1633015500433-0079867c0211?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGFwYXJ0bWVudCUyMGFlc3RoZXRpY3xlbnwwfHwwfHx8MA%3D%3D",

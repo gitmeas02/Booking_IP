@@ -5,15 +5,15 @@
             <CircleDollarSign/>
             <CircleHelp/>
             <ShoppingCart/>
-            <!-- // :to="isOwnerLoggedIn ? '/owner' : '/authentication/SignIn'" -->
             <RouterLink to="/owner-property"><button class="bg-[#4B2B2B] text-white px-4 py-2 rounded">Your Property</button></RouterLink>
-            <RouterLink to="/authentication/signin">
+            <RouterLink to="/authentication/signin" class="flex items-center gap-2 text-gray-700 hover:text-gray-900 bg-gray-100">
+                <span class="hidden md:inline">Sign In</span>
             <User />
             </RouterLink>
         </nav>
     </header>
 </template>
-
+ 
 <script setup>
 import {RouterLink} from 'vue-router'
 import { User } from 'lucide-vue-next';
@@ -40,4 +40,5 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+
 </style>

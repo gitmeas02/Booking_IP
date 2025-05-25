@@ -7,7 +7,7 @@
    
 </script>
 <template>
-    <div class="container">
+    <!-- <div class="container"> -->
         <div class="wrapper">
             <div id="title" style="text-align: center;">
                 <p>A PLACE TO CALL HOME ON YOUR NEXT ADVENTURE</p>
@@ -35,16 +35,16 @@
                 </div>
             </div>
         </div>
-    </div>
+    <!-- </div> -->
 </template>
 <style scoped>
-    .container {
+    /* .container {
         display: flex;
         justify-content: center;
         align-items: center;
         width: 100vw;
         height: 100vh;
-    }
+    } */
     p {
         font-size: 3vh;
         color: white;
