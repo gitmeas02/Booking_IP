@@ -1,22 +1,30 @@
-import { defineStore } from "pinia";
-import axios from "axios";
+import { defineStore } from 'pinia';
 
-export const useSettingInformationStore = defineStore("settingInformation", {
+export const useSettingInformationStore = defineStore('settingInformation', {
   state: () => ({
-    personalInfo: []
+    personalInfo: {
+      1: {
+        name: "John Doe",
+        displayName: "Johnny",
+        email: "john@example.com",
+        phone: "+1234567890",
+        dob: "1990-01-01",
+        nationality: "USA",
+        gender: "Male",
+        address: "123 Main St, City",
+        passport: "123456789"
+      }
+    }
   }),
   actions: {
-    async fetchPersonalInfo() {
-      const res = await axios.get("http://localhost:5000/personalInfo");
-      this.personalInfo = res.data;
+    fetchPersonalInfo() {
+      // Normally fetch from API
     },
     getPersonalInfoById(id) {
-      // Use the already-fetched data from state for synchronous access
-      return this.personalInfo.find(info => info.id === id);
+      return this.personalInfo[id];
     },
-    async updatePersonalInfo(id, newData) {
-      await axios.patch(`http://localhost:5000/personalInfo/${id}`, newData);
-      await this.fetchPersonalInfo();
+    updatePersonalInfo(id, data) {
+      Object.assign(this.personalInfo[id], data);
     }
   }
 });
