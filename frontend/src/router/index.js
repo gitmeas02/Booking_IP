@@ -50,8 +50,9 @@ const routes = [
     component: ListRoomPage,
   },
   {
-    path: "/products-details",
+    path: "/products-details/:id",
     name: "ProductsDetails",
+    props: true ,
     component: ProductDetailPage,
   },
   {
@@ -59,9 +60,9 @@ const routes = [
     name: "Chat",
     component: Chatbox,
   },
-    {
-    path: "/uplaodproperty",
-    name: "uplaodproperty",
+  {
+    path: "/upload-property",
+    name: "uploadProperty",
     component: UploadProperty,
   },
   {
