@@ -20,23 +20,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/generate-khqr', function (KHQRService $service) {
-    $result = $service->generateIndividual();
-    
-    if (!$result['success']) {
-        return view('khqr-error', ['error' => $result['message']]);
-    }
-    
-    // Store MD5 in session for tracking
-    session(['current_qr_md5' => $result['md5']]);
-    
-    return view('khqr', [
-        'qrString' => $result['qr_string'],
-        'md5' => $result['md5'],
-        'message' => $result['message'],
-        'hasApiToken' => !empty(env('BAKONG_API_TOKEN'))
-    ]);
-});
 
 // Generate QR with transaction tracking (improved)
 Route::get('/generate-trackable-khqr', [PaymentController::class, 'generateForWeb']);
