@@ -1,128 +1,109 @@
-<template>
-
-    <div class="hotel-card">
-        <!-- Image -->
-        <div class="image">
-            <img :src="hotel.rooms[0].images[0]" alt="hotel image" class="img" />
-        </div>
-
-        <!-- Hotel Info -->
-        <div class="hotel-card-info">
-            <!-- Hotel Header - Name and Rating -->
-            <div class="hotel-header">
-                <div class="hotel-name-container">
-                    <h1 class="hotel-name">{{ hotel.name }}</h1>
-                    <div class="stars-container">
-                        <span class="star-icon" v-for="n in hotel.stars" :key="n">★</span>
-                    </div>
-                </div>
-
-                <div class="review-container">
-                    <div class="review-score-container">
-                        <span class="review-text">Review Score</span>
-                        <div class="score-badge">{{ hotel.reviewScore }}</div>
-                    </div>
-                    <a href="#" class="comments-link">Comments ({{ hotel.commentsCount }})</a>
-                </div>
-            </div>
-
-            <!-- Location info -->
-            <div class="location-container">
-                <a href="#" class="location-link">{{ hotel.location.city }}</a>
-                <a href="#" class="map-link">Show On Map</a>
-                <span class="distance-text">{{ hotel.location.distanceFromCenter }} from center</span>
-            </div>
-
-            <!-- Price -->
-            <div class="price-container">
-                <div class="price-text">US$ {{ hotel.price }}</div>
-            </div>
-
-            <!-- Room info -->
-            <div class="room-info">
-                <ul class="room-list">
-                    <li v-for="(room, rIndex) in hotel.rooms" :key="rIndex" class="room-list-item">
-                        Size {{ room.size }}
-                    </li>
-                    <li v-for="(room, rIndex) in hotel.rooms" :key="rIndex" class="room-list-item">
-                        Beds: {{ room.beds }}
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Amenities -->
-            <div class="amenities-container">
-                <div class="amenities-list">
-                    <div class="amenity-item" v-for="(amenity, aIndex) in hotel.amenities" :key="aIndex">
-                        <!-- <Icon :icon="icons[amenity]" class="amenity-icon" /> -->
-                         <component :is="icons[amenity]" class="w-4 h-4 text-gray-600" />
-                        <span class="amenity-text">{{ amenity }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action button -->
-            <div class="action-container">
-                <button class="view-button" @click="viewHotel(hotel.id)">View Hotel</button>
-            </div>
-        </div>
+<template> 
+  <div
+    class="hotel-card cursor-pointer"
+    @click="$router.push({ name: 'ProductsDetails', params: { id: room.id } })"
+  >
+    <!-- Image -->
+    <div class="image">
+      <img
+        v-if="room.images?.length"
+        :src="room.images[0]"
+        :alt="`Image of ${room.name}`"
+        class="img"
+      />
+      <div v-else class="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+        No Image
+      </div>
     </div>
+
+    <!-- Hotel Info -->
+    <div class="hotel-card-info">
+      <!-- Header -->
+      <div class="hotel-header">
+        <div class="hotel-name-container">
+          <h1 class="hotel-name">{{ room.hotel?.name }}</h1>
+          <div class="stars-container">
+            <span class="star-icon" v-for="n in room.hotel?.stars" :key="n">★</span>
+          </div>
+        </div>
+
+        <div class="review-container">
+          <div class="review-score-container">
+            <span class="review-text">Review Score</span>
+            <div class="score-badge">{{ room.hotel?.reviewScore ?? 'N/A' }}</div>
+          </div>
+          <a href="#" class="comments-link">
+            Comments ({{ room.hotel?.comments?.length ?? 0 }})
+          </a>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="location-container">
+        <a href="#" class="location-link">{{ room.hotel?.location?.city }}</a>
+        <a href="#" class="map-link">Show On Map</a>
+        <span class="distance-text">
+          {{ room.hotel?.location?.distanceFromCenter ?? 'N/A' }} from center
+        </span>
+      </div>
+
+      <!-- Price -->
+      <div class="price-container">
+        <div class="price-text">US$ {{ room.price }}</div>
+      </div>
+
+      <!-- Room Info -->
+      <div class="room-info">
+        <ul class="room-list">
+          <li class="room-list-item">Size: {{ room.size }}</li>
+          <li class="room-list-item">Beds: {{ room.beds }}</li>
+        </ul>
+      </div>
+
+      <!-- Amenities -->
+      <div class="amenities-container">
+        <div class="amenities-list">
+          <div
+            class="amenity-item"
+            v-for="(amenity, aIndex) in room.amenities"
+            :key="aIndex"
+          >
+            <component
+              :is="icons[amenity]"
+              class="w-4 h-4 text-gray-600"
+            />
+            <span class="amenity-text">{{ amenity }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Button -->
+      <div class="action-container">
+        <button
+          class="view-button"
+          @click.stop="viewHotel(room.id)"
+        >
+          View Hotel
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
-<!-- <script>
-import { Icon } from '@iconify/vue';
-
-export default {
-    name: 'HotelCard',
-    components: {
-        Icon
-    },
-    props: {
-        hotel: {
-            type: Object,
-            required: true
-        }
-    },
-
-    data() {
-        return {
-            icons: {
-                "Air Conditioning": "material-symbols:air",
-                "TV": "material-symbols:tv",
-                "Mini Bar": "mdi:glass-cocktail",
-                "Free Breakfast": "material-symbols:fastfood-outline-rounded",
-                "Free Wi-Fi": "material-symbols:wifi",
-                "Hot Water": "material-symbols:shower-outline-rounded",
-                "Phone Call": "material-symbols:deskphone-outline",
-            }
-
-        };
-
-    },
-
-
-
-
-
-};
-</script> -->
 <script setup>
 import {
   AirVent,
-  Tv,
-  Wine,
   Coffee,
-  Wifi,
+  Phone,
   ShowerHead,
-  Phone
-} from 'lucide-vue-next'
+  Tv,
+  Wifi,
+  Wine
+} from 'lucide-vue-next';
 
 const props = defineProps({
-  hotel: {
-    type: Object,
-    required: true
-  }
-})
+  room: { type: Object, required: true }
+});
 
 const icons = {
   "Air Conditioning": AirVent,
@@ -132,8 +113,14 @@ const icons = {
   "Free Wi-Fi": Wifi,
   "Hot Water": ShowerHead,
   "Phone Call": Phone
+};
+
+function viewHotel(id) {
+  // Optional: additional behavior before navigating
+  console.log('View hotel (room id):', id);
 }
 </script>
+
 
 
 <style scoped>
