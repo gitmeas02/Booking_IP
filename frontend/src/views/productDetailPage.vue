@@ -23,24 +23,20 @@
           alt="Hotel room"
           class="main-image"
           v-if="images.length"
+          @click="openPhotoModal(currentImageIndex)"
         />
         <div class="navigation-dots">
           <span
-            v-for="(_, index) in images"
-            :key="index"
-            :class="['dot', { active: index === currentImageIndex }]"
-            @click="setCurrentImage(index)"
+        v-for="(_, index) in images"
+        :key="index"
+        :class="['dot', { active: index === currentImageIndex }]"
+        @click="setCurrentImage(index); openPhotoModal(index)"
           ></span>
         </div>
       </div>
 
       <div class="thumbnail-gallery">
-        <div
-          v-for="(image, index) in images"
-          :key="index"
-          class="thumbnail-container"
-          @click="setCurrentImage(index)"
-        >
+        <div v-for="(image, index) in images" :key="index" class="thumbnail-container" @click="openPhotoModal(index)">
           <img :src="image" alt="Room thumbnail" class="thumbnail" />
           <div v-if="index === images.length - 1" class="photo-count">
             <span>{{ images.length }} photos</span>
@@ -74,34 +70,26 @@
         <div class="hotel-info">
           <div class="hotel-description">
             <p v-for="(desc, index) in hotel.description" :key="index">{{ desc }}</p>
-            </div>
+          </div>
           <button class="show-map-btn">Show Map</button>
 
           <!-- Facilities Section -->
-        <div class="facilities-section">
-        <h3>Most popular facilities</h3>
-        <div class="facilities-grid">
-            <div
-            class="facility"
-            v-for="amenity in hotelAmenities"
-            :key="amenity.id"
-            >
-            <span class="icon">{{ amenity.icon }}</span> {{ amenity.name }}
+          <div class="facilities-section">
+            <h3>Most popular facilities</h3>
+            <div class="facilities-grid">
+              <div class="facility" v-for="amenity in hotelAmenities" :key="amenity.id">
+                <span class="icon">{{ amenity.icon }}</span> {{ amenity.name }}
+              </div>
             </div>
-        </div>
-        </div>
+          </div>
 
-     
+
           <!-- Available Rooms -->
           <div class="available-property">
             <h3>AVAILABLE ROOMS</h3>
             <button class="view-more-btn">View More Listing</button>
             <div class="room-listings">
-              <div
-                v-for="(r, index) in roomsBelongToHotel"
-                :key="index"
-                class="room-card"
-              >
+              <div v-for="(r, index) in roomsBelongToHotel" :key="index" class="room-card">
                 <div class="room-image">
                   <img :src="r.image || r.images?.[0]" :alt="r.title" />
                 </div>
@@ -118,11 +106,7 @@
         <!-- Booking Section -->
         <div class="booking-section">
           <div class="hotel-thumbnail">
-            <img
-              :src="images[0]"
-              alt="Hotel"
-              class="thumbnail-img"
-            />
+            <img :src="images[0]" alt="Hotel" class="thumbnail-img" />
             <h3>{{ hotel.name }}</h3>
             <p>{{ hotel.location?.city }}</p>
           </div>
@@ -162,11 +146,8 @@
 
           <div class="map-section">
             <div class="map-container">
-              <img
-                src="https://plus.unsplash.com/premium_photo-1682310071124-33632135b2ee?w=500"
-                alt="Map"
-                class="map-image"
-              />
+              <img src="https://plus.unsplash.com/premium_photo-1682310071124-33632135b2ee?w=500" alt="Map"
+                class="map-image" />
               <div class="map-marker">📍</div>
             </div>
             <div class="direction-location">
@@ -176,6 +157,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Viewer -->
+    <div v-if="modalVisible" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-content">
+        <button class="modal-close" @click="closeModal">
+          <X stroke-width="3"/>
+        </button>
+        <button class="modal-nav left" @click="prevPhoto" :disabled="currentPhotoIndex === 0">
+          <ChevronLeft/>
+        </button>
+        <img :src="images[currentPhotoIndex]" class="modal-image" />
+        <button class="modal-nav right" @click="nextPhoto" :disabled="currentPhotoIndex === images.length - 1">
+          <ChevronRight/>
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <div v-else>
@@ -187,6 +185,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute,useRouter } from 'vue-router'
 import { useRoomStore } from '@/stores/store'
+import { ChevronLeft, ChevronRight, X,  } from 'lucide-vue-next';
 
 const roomStore = useRoomStore()
 const route = useRoute();
@@ -218,6 +217,13 @@ watch(room, newRoom => {
 })
 
 const currentImageIndex = ref(0)
+const currentImage_thamnals= (index)=>{
+  if (index >= 0 && index < images.value.length) {
+    currentImageIndex.value = index
+  } else {
+    console.warn('Index out of bounds for image thumbnails')
+  }
+}
 const setCurrentImage = (index) => {
   currentImageIndex.value = index
 }
@@ -271,6 +277,31 @@ onMounted(async () => {
   await roomStore.fetchRooms()
   await roomStore.fetchHotels()
 })
+
+const modalVisible = ref(false)
+const currentPhotoIndex = ref(0)
+
+const openPhotoModal = (index) => {
+  currentPhotoIndex.value = index
+  modalVisible.value = true
+}
+
+const closeModal = () => {
+  modalVisible.value = false
+}
+
+const nextPhoto = () => {
+  if (currentPhotoIndex.value < images.value.length - 1) {
+    currentPhotoIndex.value++
+  }
+}
+
+const prevPhoto = () => {
+  if (currentPhotoIndex.value > 0) {
+    currentPhotoIndex.value--
+  }
+}
+
 </script>
 <style scoped>
 .hotel-listing {
@@ -417,6 +448,7 @@ onMounted(async () => {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
 .hotel-booking-app {
   font-family: Arial, sans-serif;
   max-width: 1200px;
@@ -659,6 +691,91 @@ onMounted(async () => {
 .direction-location h3 {
   margin: 0;
   font-size: 1rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.modal-img-container {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.modal-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+  background: #fff;
+}
+
+.modal-close {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  width: 48px;
+  height: 48px;
+  font-size: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.modal-nav {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  width: 56px;
+  height: 56px;
+  font-size: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: 0.2s;
+}
+
+.modal-nav.left {
+  position: fixed;
+  left: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.modal-nav.right {
+  position: fixed;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 @media (max-width: 768px) {

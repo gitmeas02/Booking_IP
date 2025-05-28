@@ -78,10 +78,10 @@ const routes = [
     path: "/setting-details",
     name: "SettingDetail",
     component: SettingDetailPage,
-    meta: {
-      requiresAuth: true ,
-      requiresRole: 'user' // Only accessible by user role
-    }
+    // meta: {
+    //   requiresAuth: true ,
+    //   requiresRole: 'user' // Only accessible by user role
+    // }
   },
   {
     path: "/authentication",

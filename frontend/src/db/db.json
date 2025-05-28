@@ -1,0 +1,16 @@
+{
+  "personalInfo": [
+    {
+      "id": "1",
+      "name": "xcvxcv",
+      "displayName": "",
+      "email": "john@example.com",
+      "phone": "123456789",
+      "dob": "1990-01-01",
+      "nationality": "American",
+      "gender": "Male",
+      "address": "",
+      "passport": ""
+    }
+  ]
+}
