@@ -185,11 +185,12 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute,useRouter } from 'vue-router'
 import { useRoomStore } from '@/stores/store'
 
 const roomStore = useRoomStore()
-const route = useRoute()
+const route = useRoute();
+   const router = useRouter();
 const roomId = parseInt(route.params.id)
 
 const checkInDate = ref('')
@@ -235,8 +236,28 @@ const pricePerNight = computed(() => room.value?.price || 0)
 const totalRoomPrice = computed(() => pricePerNight.value * numberOfNights.value)
 const totalPrice = computed(() => totalRoomPrice.value + bookingFee.value)
 
+
 const reserveRoom = () => {
-  alert(`Reserved room ID ${roomId} from ${checkInDate.value} to ${checkOutDate.value}`)
+    if (!checkInDate.value || !checkOutDate.value) {
+        alert('Please select check-in and check-out dates.')
+        return
+    }
+    if (numberOfNights.value <= 0) {
+        alert('Check-out date must be after check-in date.')
+        return
+    }
+    if (totalPrice.value <= 0) {
+        alert('Total price must be greater than zero.')
+        return
+    }
+    router.push({
+        name: 'checkout',
+        params: { id: roomId },
+        query: {
+            checkin: checkInDate.value,
+            checkout: checkOutDate.value
+        }
+    })
 }
 
 const getReviewScoreText = (score) => {

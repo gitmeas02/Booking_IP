@@ -109,14 +109,29 @@ import FormInfo from "@/components/CheckoutComponents/FormInfo.vue";
 import BookingSummary from "@/components/CheckoutComponents/BookingSummary.vue";
 import { MapPin, Shield, Bed } from "lucide-vue-next";
 import { ref } from "vue";
- 
-  const formInfoRef = ref(null);
+ import { useRoute } from 'vue-router';
+import { useRoomStore } from "@/stores/store";
+
+const route = useRoute();
+
+// Accessing route data
+const id = route.params.id;
+const checkin = route.query.checkin;
+const checkout = route.query.checkout;
+const roomStore=useRoomStore();
+const getRoomInfoById = (id) => {
+  return roomStore.rooms.find(room => room.id === Number(id));
+};
+const selectedRoom = getRoomInfoById(id);
+const hotel = selectedRoom
+  ? roomStore.hotels.find(h => h.id === selectedRoom.hotelId)
+  : null;  const formInfoRef = ref(null);
   const bookingDetails = {
-  hotelName: "Khun Hotel",
+  hotelName: hotel?.name || "Khun Hoth Hotel",
   location: "Siem Reap, Cambodia",
   near: "Luxury boutique hotel near Angkor Wat",
-  checkin: new Date("2025-04-10"),
-  checkout: new Date("2025-04-13"),
+  checkin: new Date(checkin),
+checkout: new Date(checkout),
   roomType: "Deluxe Double",
   guest: 2,
   nights: 3,

@@ -37,12 +37,12 @@ const routes = [
     }
   },
   {
-    path: "/checkout",
-    name: "Success",
+    path: "/checkout/:id",
+    name: "checkout",
     component: CheckoutPage,
-    meta:{requiresAuth:true,
-      roles: ['user'] 
-    }
+    // meta:{requiresAuth:true,
+    //   roles: ['user'] 
+    // }
   },
   {
     path: "/listroom",
