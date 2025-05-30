@@ -318,7 +318,7 @@ watch([startDate, endDate], () => {
 .date-inputs {
     display: flex;
     gap: 8px;
-    margin-bottom: 4px;
+    /* margin-bottom: 4px; */
 }
 
 .date-input-container {
