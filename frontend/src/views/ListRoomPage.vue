@@ -1,21 +1,16 @@
 <template>
-  <div class="flex items-center justify-conter flex-col">
-
-    <div class="rounded-xl bg-[#0A2647] w-280 ">
-
-      <div id="inputSearch" class="input-container flex items-center justify-center flex-row pt-2 gap-2">
-        <div class="relative flex items-center">
-          <input type="text" placeholder="Enter Your Destination or Property" class="bg-white h-16.5 w-100 rounded-lg pl-10 pr-2">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-        </div>
-        <button class="w-20 h-16.5 rounded-lg bg-white font-bold">Search</button>
+  
+  <div class="flex items-center justify-center flex-col pt-14 pl-14 pr-14">
+     <div class="rounded-xl bg-[#0A2647] w-full max-w-screen px-14 pt-7 pb-7">
+      <div  class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
+        <input type="text" placeholder="Enter Your Destination or Property" class="bg-white h-16.5 w-full rounded-lg pl-10 pr-2" />
+        <button class=" w-[200px] h-16 rounded-lg bg-white font-bold">Search</button>
       </div>
 
-      <div class="flex items-center justify-conter flex-row p-2  wrapper">
-        <DateRangePicker/>
-        <SelectRoom class="ml-2 mr-2"/>
+      <div class="flex items-center justify-conter flex-row p-2">
+      <DateRangePicker />
+      <SelectRoom class="ml-2 mr-2" />
       </div>
-
     </div>
     <div class="container">
       <div class="filter-section">
@@ -28,9 +23,15 @@
             :key="property.name"
           >
             <label class="checkbox-label">
-              <input type="checkbox" :value="property.name" v-model="selected" />
+              <input
+                type="checkbox"
+                :value="property.name"
+                v-model="selected"
+              />
               <span class="property-info">
-                <span class="icon" v-if="property.icon">{{ property.icon }}</span>
+                <span class="icon" v-if="property.icon">{{
+                  property.icon
+                }}</span>
                 {{ property.name }}
               </span>
             </label>
@@ -54,8 +55,12 @@
       </div>
       <div class="room-list">
         <!--    single room    -->
-        
-        <RoomCard v-for="(room, index) in matchingRooms" :key="index" :room="room" />
+
+        <RoomCard
+          v-for="(room, index) in matchingRooms"
+          :key="index"
+          :room="room"
+        />
       </div>
     </div>
   </div>
@@ -69,7 +74,7 @@ import { useRoomStore } from "@/stores/store";
 import { Icon } from "@iconify/vue";
 import { onMounted } from "vue";
 import { computed, ref } from "vue";
-import { Search } from 'lucide-vue-next';
+import { Search } from "lucide-vue-next";
 
 const selected = ref([]);
 const showMore = ref(false);
@@ -88,7 +93,7 @@ const matchingRooms = computed(() => {
 
   roomStore.hotels.forEach((hotel) => {
     const hotelRooms = roomStore.rooms.filter((room) =>
-       hotel.roomId.includes(room.id)
+      hotel.roomId.includes(room.id)
     );
 
     hotelRooms.forEach((room) => {
@@ -101,12 +106,11 @@ const matchingRooms = computed(() => {
 
   return allRooms;
 });
- onMounted(async () => {
+onMounted(async () => {
   await roomStore.fetchRooms();
   await roomStore.fetchHotels();
 });
 </script>
-
 
 <style scoped>
 .container {
@@ -114,7 +118,7 @@ const matchingRooms = computed(() => {
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
-  background-color: #fcfcfc;
+  /* background-color: #fcfcfc; */
   gap: 25px;
   padding-top: 15px;
   padding-bottom: 15px;
