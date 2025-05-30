@@ -1,47 +1,57 @@
 <template>
-  <div class="container">
-    <div class="filter-section">
-      <div class="filter-box">
-        <h2 class="filter-title">Property Type</h2>
+  <div class="flex items-center justify-conter flex-col">
 
-        <div
-          class="filter-item"
-          v-for="(property, index) in displayedProperties"
-          :key="property.name"
-        >
-          <label class="checkbox-label">
-            <input type="checkbox" :value="property.name" v-model="selected" />
-            <span class="property-info">
-              <span class="icon" v-if="property.icon">{{ property.icon }}</span>
-              {{ property.name }}
-            </span>
-          </label>
-          <span class="property-count">{{ property.count }}</span>
+    <div class="flex items-center justify-conter flex-row p-2 rounded-xl bg-[#0A2647] w-280  wrapper">
+      <DateRangePicker/>
+      <SelectRoom class="ml-2 mr-2"/>
+      <button class="w-50 h-16.5 rounded-lg bg-white">Search</button>
+    </div>
+    <div class="container">
+      <div class="filter-section">
+        <div class="filter-box">
+          <h2 class="filter-title">Property Type</h2>
+
+          <div
+            class="filter-item"
+            v-for="(property, index) in displayedProperties"
+            :key="property.name"
+          >
+            <label class="checkbox-label">
+              <input type="checkbox" :value="property.name" v-model="selected" />
+              <span class="property-info">
+                <span class="icon" v-if="property.icon">{{ property.icon }}</span>
+                {{ property.name }}
+              </span>
+            </label>
+            <span class="property-count">{{ property.count }}</span>
+          </div>
+
+          <button
+            v-if="properties.length > limit"
+            @click="showMore = !showMore"
+            class="see-more"
+          >
+            {{ showMore ? "See Less" : "See More" }}
+            <Icon icon="iconamoon:arrow-down-2" v-if="!showMore" />
+            <Icon icon="iconamoon:arrow-up-2" v-else />
+          </button>
         </div>
 
-        <button
-          v-if="properties.length > limit"
-          @click="showMore = !showMore"
-          class="see-more"
-        >
-          {{ showMore ? "See Less" : "See More" }}
-          <Icon icon="iconamoon:arrow-down-2" v-if="!showMore" />
-          <Icon icon="iconamoon:arrow-up-2" v-else />
-        </button>
+        <div class="filter-price">
+          <TwoThumbSlider />
+        </div>
       </div>
-
-      <div class="filter-price">
-        <TwoThumbSlider />
+      <div class="room-list">
+        <!--    single room    -->
+        
+        <RoomCard v-for="(room, index) in matchingRooms" :key="index" :room="room" />
       </div>
-    </div>
-    <div class="room-list">
-      <!--    single room    -->
-       
-      <RoomCard v-for="(room, index) in matchingRooms" :key="index" :room="room" />
     </div>
   </div>
 </template>
 <script setup>
+import DateRangePicker from "@/components/DatePicker/DateRangePicker.vue";
+import SelectRoom from "@/components/DatePicker/selectRoom.vue";
 import RoomCard from "@/components/ListHotel/RoomCard.vue";
 import TwoThumbSlider from "@/components/ListHotel/TwoThumbSlider.vue";
 import { useRoomStore } from "@/stores/store";

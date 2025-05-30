@@ -260,8 +260,11 @@
   <style scoped>
   .booking-dropdown-container {
     position: relative;
-    width: 100%;
-    max-width: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* width: 100%; */
+    /* max-width: 500px; */
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
   
@@ -269,7 +272,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 4rem;
+    height: 4.188rem;
     width: 21em;
     padding: 12px 16px;
     background-color: white;
