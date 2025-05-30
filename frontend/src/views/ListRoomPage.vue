@@ -1,10 +1,21 @@
 <template>
   <div class="flex items-center justify-conter flex-col">
 
-    <div class="flex items-center justify-conter flex-row p-2 rounded-xl bg-[#0A2647] w-280  wrapper">
-      <DateRangePicker/>
-      <SelectRoom class="ml-2 mr-2"/>
-      <button class="w-50 h-16.5 rounded-lg bg-white">Search</button>
+    <div class="rounded-xl bg-[#0A2647] w-280 ">
+
+      <div id="inputSearch" class="input-container flex items-center justify-center flex-row pt-2 gap-2">
+        <div class="relative flex items-center">
+          <input type="text" placeholder="Enter Your Destination or Property" class="bg-white h-16.5 w-100 rounded-lg pl-10 pr-2">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+        </div>
+        <button class="w-20 h-16.5 rounded-lg bg-white font-bold">Search</button>
+      </div>
+
+      <div class="flex items-center justify-conter flex-row p-2  wrapper">
+        <DateRangePicker/>
+        <SelectRoom class="ml-2 mr-2"/>
+      </div>
+
     </div>
     <div class="container">
       <div class="filter-section">
@@ -58,6 +69,7 @@ import { useRoomStore } from "@/stores/store";
 import { Icon } from "@iconify/vue";
 import { onMounted } from "vue";
 import { computed, ref } from "vue";
+import { Search } from 'lucide-vue-next';
 
 const selected = ref([]);
 const showMore = ref(false);
