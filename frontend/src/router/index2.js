@@ -76,7 +76,10 @@ export default[
   { 
     path:'/test',
     name:"test",
-    component:Test
+    component:Test,
+    meta:{
+      require:true
+    }
   }
 
 

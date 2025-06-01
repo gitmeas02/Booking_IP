@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class ApplicationPhoto extends Model
-{
-   protected $fillable = ['application_id', 'url'];
+{  
+    protected $table="application_photo";
+    protected $fillable = ['application_id', 'url'];
 
     public function application()
     {

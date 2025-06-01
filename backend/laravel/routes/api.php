@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
@@ -30,9 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/switch-role', [RoleController::class, 'switchRole']);
 Route::get('/user-roles', [RoleController::class, 'getUserRoles']);
 
-Route::middleware('auth:sanctum')->group(callback: function () {
-    Route::post('/apply-owner', [OwnerController::class, 'apply']);
-    Route::post('/approve-owner/{id}', [OwnerController::class, 'approve']); // Optional for admin
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/owner/apply', [OwnerController::class, 'apply']);
+    Route::post('/approve-owner/{id}', [OwnerController::class, 'approve']);
 });
 
 //
@@ -40,4 +41,6 @@ Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
     Route::post('/property/{id}/room', [RoomTypeController::class, 'store']);
     Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
 });
+// amenity
+Route::get('/amenities', [AmenityController::class, 'index']);
 

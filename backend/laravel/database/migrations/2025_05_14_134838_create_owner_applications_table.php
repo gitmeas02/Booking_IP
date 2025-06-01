@@ -16,8 +16,8 @@ return new class extends Migration
             // Foreign key to users
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); 
-                        
-            $table->string('property_name');
+            $table->string(column: 'property_type');
+            $table->string(column: 'property_name');
             $table->text('description')->nullable();
             
             // Foreign key to application_location
