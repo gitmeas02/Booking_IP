@@ -99,7 +99,7 @@ export default {
     }
 }
 </script>
-
+<!-- 
 <style scoped>
 .container {
     display: flex;
@@ -282,4 +282,4 @@ h2 {
         font-size: 14px;
     }
 }
-</style>
+</style> -->

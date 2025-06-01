@@ -10,6 +10,7 @@ import OwnerPropertyDetailPartnerPage from "@/views/OwnerPropertyDetailPartnerPa
 import OwnerPropertyDetailPaymentPage from "@/views/OwnerPropertyDetailPaymentPage.vue";
 import OwnerPropertyDetailPhotoPage from "@/views/OwnerPropertyDetailPhotoPage.vue";
 import OwnerPropertyLocationPage from "@/views/OwnerPropertyLocationPage.vue";
+import Test from "@/views/Test/Test.vue";
 
 export default[
   {
@@ -72,7 +73,11 @@ export default[
     name: 'OwnerPropertyDetailLastConfirmation',
     component: OwnerPropertyDetailLastConfirmPage
   },
-
+  { 
+    path:'/test',
+    name:"test",
+    component:Test
+  }
 
 
 

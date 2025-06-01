@@ -24,7 +24,7 @@
                     Signing out will log you out from all devices except this one. This can take up to 10 minutes.
                 </p>
             </div>
-            <a href="#" class="text-blue-600 font-medium text-sm">Sign out</a>
+            <a href="#" class="text-blue-600 font-medium text-sm" @click="signOut" >Sign out</a>
         </div>
 
         <div class="border-t py-4 flex justify-between items-start gap-4">
@@ -38,7 +38,23 @@
 </template>
 
 <script setup>
-// Add functionality or methods if needed
+const signOut = async () => {
+  try {
+    // Optional: Call backend logout endpoint to invalidate token
+    // await axios.post('http://localhost:8100/api/logout', {}, {
+    //   withCredentials: true
+    // })
+
+    // Remove token from localStorage
+    localStorage.removeItem('token')
+
+    // Redirect to login page or homepage
+    router.push('/login')
+  } catch (err) {
+    console.error('Sign out failed:', err)
+    alert('Sign out failed. Check console.')
+  }
+}
 </script>
 
 <style scoped>
