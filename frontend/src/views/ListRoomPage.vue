@@ -1,17 +1,28 @@
 <template>
-  
   <div class="flex items-center justify-center flex-col pt-14 pl-14 pr-14">
-     <div class="rounded-xl bg-[#0A2647] w-full max-w-screen px-14 pt-7 pb-7">
-      <div  class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
-        <input type="text" placeholder="Enter Your Destination or Property" class="bg-white h-16.5 w-full rounded-lg pl-10 pr-2" />
-        <button class=" w-[200px] h-16 rounded-lg bg-white font-bold">Search</button>
+    <form
+      class="rounded-xl bg-[#0A2647] w-full max-w-screen px-14 pt-7 pb-7"
+      @submit.prevent="handleSearch"
+    >
+      <div class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Enter Your Destination or Property"
+          class="bg-white h-16.5 w-full rounded-lg pl-10 pr-2"
+        />
+        <button
+          class="w-[200px] h-16 rounded-lg bg-white font-bold cursor-pointer"
+          type="submit"
+        >
+          Search
+        </button>
       </div>
-
-      <div class="flex items-center justify-conter flex-row p-2">
-      <DateRangePicker />
-      <SelectRoom class="ml-2 mr-2" />
+      <div class="flex items-center flex-row p-2">
+        <DateRangePicker v-model="dateRange" />
+        <SelectRoom v-model="guestDetails" class="ml-2 mr-2" />
       </div>
-    </div>
+    </form>
     <div class="container">
       <div class="filter-section">
         <div class="filter-box">
@@ -76,6 +87,11 @@ import { onMounted } from "vue";
 import { computed, ref } from "vue";
 import { Search } from "lucide-vue-next";
 
+import { useSearchStore} from '@/stores/search'
+const searchRoom = useSearchStore();
+
+
+//------------------------------------------------------------------
 const selected = ref([]);
 const showMore = ref(false);
 const limit = 3;
@@ -105,10 +121,19 @@ const matchingRooms = computed(() => {
   });
 
   return allRooms;
-});
+}
+);
+
 onMounted(async () => {
   await roomStore.fetchRooms();
   await roomStore.fetchHotels();
+  await searchRoom.SearchRooms();
+});
+const guestDetails = ref({
+  rooms: 1,
+  adults: 2,
+  children: 2,
+  childAges: [null, null]
 });
 </script>
 
