@@ -72,6 +72,8 @@
           :key="index"
           :room="room"
         />
+
+        <img  src="http://localhost:9000/ownerimages/owner_applications_images/683c03e5ab1e8.png" alt="">
       </div>
     </div>
   </div>

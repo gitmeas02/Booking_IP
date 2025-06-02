@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
 // use App\Models\OwnerApplication;
@@ -40,7 +41,10 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
     Route::post('/property/{id}/room', [RoomTypeController::class, 'store']);
     Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
+    Route::get('/application/{id}/images', [ImageController::class, 'getUserApplicationImages']);
+   //http://localhost:8100/api/owner/application/7/images
 });
 // amenity
 Route::get('/amenities', [AmenityController::class, 'index']);
 
+//Images

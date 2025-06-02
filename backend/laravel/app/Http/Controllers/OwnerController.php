@@ -16,13 +16,9 @@ class OwnerController extends Controller
         $user = auth()->user();
 
         // Prevent multiple applications
-        $existingApplication = OwnerApplication::where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'approved'])
-            ->first();
-        if ($existingApplication) {
-            return response()->json(['error' => 'You already have a pending or approved application.'], 403);
-        }
+        // No restriction: users can submit multiple applications regardless of status
 
+        
         $validated = $request->validate([
             'property_type' => 'required|string',
             'fit_category' => 'required|string',

@@ -1,4 +1,6 @@
 <template>
+  <div>
+  </div>
   <form @submit.prevent="submitApplication" class="max-w-3xl mx-auto p-6 bg-white rounded shadow space-y-6">
     <!-- Error message if API Base URL is undefined -->
     <div v-if="!apiBaseUrl" class="text-red-600 font-semibold mt-2 mb-4">
@@ -257,23 +259,62 @@
     <p v-if="error" class="text-red-600 font-semibold mt-2">{{ error }}</p>
     <p v-if="success" class="text-green-600 font-semibold mt-2">{{ success }}</p>
   </form>
+ <div v-if="images.length" class="mt-6 grid grid-cols-4 gap-4">
+    <img
+      v-for="(img, index) in images"
+      :key="index"
+      :src="img"
+      class="w-32 h-32 object-cover"
+      alt="Application Image"
+    />
+  </div>
+
+  <div v-else-if="loading" class="mt-6 text-gray-500">Loading images...</div>
+  <div v-else-if="error" class="mt-6 text-red-500">{{ error }}</div>
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import axios from 'axios'
-
 const dragActive = ref(false)
 const fileInput = ref(null)
 const loading = ref(false)
+
 const error = ref('')
 const success = ref('')
+const applicationId = ref('9');
+const images = ref([])
 
 // Get API base URL and add debug logging
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 console.log('Environment variables:', import.meta.env)
 console.log('API Base URL:', apiBaseUrl)
 
+
+
+async function fetchImages() {
+  loading.value = true
+  try {
+const response = await axios.get(`http://localhost:8100/api/owner/application/${applicationId.value}/images`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    })
+    images.value = response.data.images
+    console.log('Fetched images:', images.value)
+    } catch (err) {
+    error.value = err.message || 'Failed to load images'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  // Only fetch if applicationId is set
+  if (applicationId.value) {
+    fetchImages()
+  }
+})
 // Example amenities list, replace with real data from your API or props
 const amenitiesList = [
   { id: 1, name: 'WiFi' },
@@ -281,7 +322,9 @@ const amenitiesList = [
   { id: 3, name: 'Gym' },
   { id: 4, name: 'Air Conditioning' },
 ]
-
+const etchAmenitiesList=[
+  
+]
 const form = reactive({
   property_type: '',
   fit_category: '',
