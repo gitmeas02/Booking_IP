@@ -455,25 +455,69 @@
   
   /* Responsive styles */
   @media (max-width: 480px) {
-    .dropdown-menu {
-      position: fixed;
-      top: auto;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      border-radius: 16px 16px 0 0;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    
-    .age-options {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      top: auto;
-      border-radius: 16px 16px 0 0;
-      max-height: 50vh;
-    }
-
+  .dropdown-trigger {
+    width: 100%;
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+    font-size: 14px;
   }
+
+  .trigger-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .dropdown-menu {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    padding: 12px;
+  }
+
+  .option-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .counter-controls {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .age-dropdown-trigger {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .age-options {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .child-age-selector {
+    margin-bottom: 16px;
+  }
+
+  .pricing-note {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+}
+
   </style>

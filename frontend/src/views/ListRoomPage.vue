@@ -1,15 +1,15 @@
 <template>
   
   <div class="flex items-center justify-center flex-col pt-14 pl-14 pr-14">
-     <div class="rounded-xl bg-[#0A2647] w-full max-w-screen px-14 pt-7 pb-7">
+     <div class="rounded-xl bg-[#0A2647] w-full px-14 pt-7 pb-7">
       <div  class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
-        <input type="text" placeholder="Enter Your Destination or Property" class="bg-white h-16.5 w-full rounded-lg pl-10 pr-2" />
+        <input type="text" placeholder="Enter Your Destination or Property" class="bg-white h-16.5 w-full rounded-lg pl-10" />
         <button class=" w-[200px] h-16 rounded-lg bg-white font-bold">Search</button>
       </div>
 
-      <div class="flex items-center justify-conter flex-row p-2">
+      <div class="flex items-center justify-conter flex-row pt-2 gap-2 w-full">
       <DateRangePicker />
-      <SelectRoom class="ml-2 mr-2" />
+      <SelectRoom/>
       </div>
     </div>
     <div class="container">
@@ -192,8 +192,9 @@ onMounted(async () => {
 }
 
 .filter-price {
-  width: 100%; /* Adjust the width of the container */
-  margin: 0 auto; /* Center the slider */
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
 }
 
 .room-list {
