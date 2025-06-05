@@ -18,20 +18,11 @@
       </div>
 
       <div class="main-image-container">
-        <img
-          :src="images[currentImageIndex]"
-          alt="Hotel room"
-          class="main-image"
-          v-if="images.length"
-          @click="openPhotoModal(currentImageIndex)"
-        />
+        <img :src="images[currentImageIndex]" alt="Hotel room" class="main-image" v-if="images.length"
+          @click="openPhotoModal(currentImageIndex)" />
         <div class="navigation-dots">
-          <span
-        v-for="(_, index) in images"
-        :key="index"
-        :class="['dot', { active: index === currentImageIndex }]"
-        @click="setCurrentImage(index); openPhotoModal(index)"
-          ></span>
+          <span v-for="(_, index) in images" :key="index" :class="['dot', { active: index === currentImageIndex }]"
+            @click="setCurrentImage(index); openPhotoModal(index)"></span>
         </div>
       </div>
 
@@ -156,20 +147,77 @@
           </div>
         </div>
       </div>
+
+      <!-- Comment Section -->
+      <div id="comment-header" class=" font-bold text-2xl pb-4">Comment</div>
+
+      <!-- Comment Input -->
+      <div id="comment-fill" class=" flex justify-center items-center py-3 pr-7">
+
+        <div id="comment-profile" class="flex items-center justify-between gap-2">
+          <div id="comment-pic">😆</div>
+          <div id="comment-name" class="font-bold">Khun Meas</div>
+        </div>
+
+        <div id="comment-input" class="flex-1 ml-2">
+          <input v-model="newComment" type="text" placeholder="Write a comment..."
+            class="w-full px-6 py-2 border-b-1 focus:outline-none " />
+        </div>
+
+      </div>
+
+      <!-- Comment Button -->
+      <div id="comment-btn" class=" flex justify-end items-center gap-2 pr-6.5">
+        <button class="text-base px-7 py-2 rounded-2xl" @click="cancel">Cancel</button>
+        <button class="text-base px-7 py-2 rounded-lg border-2 border-gray-400" @click="handleComment">Comment</button>
+      </div>
+
+      <!-- Rendered Comments -->
+      <div v-for="(comment, index) in comments" :key="index" class="flex items-center content-between mt-4 border-t border-gray-300 pt-4 px-6">
+        <!--  information -->
+        <div id="comment-info" class="flex items-start flex-col w-fit">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="text-xl">😆</div>
+            <div class="font-bold">Khun Meas</div>
+          </div>
+
+          <div id="check-in-out" class="text-gray-500 text-sm flex items-center gap-2">
+            <Calendar/> 3 nights.Jan.2024
+          </div>
+
+          <div id="room-type" class="text-gray-700 mt-2 text-sm flex items-center gap-2">
+            <BedSingle/> Deluxe Room with Balcony
+          </div>
+        </div>
+        
+        <!-- User Comment -->
+        <div id="comment-content" class="flex items-start self-start flex-col w-full gap-5">
+          <div id="comment-date" class="">Reviewed: January 17, 2024</div>
+          <div id="comment" class="font-bold text-xl">{{ comment }}</div>
+        </div>
+
+        <!-- Rating -->
+        <div id="comment-rating" class="flex items-start self-start gap-2 bg-blue-900 text-white p-1 rounded-sm">
+          1.0
+        </div>
+
+        
+      </div>
+
     </div>
 
     <!-- Modal Viewer -->
     <div v-if="modalVisible" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
         <button class="modal-close" @click="closeModal">
-          <X stroke-width="3"/>
+          <X stroke-width="3" />
         </button>
         <button class="modal-nav left" @click="prevPhoto" :disabled="currentPhotoIndex === 0">
-          <ChevronLeft/>
+          <ChevronLeft />
         </button>
         <img :src="images[currentPhotoIndex]" class="modal-image" />
         <button class="modal-nav right" @click="nextPhoto" :disabled="currentPhotoIndex === images.length - 1">
-          <ChevronRight/>
+          <ChevronRight />
         </button>
       </div>
     </div>
@@ -185,7 +233,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRoomStore } from '@/stores/store'
-import { ChevronLeft, ChevronRight, X,  } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Divide, X, Calendar,BedSingle } from 'lucide-vue-next';
 
 const roomStore = useRoomStore()
 const route = useRoute()
@@ -280,6 +328,21 @@ const prevPhoto = () => {
     currentPhotoIndex.value--
   }
 }
+
+const newComment = ref('')
+const comments = ref([])
+
+const cancel = () => {
+  newComment.value = ''
+}
+
+const handleComment = () => {
+  if (newComment.value.trim() !== '') {
+    comments.value.push(newComment.value.trim())
+    newComment.value = ''
+  }
+}
+
 
 </script>
 <style scoped>
