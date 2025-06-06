@@ -156,7 +156,7 @@
 
         <div id="comment-profile" class="flex items-center justify-between gap-2">
           <div id="comment-pic">😆</div>
-          <div id="comment-name" class="font-bold">Khun Meas</div>
+          <div id="comment-name" class="font-bold">{{ userName }}</div>
         </div>
 
         <div id="comment-input" class="flex-1 ml-2">
@@ -178,7 +178,7 @@
         <div id="comment-info" class="flex items-start flex-col w-fit">
           <div class="flex items-center gap-2 mb-2">
             <div class="text-xl">😆</div>
-            <div class="font-bold">Khun Meas</div>
+            <div class="font-bold">{{ userName }}</div>
           </div>
 
           <div id="check-in-out" class="text-gray-500 text-sm flex items-center gap-2">
@@ -192,8 +192,8 @@
         
         <!-- User Comment -->
         <div id="comment-content" class="flex items-start self-start flex-col w-full gap-5">
-          <div id="comment-date" class="">Reviewed: January 17, 2024</div>
-          <div id="comment" class="font-bold text-xl">{{ comment }}</div>
+          <div id="comment-date" class="">Reviewed: {{ comment.date }}</div>
+          <div id="comment" class="font-bold text-xl">{{ comment.text }}</div>
         </div>
 
         <!-- Rating -->
@@ -329,20 +329,29 @@ const prevPhoto = () => {
   }
 }
 
-const newComment = ref('')
-const comments = ref([])
+
+const userName = ref('Khun Meas');
+
+const newComment = ref('');
+const comments = ref([]);
+
+const handleComment = () => {
+  if (newComment.value.trim() !== '') {
+    comments.value.push({
+      text: newComment.value.trim(),
+      date: new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
+    });
+    newComment.value = '';
+  }
+};
 
 const cancel = () => {
   newComment.value = ''
 }
-
-const handleComment = () => {
-  if (newComment.value.trim() !== '') {
-    comments.value.push(newComment.value.trim())
-    newComment.value = ''
-  }
-}
-
 
 </script>
 <style scoped>
