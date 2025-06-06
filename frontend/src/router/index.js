@@ -12,7 +12,6 @@ import SignUp from "@/views/Authentication/SignUp.vue";
 import AuthenticationPage from "@/views/Authentication/AuthenticationPage.vue";
 
 import Admin from "@/views/AdminPage/Admin.vue";
-import OwnerPropertyPage from "@/views/OwnerPropertyPage.vue";
 
 import Chatbox from "@/views/ChatBox.vue";
 
@@ -121,14 +120,7 @@ const routes = [
       path: '/:pathMatch(.*)*',
       redirect: '/'
     },
-  {
-    path: "/owner-property",
-    name: "OwnerProperty",
-    component: OwnerPropertyPage,
-    meta:{
-      requiresAuth:true,roles: ['user','owner']
-    }
-  },
+
 ];
 
 const router = createRouter({

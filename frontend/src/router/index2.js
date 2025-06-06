@@ -1,76 +1,74 @@
-import OwnerPropertyCategoryPage from "@/views/OwnerPropertyCategoryPage.vue";
-import OwnerPropertyDetailConfirmationPage from "@/views/OwnerPropertyDetailConfirmationPage.vue";
-import OwnerPropertyDetailInvoicePage from "@/views/OwnerPropertyDetailInvoicePage.vue";
-import OwnerPropertyDetailLastConfirmPage from "@/views/OwnerPropertyDetailLastConfirmPage.vue";
-import OwnerPropertyDetailPage1 from "@/views/OwnerPropertyDetailPage1.vue";
-import OwnerPropertyDetailPage2 from "@/views/OwnerPropertyDetailPage2.vue";
-import OwnerPropertyDetailPage3 from "@/views/OwnerPropertyDetailPage3.vue";
-import OwnerPropertyDetailPage4 from "@/views/OwnerPropertyDetailPage4.vue";
-import OwnerPropertyDetailPartnerPage from "@/views/OwnerPropertyDetailPartnerPage.vue";
-import OwnerPropertyDetailPaymentPage from "@/views/OwnerPropertyDetailPaymentPage.vue";
-import OwnerPropertyDetailPhotoPage from "@/views/OwnerPropertyDetailPhotoPage.vue";
-import OwnerPropertyLocationPage from "@/views/OwnerPropertyLocationPage.vue";
+
 import Test from "@/views/Test/Test.vue";
+import OwnerPropertyTypePage from "@/views/OwnerApply/OwnerPropertyTypePage.vue";
+import OwnerPropertyName from "@/views/OwnerApply/OwnerPropertyName.vue";
+import OwnerPropertyAmenity from "@/views/OwnerApply/OwnerPropertyAmenity.vue";
+import OwnerPropertyServicePage from "@/views/OwnerApply/OwnerPropertyServicePage.vue";
+import OwnerPropertyHotelRulePage from "@/views/OwnerApply/OwnerPropertyHotelRulePage.vue";
+import OwnerPropertyDetailConfirmationPage from "@/views/OwnerApply/OwnerPropertyDetailConfirmationPage.vue";
+import OwnerPropertyPhotosPage from "@/views/OwnerApply/OwnerPropertyPhotosPage.vue";
+import OwnerPropertyAcceptPaymentPage from "@/views/OwnerApply/OwnerPropertyAcceptPaymentPage.vue";
+import OwnerPropertyPersonalDetailsPage from "@/views/OwnerApply/OwnerPropertyPersonalDetailsPage.vue";
+import OwnerPropertyLocationPage from "@/views/OwnerApply/OwnerPropertyLocationPage.vue";
+import OwnerPropertyDetailLastConfirmPage from "@/views/OwnerApply/OwnerPropertyDetailLastConfirmPage.vue";
 
 export default[
+   {
+      path: "/owner-property",
+      name: "OwnerPropertyPage1", // page1
+      component: OwnerPropertyTypePage,
+      meta:{
+        requiresAuth:true,roles: ['user','owner']
+      }
+    },
   {
-    path: '/ownerpropertycategorypage',
-    name: 'OwnerPropertyCategoryPage',
-    component: OwnerPropertyCategoryPage
-  },
-  {
-    path: '/ownerpropertylocationpage',
-    name: 'OwnerPropertyLocationPage',
+    path: '/ownerproperty-location',
+    name: 'OwnerPropertyPage2', //page2
     component: OwnerPropertyLocationPage
   },
   {
-    path: '/ownerpropertydetailpage/1',
-    name: 'OwnerPropertyDetailPage1',
-    component: OwnerPropertyDetailPage1
+    path: '/ownerproperty-name/', //page3
+    name: 'OwnerPropertyPage3',
+    component: OwnerPropertyName
   },
   {
-    path: '/ownerpropertydetailpage/2',
-    name: 'OwnerPropertyDetailPage2',
-    component: OwnerPropertyDetailPage2
+    path: '/ownerproperty-amenities',
+    name: 'OwnerPropertyPage4',
+    component: OwnerPropertyAmenity //page4
   },
   {
-    path: '/ownerpropertydetailpage/3',
-    name: 'OwnerPropertyDetailPage3',
-    component: OwnerPropertyDetailPage3
+    path: '/ownerproperty-services',
+    name: 'OwnerPropertyPage5',
+    component: OwnerPropertyServicePage// page5
   },
   {
-    path: '/ownerpropertydetailpage/4',
-    name: 'OwnerPropertyDetailPage4',
-    component: OwnerPropertyDetailPage4
+    path: '/ownerproperty-house-rule',
+    name: 'OwnerPropertyPage6', //page6
+    component: OwnerPropertyHotelRulePage
   },
   {
-    path: '/ownerpropertydetailpage/confirmation',
-    name: 'OwnerPropertyDetailPageConfirmation',
+    path: '/ownerproperty-confirmation', // show 3 step property details from page 1 to page6, images,final setp
+    name: 'OwnerPropertyPage7', //page7
     component: OwnerPropertyDetailConfirmationPage
   },
   {
-    path: '/ownerpropertydetailpage/upload',
-    name: 'OwnerPropertyDetailPagePhoto',
-    component: OwnerPropertyDetailPhotoPage
+    path: '/ownerproperty-uplaods-images',
+    name: 'OwnerPropertyPage8',
+    component: OwnerPropertyPhotosPage //page8
   },
   {
-    path: '/ownerpropertydetailpage/payment',
-    name: 'OwnerPropertyDetailPaymentPage',
-    component: OwnerPropertyDetailPaymentPage
+    path: '/ownerproperty-accept-payment',
+    name: 'OwnerPropertyPage9', //page9
+    component: OwnerPropertyAcceptPaymentPage
   },
   {
-    path: '/ownerpropertydetailpage/invoice',
-    name: 'OwnerPropertyDetailInvoice',
-    component: OwnerPropertyDetailInvoicePage
+    path: '/ownerproperty/partnerverification',
+    name: 'OwnerPropertyPage10', //page10
+    component: OwnerPropertyPersonalDetailsPage
   },
   {
-    path: '/ownerpropertydetailpage/partnerverification',
-    name: 'OwnerPropertyDetailPartner',
-    component: OwnerPropertyDetailPartnerPage
-  },
-  {
-    path: '/ownerpropertydetailpage/lastconfirmation',
-    name: 'OwnerPropertyDetailLastConfirmation',
+    path: '/owner/confirmation', //page11
+    name: 'OwnerPropertyPage11',
     component: OwnerPropertyDetailLastConfirmPage
   },
   { 
