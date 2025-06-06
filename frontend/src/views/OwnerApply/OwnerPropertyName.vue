@@ -11,13 +11,17 @@
       <div class="flex-1 space-y-6">
         <!-- Form Card -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-8">
-          <!-- Hotel Name -->
+          <!-- Property Name -->
           <div>
             <h4 class="text-xl font-semibold mb-2">What's the name of your hotel?</h4>
             <label class="block text-sm font-medium text-gray-700 mb-1" for="hotel-name">Property Name</label>
-            <input id="hotel-name" type="text" placeholder="Name"
+            <input
+              id="hotel-name"
+              type="text"
+              placeholder="Name"
               class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-              v-model="hotelName" />
+              v-model="store.property.name"
+            />
             <p class="text-sm text-gray-600 mt-1">
               Guests will see this name when searching for a place to stay.
             </p>
@@ -30,13 +34,13 @@
             <h4 class="text-xl font-semibold mb-2">What is the star rating of your hotel?</h4>
             <div class="space-y-3">
               <label class="flex items-center gap-3">
-                <input type="radio" name="star_rating" value="0" v-model="starRating" />
+                <input type="radio" name="star_rating" :value="0" v-model="store.property.starRating" />
                 N/A
               </label>
 
               <label v-for="n in 5" :key="n" class="block">
                 <div class="flex items-center gap-3">
-                  <input type="radio" name="star_rating" :value="n" v-model="starRating" />
+                  <input type="radio" name="star_rating" :value="n" v-model="store.property.starRating" />
                   <span class="flex items-center gap-2">
                     <span>{{ n }} Star<span v-if="n > 1">s</span></span>
                     <span class="flex gap-0.5">
@@ -49,74 +53,64 @@
           </div>
 
           <hr />
-
-          <!-- Management Company -->
-          <div>
-            <h4 class="text-xl font-semibold mb-2">
-              Are you a property management company or part of a group or chain?
-            </h4>
-            <div class="space-y-2">
-              <label class="flex items-center gap-2">
-                <input type="radio" name="is_managed" value="yes" v-model="isManaged" />
-                Yes
-              </label>
-              <label class="flex items-center gap-2">
-                <input type="radio" name="is_managed" value="no" v-model="isManaged" />
-                No
-              </label>
-            </div>
-          </div>
         </div>
 
-        <!-- Buttons moved OUTSIDE the white box -->
+        <!-- Buttons OUTSIDE white box -->
         <div class="flex justify-between">
           <button
             class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            @click="handleBack">
+            @click="handleBack"
+          >
             Back
           </button>
           <button
             class="px-6 py-2 text-white bg-black rounded-md shadow-md hover:bg-gray-300 hover:text-black focus:outline-none focus:ring-2 focus:ring-amber-400"
-            @click="handleContinue" :disabled="!hotelName || !starRating || isManaged === null">
+            @click="goToNextPage"
+            :disabled="!store.property.name || store.property.starRating === null"
+          >
             Continue
           </button>
         </div>
       </div>
 
-      <!-- Right Column -->
+      <!-- Right Column (optional) -->
       <div class="flex-1">
-        <!-- Optional content -->
+        <!-- You can add optional content here -->
       </div>
     </div>
   </div>
 </template>
 
-
 <script>
-import { Icon } from '@iconify/vue';
+import { defineComponent } from "vue";
+import { useValidationStore } from "@/stores/validationStore";
+import { useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
 
-export default {
-  components: {
-    Icon,
-  },
-  data() {
-    return {
-      hotelName: '',
-      starRating: null,
-      isManaged: null,
-    };
-  },
-  methods: {
-    handleBack() {
-      console.log("Back clicked");
-      // implement your logic for navigating back
-    },
-    handleContinue() {
-      console.log("Continue clicked");
-      // implement your logic for proceeding forward
-    }
+export default defineComponent({
+  components: { Icon },
+  setup() {
+    const store = useValidationStore();
+    const router = useRouter();
+
+const goToNextPage = () => {
+  if (!store.property.name || store.property.starRating === null) {
+    store.errorMessage = "Please provide property name and star rating.";
+    return;
   }
+  store.errorMessage = "";
+  router.push({ name: "OwnerPropertyPage4" });
+  console.log("Current property data:", JSON.stringify(store.property, null, 2));
 };
+
+
+    const handleBack = () => {
+      router.push({ name: "OwnerPropertyPage2" });
+    };
+
+    return { store, goToNextPage, handleBack };
+  },
+});
 </script>
 
 <style scoped>
