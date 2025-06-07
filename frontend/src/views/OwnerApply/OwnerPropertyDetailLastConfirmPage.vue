@@ -100,7 +100,7 @@ export default defineComponent({
       router.push({ name: "OwnerPropertyPage10" });
     };
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
       try {
         const success =  store.submit(); // assume it returns a boolean
         console.log("Current property data:", JSON.stringify(store.property, null, 2));

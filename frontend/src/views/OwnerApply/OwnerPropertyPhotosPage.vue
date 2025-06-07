@@ -109,7 +109,11 @@ export default defineComponent({
     const files = ref([]);
     const dragActive = ref(false);
     const errorMessage = ref("");
-
+  
+        
+    //    form.photos.forEach((file, idx) => {
+    //   formData.append(`photos[${idx}]`, file);
+    // });
     // Validate file type and size
     const validateFile = (file) => {
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
