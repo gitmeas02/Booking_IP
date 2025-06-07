@@ -13,6 +13,8 @@ class HouseRule extends Model
         'checkin_from',
         'checkout_from',
         'checkout_to',
+        'allow_pet',
+        'is_childrenAllowed'
     ];
 
     // Relationship: HouseRule belongs to an OwnerApplication

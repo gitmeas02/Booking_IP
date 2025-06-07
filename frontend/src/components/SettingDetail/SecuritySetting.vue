@@ -38,6 +38,9 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 const signOut = async () => {
   try {
     // Optional: Call backend logout endpoint to invalidate token
@@ -49,9 +52,10 @@ const signOut = async () => {
     localStorage.removeItem('token')
 
     // Redirect to login page or homepage
-    router.push('/login')
+   router.push({ name: 'Homepage' }) 
   } catch (err) {
     console.error('Sign out failed:', err)
+    router.push('/') 
     alert('Sign out failed. Check console.')
   }
 }

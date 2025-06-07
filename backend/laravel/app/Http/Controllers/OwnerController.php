@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApplicationLocation;
 use App\Models\OwnerApplication;
 use App\Models\Role;
 use Illuminate\Support\Facades\Auth;
@@ -20,39 +21,49 @@ class OwnerController extends Controller
 
         
         $validated = $request->validate([
-            'property_type' => 'required|string',
-            'fit_category' => 'required|string',
-            'property_name' => 'required|string',
+            //OwnerApplication Model
+            'property_type' => 'required|string', // property_type  page1
+            //OwnerApplication Model
+            'property_name' => 'required|string', // page 3
+            //OwnerApplication Model
             'stars' => 'nullable|integer',
-            'location.street' => 'required|string',
-            'location.floor' => 'nullable|string',
+            'location.street' => 'required|string', //location from  
+            'location.floor' => 'nullable|string', // page 2
             'location.country' => 'required|string',
             'location.city' => 'required|string',
             'location.zip_code' => 'required|string',
-            'amenities' => 'array|exists:amenities,id', // Validate amenity IDs
-            'services.breakfast' => 'required|boolean',
-            'services.parking' => 'required|boolean',
-            'rules.checkin_from' => 'required|string',
-            'rules.checkin_to' => 'required|string',
-            'rules.checkout_from' => 'required|string',
-            'rules.checkout_to' => 'required|string',
-            'rules.allow_pet' => 'required|boolean',
-            'photos' => 'required|array|min:4',
+
+            'amenities' => 'array|exists:amenities,id', // Validate amenity IDs page 4
+
+            'breakfast' => 'required|boolean',
+            'parking' => 'required|boolean', // page 5
+
+            'houseRules.checkin_from' => 'required|string',
+            'houseRules.checkin_to' => 'required|string',
+            'houseRules.checkout_from' => 'required|string',
+            'houseRules.checkout_to' => 'required|string', // page 6
+            'houseRules.allow_pet' => 'required|boolean',
+            'houseRules.childrenAllowed' => 'required|boolean',
+
+            'photos' => 'required|array|min:4',  //page 7
             'photos.*' => 'image|max:2048',
-            'payment.at_property' => 'required|boolean',
-            'payment.online' => 'required|boolean',
-            'payment.pteas_khmer' => 'required|boolean',
-            'identity.first_name' => 'required|string',
-            'identity.last_name' => 'required|string',
-            'identity.middle_name' => 'nullable|string',
-            'identity.first_name_id' => 'required|string',
-            'identity.last_name_id' => 'required|string',
-            'identity.middle_name_id' => 'nullable|string',
-            'identity.email' => 'required|email',
+
+            'paymentOptions.at_property' => 'required|boolean',
+            'paymentOptions.online' => 'required|boolean', //page 8
+
+            'identity.full_name' => 'required|string', // last page            
+            'identity.email' => ['required', 'email', function($attribute, $value, $fail) use ($user){
+                    if ($value !== $user->email) {
+                        $fail('The identity email must match your account email');
+                    }
+                }],
             'identity.phone' => 'required|string',
             'identity.country' => 'required|string',
             'identity.address1' => 'required|string',
             'identity.address2' => 'nullable|string',
+            'identity.first_name_id' => 'required|string',
+            'identity.last_name_id' => 'required|string',
+            'identity.middle_name_id' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -61,14 +72,14 @@ class OwnerController extends Controller
             $application = OwnerApplication::create([
                 'user_id' => $user->id,
                 'property_type' => $validated['property_type'],
-                'description' => $validated['fit_category'], // Map fit_category to description
                 'property_name' => $validated['property_name'],
                 'star_rating' => $validated['stars'],
-                'is_pet_allowed' => $validated['rules']['allow_pet'], 
                 'status' => 'pending'
             ]);
+          
 
-            $application->location()->create([
+            ApplicationLocation::create([ //
+                'application_id' => $application->id,
                 'street' => $validated['location']['street'],
                 'apartment_floor' => $validated['location']['floor'],
                 'country' => $validated['location']['country'],
@@ -77,21 +88,25 @@ class OwnerController extends Controller
             ]);
 
             if (!empty($validated['amenities'])) {
-                $application->amenities()->sync($validated['amenities']); // Works with belongsToMany
+              $application->amenities()->sync($validated['amenities']);
             }
 
             $application->services()->create([
-                'breakfast' => $validated['services']['breakfast'],
-                'parking' => $validated['services']['parking'],
-                'allow_pet' => $validated['rules']['allow_pet'],
+                'breakfast' => $validated['breakfast'],
+                'parking' => $validated['parking'],
             ]);
 
             $application->houseRules()->create([
-                'checkin_from' => $validated['rules']['checkin_from'],
-                'checkin_to' => $validated['rules']['checkin_to'],
-                'checkout_from' => $validated['rules']['checkout_from'],
-                'checkout_to' => $validated['rules']['checkout_to'],
+                'checkin_from' => $validated['houseRules']['checkin_from'],
+                'checkin_to' => $validated['houseRules']['checkin_to'],
+                'checkout_from' => $validated['houseRules']['checkout_from'],
+                'checkout_to' => $validated['houseRules']['checkout_to'],
+                'allow_pet' => $validated['houseRules']['allow_pet'],
+                'is_childrenAllowed' => $validated['houseRules']['childrenAllowed'], // ✅ FIXED
             ]);
+
+               
+         
              
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $photo) {
@@ -102,17 +117,14 @@ class OwnerController extends Controller
                 }
             }
             $application->paymentMethods()->create([
-                'credit_card_at_property' => $validated['payment']['at_property'],
-                'online_payment' => $validated['payment']['online'],
-                'use_platform_payments' => $validated['payment']['pteas_khmer'],
+                'credit_card_at_property' => $validated['paymentOptions']['at_property'],
+                'online_payment' => $validated['paymentOptions']['online'],
             ]);
 
             $application->personalInfo()->create([
-                'first_name' => $validated['identity']['first_name'],
-                'last_name' => $validated['identity']['last_name'],
-                'middle_name' => $validated['identity']['middle_name'] ?? null,
-                'email' => $validated['identity']['email'],
+                'full_name' => $validated['identity']['full_name'],
                 'phone_number' => $validated['identity']['phone'],
+                'email' => $validated['identity']['email'],
                 'country_region' => $validated['identity']['country'],
                 'address_line1' => $validated['identity']['address1'],
                 'address_line2' => $validated['identity']['address2'] ?? null,

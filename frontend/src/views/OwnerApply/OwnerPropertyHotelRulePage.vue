@@ -136,23 +136,23 @@ export default defineComponent({
 
     // Computed bindings to the store
     const checkInFrom = computed({
-      get: () => store.property.houseRules.checkinFrom,
-      set: (val) => (store.property.houseRules.checkinFrom = val),
+      get: () => store.property.houseRules.checkin_from,
+      set: (val) => (store.property.houseRules.checkin_from = val),
     });
 
     const checkInUntil = computed({
-      get: () => store.property.houseRules.checkinTo,
-      set: (val) => (store.property.houseRules.checkinTo = val),
+      get: () => store.property.houseRules.checkin_to,
+      set: (val) => (store.property.houseRules.checkin_to = val),
     });
 
     const checkOutFrom = computed({
-      get: () => store.property.houseRules.checkoutFrom,
-      set: (val) => (store.property.houseRules.checkoutFrom = val),
+      get: () => store.property.houseRules.checkout_from,
+      set: (val) => (store.property.houseRules.checkout_from = val),
     });
 
     const checkOutUntil = computed({
-      get: () => store.property.houseRules.checkoutTo,
-      set: (val) => (store.property.houseRules.checkoutTo = val),
+      get: () => store.property.houseRules.checkout_to,
+      set: (val) => (store.property.houseRules.checkout_to = val),
     });
 
     const allowChildren = computed({
@@ -161,8 +161,8 @@ export default defineComponent({
     });
 
     const petsAllowed = computed({
-      get: () => store.property.houseRules.petsAllowed,
-      set: (val) => (store.property.houseRules.petsAllowed = val),
+      get: () => store.property.houseRules.allow_pet,
+      set: (val) => (store.property.houseRules.allow_pet = val),
     });
 
     const handleContinue = () => {

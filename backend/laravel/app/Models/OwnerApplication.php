@@ -9,13 +9,13 @@ class OwnerApplication extends Model
 {
     //Register as Admin
     use HasFactory;
+    protected $table='owner_applications';
     protected $fillable = [
         'user_id',
         'property_type',
         'property_name',
         'description',
         'star_rating',
-        'is_pet_allowed',
         'status',
         'expires_at',
     ];

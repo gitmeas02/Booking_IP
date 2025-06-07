@@ -25,7 +25,7 @@
       <div>
         <label class="block text-sm font-medium">Apartment/Floor</label>
         <input
-          v-model="store.property.location.apartmentFloor"
+          v-model="store.property.location.floor"
           class="w-full px-3 py-2 border rounded"
         />
       </div>
@@ -39,7 +39,7 @@
       <div>
         <label class="block text-sm font-medium">Postcode</label>
         <input
-          v-model="store.property.location.postcode"
+          v-model="store.property.location.zip_code"
           class="w-full px-3 py-2 border rounded"
         />
       </div>

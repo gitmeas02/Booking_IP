@@ -29,7 +29,7 @@
           </label>
           <input
             id="fullName"
-            v-model="store.property.owner.fullName"
+            v-model="store.property.identity.full_name"
             type="text"
             placeholder="Your full name"
             class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -49,7 +49,7 @@
           <input
             required
             id="email"
-            v-model="store.property.owner.email"
+            v-model="store.property.identity.email"
             type="email"
             placeholder="Your email"
             class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -68,7 +68,7 @@
           <input
             required
             id="phoneNumber"
-            v-model="store.property.owner.phoneNumber"
+            v-model="store.property.identity.phone"
             type="tel"
             placeholder="+1234567890"
             class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -84,7 +84,7 @@
           <input
             required
             id="countryRegion"
-            v-model="store.property.owner.countryRegion"
+            v-model="store.property.identity.country"
             type="text"
             placeholder="Country or Region"
             class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -99,7 +99,7 @@
           <input
             required
             id="addressLine1"
-            v-model="store.property.owner.addressLine1"
+            v-model="store.property.identity.address1"
             type="text"
             placeholder="Street address"
             class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -111,7 +111,7 @@
           </label>
           <input
             id="addressLine2"
-            v-model="store.property.owner.addressLine2"
+            v-model="store.property.identity.address2"
             type="text"
             placeholder="Apartment, suite, unit, etc. (optional)"
             class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -126,7 +126,7 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               required
-              v-model="store.property.owner.idFirstName"
+              v-model="store.property.identity.first_name_id"
               type="text"
               placeholder="ID First Name"
               class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -134,7 +134,7 @@
             />
             <input
               required
-              v-model="store.property.owner.idMiddleName"
+              v-model="store.property.identity.middle_name_id"
               type="text"
               placeholder="ID Middle Name"
               class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -142,7 +142,7 @@
             />
             <input
               required
-              v-model="store.property.owner.idLastName"
+              v-model="store.property.identity.last_name_id"
               type="text"
               placeholder="ID Last Name"
               class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -180,79 +180,112 @@
     </form>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useValidationStore } from "@/stores/validationStore";
 import { useRouter } from "vue-router";
+import axios from "axios";
 
 const store = useValidationStore();
 const router = useRouter();
 
 const loggedInEmail = ref("");
 const loggedInName = ref("");
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+console.log('Environment variables:', import.meta.env);
+console.log('API Base URL:', apiBaseUrl);
 
 onMounted(async () => {
   const token = localStorage.getItem("token");
+  console.log("Raw token from localStorage:", token);
   if (token) {
     try {
-      const res = await fetch("/api/me", {
+      console.log(`Sending GET request to: ${apiBaseUrl}/me with token`);
+      const res = await axios.get(`${apiBaseUrl}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to fetch user info");
-      const data = await res.json();
-      console.log("Raw token from localStorage:", token);
+
+      console.log("Raw axios response object:", res);
+      const data = res.data;
       console.log("User info from backend:", data);
 
       if (data.user) {
-        store.property.owner.email = data.user.email || "";
-        store.property.owner.fullName = data.user.name || "";
+        store.property.identity.email = data.user.email || "";
+        store.property.identity.full_name = data.user.name || "";
 
         loggedInEmail.value = data.user.email || "";
         loggedInName.value = data.user.name || "";
+
+        console.log("Set loggedInEmail to:", loggedInEmail.value);
+        console.log("Set loggedInName to:", loggedInName.value);
+        console.log("Store updated identity.email:", store.property.identity.email);
+        console.log("Store updated identity.full_name:", store.property.identity.full_name);
+      } else {
+        console.warn("No user data found in response");
       }
     } catch (error) {
       console.error("Error fetching user info:", error);
     }
+  } else {
+    console.warn("No token found in localStorage");
   }
 });
 
 const isFullNameValid = computed(() => {
-  return store.property.owner.fullName.trim() === loggedInName.value.trim();
+  const isValid = store.property.identity.full_name.trim() === loggedInName.value.trim();
+  console.log("Checking full name validity:", {
+    entered: store.property.identity.full_name,
+    loggedInName: loggedInName.value,
+    isValid,
+  });
+  return isValid;
 });
 
 const isEmailValid = computed(() => {
-  return store.property.owner.email.trim() === loggedInEmail.value.trim();
+  const isValid = store.property.identity.email.trim() === loggedInEmail.value.trim();
+  console.log("Checking email validity:", {
+    entered: store.property.identity.email,
+    loggedInEmail: loggedInEmail.value,
+    isValid,
+  });
+  return isValid;
 });
 
 const canContinue = computed(() => {
-  return (
-    store.property.owner.fullName.trim() !== "" &&
+  const can = (
+    store.property.identity.full_name.trim() !== "" &&
     isFullNameValid.value &&
     isEmailValid.value &&
-    store.property.owner.phoneNumber.trim() !== "" &&
-    store.property.owner.countryRegion.trim() !== "" &&
-    store.property.owner.addressLine1.trim() !== "" &&
-    store.property.owner.idFirstName.trim() !== "" &&
-    store.property.owner.idLastName.trim() !== ""
+    store.property.identity.phone.trim() !== "" &&
+    store.property.identity.country.trim() !== "" &&
+    store.property.identity.address1.trim() !== "" &&
+    store.property.identity.first_name_id.trim() !== "" &&
+    store.property.identity.last_name_id.trim() !== ""
   );
+  console.log("Checking canContinue:", can);
+  return can;
 });
 
 const goToNextPage = () => {
+  console.log(store.property)
   store.errorMessage = "";
   if (!canContinue.value) {
     store.errorMessage =
       "Please complete all required fields and ensure full name and email match your login details.";
+    console.warn("Form validation failed. Cannot continue.");
     return;
   }
 
-  console.log("Submitting owner data:", store.property.owner); // Debug log
+  console.log("Submitting owner data:", store.property.identity);
 
   router.push({ name: "OwnerPropertyPage11" });
-   console.log("Submitting owner data:", store.property); 
+
+  console.log("Navigated to OwnerPropertyPage11");
 };
 
 const goBack = () => {
+  console.log("Navigating back to OwnerPropertyPage9");
   router.push({ name: "OwnerPropertyPage9" });
 };
 </script>

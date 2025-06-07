@@ -20,7 +20,7 @@
               type="text"
               placeholder="Name"
               class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-              v-model="store.property.name"
+              v-model="store.property.property_name"
             />
             <p class="text-sm text-gray-600 mt-1">
               Guests will see this name when searching for a place to stay.
@@ -34,13 +34,13 @@
             <h4 class="text-xl font-semibold mb-2">What is the star rating of your hotel?</h4>
             <div class="space-y-3">
               <label class="flex items-center gap-3">
-                <input type="radio" name="star_rating" :value="0" v-model="store.property.starRating" />
+                <input type="radio" name="star_rating" :value="0" v-model="store.property.stars" />
                 N/A
               </label>
 
               <label v-for="n in 5" :key="n" class="block">
                 <div class="flex items-center gap-3">
-                  <input type="radio" name="star_rating" :value="n" v-model="store.property.starRating" />
+                  <input type="radio" name="star_rating" :value="n" v-model="store.property.stars" />
                   <span class="flex items-center gap-2">
                     <span>{{ n }} Star<span v-if="n > 1">s</span></span>
                     <span class="flex gap-0.5">
@@ -66,7 +66,7 @@
           <button
             class="px-6 py-2 text-white bg-black rounded-md shadow-md hover:bg-gray-300 hover:text-black focus:outline-none focus:ring-2 focus:ring-amber-400"
             @click="goToNextPage"
-            :disabled="!store.property.name || store.property.starRating === null"
+            :disabled="!store.property.property_name || store.property.stars === null"
           >
             Continue
           </button>
@@ -94,7 +94,7 @@ export default defineComponent({
     const router = useRouter();
 
 const goToNextPage = () => {
-  if (!store.property.name || store.property.starRating === null) {
+  if (!store.property.property_name || store.property.stars === null) {
     store.errorMessage = "Please provide property name and star rating.";
     return;
   }

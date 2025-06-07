@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class ApplicationLocation extends Model
-{
+{  
+   protected $table='application_locations';
    protected $fillable = [
         'application_id',
         'street',

@@ -88,7 +88,6 @@
 import { defineComponent, ref, watch } from "vue";
 import { useValidationStore } from "@/stores/validationStore";
 import { useRouter } from "vue-router";
-
 export default defineComponent({
   setup() {
     const store = useValidationStore();
@@ -97,32 +96,29 @@ export default defineComponent({
     // Always true by default and fixed
     const onlineOption = true;
 
-    // Editable credit card option
+    // FIX: Get the initial value correctly from store
     const creditCardOption = ref(
-      store.property.paymentOptions?.[0]?.creditCard_at_Property || false
+      store.property.paymentOptions?.at_property || false
     );
 
     const errorMessage = ref("");
 
     // Sync with store on change
     watch(creditCardOption, () => {
-      store.setPropertyValue("paymentOptions", [
-        {
-          online: true,
-          creditCard_at_Property: creditCardOption.value,
-        },
-      ]);
+      // FIX: Set as direct object, not array
+      store.setPropertyValue("paymentOptions", {
+        online: true,
+        at_property: creditCardOption.value,
+      });
       errorMessage.value = "";
     }, { immediate: true });
 
     const handleContinue = () => {
-      // Validation optional here since online = true always
-      store.setPropertyValue("paymentOptions", [
-        {
-          online: true,
-          creditCard_at_Property: creditCardOption.value,
-        },
-      ]);
+      // FIX: Set as direct object, not array
+      store.setPropertyValue("paymentOptions", {
+        online: true,
+        at_property: creditCardOption.value,
+      });
       router.push({ name: "OwnerPropertyPage10" });
       console.log(store.property);
       console.log("Json", JSON.stringify(store.property, null, 2))

@@ -18,9 +18,8 @@ return new class extends Migration
             $table->foreign('application_id')->references('id')->on('owner_applications')->onDelete('cascade');
 
             // Boolean flags for payment methods
-            $table->boolean('credit_card_at_property')->default(false);
+            $table->boolean('at_property')->default(false);
             $table->boolean('online_payment')->default(false);
-            // $table->boolean('use_platform_payments')->default(false);
             $table->timestamps();
         });
     }

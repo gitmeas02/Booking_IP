@@ -22,7 +22,7 @@
         v-for="(card, index) in cardData"
         :key="index"
         v-bind="card"
-        :isSelected="store.property.type === card.property_type"
+        :isSelected="store.property.property_type === card.property_type"
         @click="selectType(card.property_type)"
       />
     </div>
@@ -66,11 +66,11 @@ export default defineComponent({
       },
     ];
 
-    const selectType = (type) => {
-      store.setPropertyValue("type", type);
+    const selectType = (property_type) => {
+      store.setPropertyValue("property_type", property_type);
       store.errorMessage = "";
       router.push({ name: "OwnerPropertyPage2" });
-      console.log("Selected property type:", type);    };
+      console.log("Selected property type:", property_type);    };
 
     return {
       store,

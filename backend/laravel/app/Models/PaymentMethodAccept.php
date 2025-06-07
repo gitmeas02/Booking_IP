@@ -8,9 +8,8 @@ class PaymentMethodAccept extends Model
 {
      protected $fillable = [
         'application_id',
-        'credit_card_at_property',
+        'at_property',
         'online_payment',
-        // 'use_platform_payments',
     ];
 
     public function application()

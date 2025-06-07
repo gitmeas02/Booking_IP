@@ -17,9 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('application_id');
             $table->foreign('application_id')->references('id')->on('owner_applications')->onDelete('cascade');
 
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('middle_name')->nullable();
+            $table->string('full_name');
             $table->string('email');
             $table->string('phone_number');
             $table->string('country_region');

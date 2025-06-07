@@ -148,7 +148,7 @@ export default defineComponent({
         }));
       if (validFiles.length > 0) {
         files.value = [...files.value, ...validFiles];
-        store.setPropertyValue("images", files.value.map((f) => f.raw));
+        store.setPropertyValue("photos", files.value.map((f) => f.raw));
       }
     };
 
@@ -173,7 +173,7 @@ export default defineComponent({
     const removeFile = (index) => {
       URL.revokeObjectURL(files.value[index].preview);
       files.value.splice(index, 1);
-      store.setPropertyValue("images", files.value.map((f) => f.raw));
+      store.setPropertyValue("photos", files.value.map((f) => f.raw));
       errorMessage.value = files.value.length < 5 ? "Please upload at least 5 photos." : "";
     };
 
