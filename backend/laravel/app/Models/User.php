@@ -10,11 +10,18 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable , HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens;
 
     protected $fillable = [
         'name',
+        'display_name',
         'email',
+        'phone',
+        'dob',
+        'nationality',
+        'gender',
+        'address',
+        'passport',
         'password',
     ];
 
@@ -25,7 +32,7 @@ class User extends Authenticatable
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class,'role_user');
+        return $this->belongsToMany(Role::class, 'role_user');
     }
     public function hasRole($role)
     {
@@ -39,7 +46,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(Profile::class);
     }
-    public function booking(){
+    public function booking()
+    {
         return $this->hasMany(Booking::class);
     }
 
@@ -47,5 +55,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'dob' => 'date',
     ];
 }

@@ -50,3 +50,8 @@ Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
 Route::get('/amenities', [AmenityController::class, 'index']);
 
 //Images
+
+
+// Update Route
+Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'updateMe']);
+

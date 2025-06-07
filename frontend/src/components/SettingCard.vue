@@ -2,9 +2,14 @@
   <div class="card">
     <h3 class="card-title">{{ title }}</h3>
     <ul>
-      <li v-for="(item, index) in items" :key="index">
-        <Icon :icon="item.icon" class="card-icon" />
-        {{ item.label }}
+      <li
+        v-for="(item, index) in items"
+        :key="index"
+      >
+        <RouterLink :to="item.route" class="card-link">
+          <Icon :icon="item.icon" class="card-icon" />
+          {{ item.label }}
+        </RouterLink>
       </li>
     </ul>
   </div>
@@ -12,10 +17,11 @@
 
 <script setup>
 import { Icon } from '@iconify/vue'
+import { RouterLink } from 'vue-router'
 
 defineProps({
   title: String,
-  items: Array
+  items: Array // Each item should have: label, icon, route
 })
 </script>
 
@@ -40,15 +46,24 @@ ul {
 }
 
 li {
+  padding: 6px 0;
+}
+
+.card-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
   font-size: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s;
+}
+
+.card-link:hover {
+  color: #007bff;
 }
 
 .card-icon {
   font-size: 18px;
-  color: #000000;
 }
 </style>
