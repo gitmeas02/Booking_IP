@@ -46,7 +46,7 @@ class OwnerController extends Controller
             'houseRules.childrenAllowed' => 'required|boolean',
 
             'photos' => 'required|array|min:4',  //page 7
-            'photos.*' => 'image|max:2048',
+            'photos.*' => 'image|max:48128',
 
             'paymentOptions.at_property' => 'required|boolean',
             'paymentOptions.online' => 'required|boolean', //page 8

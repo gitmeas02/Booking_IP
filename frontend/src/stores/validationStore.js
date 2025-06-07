@@ -99,6 +99,7 @@ async submit() {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       },
+       withCredentials: true,
     });
     
     this.successMessage = "Application submitted successfully!";
