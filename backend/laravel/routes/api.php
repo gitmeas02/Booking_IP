@@ -34,10 +34,12 @@ Route::get('/user-roles', [RoleController::class, 'getUserRoles']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/owner/apply', [OwnerController::class, 'apply']);
-    Route::post('/approve-owner/{id}', [OwnerController::class, 'approve']);
 });
-
-//
+// company
+Route::middleware('auth:sanctum')->prefix('company')->group(function () {
+Route::post(  '/approve-owner/{id}', [OwnerController::class, 'approve']);
+});
+//owner
 Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
     Route::post('/property/{id}/room', [RoomTypeController::class, 'store']);
     Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
