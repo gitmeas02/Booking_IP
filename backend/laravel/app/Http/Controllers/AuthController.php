@@ -77,4 +77,28 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateMe(Request $request)
+{
+    $user = $request->user();
+
+    $validated = $request->validate([
+        'name' => 'sometimes|string|max:255',
+        'display_name' => 'sometimes|string|max:255',
+        'email' => 'sometimes|email|unique:users,email,' . $user->id,
+        'phone' => 'sometimes|string|max:20',
+        'dob' => 'sometimes|date',
+        'nationality' => 'sometimes|string|max:100',
+        'gender' => 'sometimes|string|max:20',
+        'address' => 'sometimes|string|max:255',
+        'passport' => 'sometimes|string|max:50',
+    ]);
+
+    $user->update($validated);
+
+    return response()->json([
+        'message' => 'Profile updated successfully',
+        'user' => $user,
+    ]);
+}
+
 }
