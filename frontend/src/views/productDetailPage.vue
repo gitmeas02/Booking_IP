@@ -1,44 +1,62 @@
 <template>
   <div v-if="room && hotel" class="booking-container">
-      <!-- Breadcrumb Navigation -->
-    <div class="breadcrumb">
-      <span>Home</span> > <span>Cambodia Hotels</span> >
-      <span>Kampot Hotels</span> >
-      <span>Book {{ hotel.name }}</span>
-    </div>
-
-    <!-- Main Image Gallery -->
-    <div class="image-gallery-container">
-      <div class="image-gallery-grid">
-        <div class="main-image-wrapper">
-          <img
-            :src="images[currentImageIndex]"
-            alt="Hotel main view"
-            class="main-image"
-            @click="openPhotoModal(currentImageIndex)"
-          />
-          <button class="see-all-photos-btn" @click="openPhotoModal(0)">
-            📷 See all photos
-          </button>
+    <!-- Hotel Listing Section -->
+    <div class="hotel-listing">
+      <div class="hotel-header">
+        <div>
+          <h1 class="hotel-name">{{ hotel.name }}</h1>
+          <p class="hotel-location">
+            Location: {{ hotel.location?.address }},
+            {{ hotel.location?.commune }}, {{ hotel.location?.district }},
+            {{ hotel.location?.city }},
+            {{ hotel.location?.country }}
+          </p>
         </div>
-        <div class="thumbnail-grid">
-          <div
-            v-for="(image, index) in images.slice(1, 5)"
+        <div class="review-score">
+          <div class="score">{{ hotel.reviewScore }}</div>
+          <div class="score-text">
+            {{ getReviewScoreText(hotel.reviewScore) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="main-image-container">
+        <img
+          :src="images[currentImageIndex]"
+          alt="Hotel room"
+          class="main-image"
+          v-if="images.length"
+          @click="openPhotoModal(currentImageIndex)"
+        />
+        <div class="navigation-dots">
+          <span
+            v-for="(_, index) in images"
             :key="index"
-            class="thumbnail-wrapper"
-            @click="openPhotoModal(index + 1)"
-          >
-            <img :src="image" alt="Hotel thumbnail" class="thumbnail" />
-            <div
-              v-if="index === 3 && images.length > 5"
-              class="more-photos-overlay"
-            >
-              +{{ images.length - 5 }} more
-            </div>
+            :class="['dot', { active: index === currentImageIndex }]"
+            @click="
+              setCurrentImage(index);
+              openPhotoModal(index);
+            "
+          ></span>
+        </div>
+      </div>
+
+      <div class="thumbnail-gallery">
+        <div
+          v-for="(image, index) in images"
+          :key="index"
+          class="thumbnail-container"
+          @click="openPhotoModal(index)"
+        >
+          <img :src="image" alt="Room thumbnail" class="thumbnail" />
+          <div v-if="index === images.length - 1" class="photo-count">
+            <span>{{ images.length }} photos</span>
           </div>
         </div>
       </div>
     </div>
+
+    <div style="margin-top: 20px"></div>
 
     <!-- Hotel Header with Navigation Tabs -->
     <div class="hotel-header-section">
@@ -86,11 +104,11 @@
       <button class="tab-btn">Location</button>
       <button class="tab-btn">Policies</button>
     </div>
+
     <!-- Main Content Area -->
     <div class="main-content-area">
       <!-- Left Content -->
       <div class="left-content">
-
         <!-- About Us>-->
         <div class="about-section">
           <h3>About us</h3>
@@ -101,7 +119,6 @@
             }}
           </p>
           <a href="#" class="read-more-link">Read more</a>
-
         </div>
 
         <!-- Room Selection -->
@@ -542,6 +559,217 @@ onUnmounted(() => {
   justify-content: center;
   font-weight: 600;
   font-size: 16px;
+}
+
+/* Hotel Listing Section */
+.hotel-listing {
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.hotel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.hotel-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 0 5px 0;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.hotel-location {
+  font-size: 14px;
+  margin: 0;
+  color: #666;
+}
+
+.review-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #003580;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 5px;
+  min-width: 45px;
+  text-align: center;
+}
+
+.score {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.score-text {
+  font-size: 12px;
+}
+
+.main-image-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.navigation-dots {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.dot.active {
+  background-color: white;
+}
+
+.thumbnail-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.thumbnail-container {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.thumbnail-container:hover .thumbnail {
+  transform: scale(1.05);
+}
+
+.photo-count {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.modal-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+  background: #fff;
+}
+
+.modal-close {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  width: 48px;
+  height: 48px;
+  font-size: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.modal-nav {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  width: 56px;
+  height: 56px;
+  font-size: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: 0.2s;
+}
+
+.modal-nav.left {
+  position: fixed;
+  left: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.modal-nav.right {
+  position: fixed;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.modal-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Hotel Header */
