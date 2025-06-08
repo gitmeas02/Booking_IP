@@ -3,31 +3,99 @@
 namespace Database\Seeders;
 
 use App\Models\Amenity;
+use App\Models\AmenityGroup;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
 class AmenitySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $amenities = [
-            ['amenity_name' => 'Free WiFi', 'icon_url' => '/icons/wifi.svg'],
-            ['amenity_name' => 'Air Conditioning', 'icon_url' => '/icons/ac.svg'],
-            ['amenity_name' => 'Swimming Pool', 'icon_url' => '/icons/pool.svg'],
-            ['amenity_name' => 'Fitness Center', 'icon_url' => '/icons/gym.svg'],
-            ['amenity_name' => 'Restaurant', 'icon_url' => '/icons/restaurant.svg'],
-            ['amenity_name' => 'Parking', 'icon_url' => '/icons/parking.svg'],
-            ['amenity_name' => 'Pet Friendly', 'icon_url' => '/icons/pet.svg'],
-            ['amenity_name' => 'Room Service', 'icon_url' => '/icons/room_service.svg'],
-            ['amenity_name' => 'Spa', 'icon_url' => '/icons/spa.svg'],
-            ['amenity_name' => '24/7 Reception', 'icon_url' => '/icons/reception.svg'],
+        $facilitiesGrouped = [
+            [
+                'category' => 'Room',
+                'items' => [
+                    'Air conditioning', 'Heating', 'Free Wi-Fi', 'Flat-screen TV', 'Safe',
+                    'Mini fridge', 'Microwave', 'Coffee/tea maker', 'Balcony or terrace',
+                ],
+            ],
+            [
+                'category' => 'Bathroom',
+                'items' => [
+                    'Private bathroom', 'Shower', 'Bathtub', 'Towels', 'Hairdryer',
+                    'Toiletries', 'Hot water',
+                ],
+            ],
+            [
+                'category' => 'Kitchen',
+                'items' => [
+                    'Kitchen', 'Kitchenette', 'Stove', 'Oven', 'Toaster', 'Dishwasher',
+                ],
+            ],
+            [
+                'category' => 'Leisure & Wellness',
+                'items' => [
+                    'Swimming pool', 'Hot tub', 'Spa', 'Sauna', 'Fitness center', 'Beachfront',
+                ],
+            ],
+            [
+                'category' => 'Property',
+                'items' => [
+                    '24-hour front desk', 'Daily housekeeping', 'Elevator', 'Free parking', 'Pet-friendly',
+                ],
+            ],
+            [
+                'category' => 'Business',
+                'items' => [
+                    'Business center', 'Meeting room', 'High-speed internet',
+                ],
+            ],
+            [
+                'category' => 'Food & Beverage',
+                'items' => [
+                    'Restaurant', 'Bar', 'Room service', 'Breakfast included', 'Mini-market',
+                ],
+            ],
+            [
+                'category' => 'Accessibility',
+                'items' => [
+                    'Wheelchair accessible', 'Accessible bathroom',
+                ],
+            ],
+            [
+                'category' => 'Transportation',
+                'items' => [
+                    'Airport shuttle', 'Car rental', 'EV charging station',
+                ],
+            ],
+            [
+                'category' => 'Family & Kids',
+                'items' => [
+                    'Baby cot', 'Kids’ play area', 'Board games',
+                ],
+            ],
+            [
+                'category' => 'Pet',
+                'items' => [
+                    'Pet bowls', 'Pet bed',
+                ],
+            ],
+            [
+                'category' => 'Safety',
+                'items' => [
+                    'Smoke alarms', 'Fire extinguishers', 'CCTV',
+                ],
+            ],
         ];
 
-        foreach ($amenities as $amenity) {
-            Amenity::firstOrCreate(['amenity_name' => $amenity['amenity_name']], $amenity);
+        foreach ($facilitiesGrouped as $group) {
+            $amenityGroup = AmenityGroup::create(['name' => $group['category']]);
+
+            foreach ($group['items'] as $item) {
+                Amenity::create([
+                    'amenity_name' => $item,
+                    'group_id' => $amenityGroup->id,
+                ]);
+            }
         }
     }
 }

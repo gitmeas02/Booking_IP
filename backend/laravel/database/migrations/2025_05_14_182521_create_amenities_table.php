@@ -10,11 +10,16 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
+    {  
+        Schema::create('amenity_groups', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->timestamps();
+        });
         Schema::create('amenities', function (Blueprint $table) {
             $table->id();
             $table->string('amenity_name');
-            $table->string('icon_url')->nullable();
+            $table->foreignId('group_id')->constrained('amenity_groups')->onDelete('cascade');
             $table->timestamps();
         });
         Schema::create('amenity_room_type', function (Blueprint $table) {
@@ -23,6 +28,7 @@ return new class extends Migration
             $table->foreignId('amenity_id')->constrained('amenities')->onDelete('cascade');
             $table->timestamps();
         });
+    
     }
 
     /**
@@ -32,5 +38,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('amenities');
         Schema::dropIfExists('amenity_room_type');
+        Schema::dropIfExists('amenity_groups');
     }
 };

@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 export const useSearchStore = defineStore('search', {
   state: () => ({
     rooms: [],
-    destination: null,
+    destination: null, // validate 
     startDate: null,
     endDate: null,
     adults: 1,
