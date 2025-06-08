@@ -1,55 +1,6 @@
 <template>
   <div v-if="room && hotel" class="booking-container">
-    <!-- Bottom Booking Bar -->
-    <!-- <div class="bottom-booking-bar" :class="{ scrolled: isScrolled }">
-      <div class="booking-bar-content">
-        <div class="booking-info">
-          <div class="booking-form">
-            <div class="input-group">
-              <label class="input-label">Check-in</label>
-              <input
-                type="date"
-                v-model="checkInDate"
-                class="date-input"
-                placeholder="Select date"
-              />
-            </div>
-            <div class="input-separator"></div>
-            <div class="input-group">
-              <label class="input-label">Check-out</label>
-              <input
-                type="date"
-                v-model="checkOutDate"
-                class="date-input"
-                placeholder="Select date"
-              />
-            </div>
-            <div class="input-separator"></div>
-            <div class="input-group">
-              <label class="input-label">Guests & rooms</label>
-              <div class="guests-selector">
-                <div class="guests-info">
-                  <span class="guests-count">👥 2 adults</span>
-                  <span class="rooms-count">🏨 1 room</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="booking-action">
-          <div class="price-display">
-            <div class="price-label">From</div>
-            <div class="price-amount">USD ${{ room.price }}</div>
-            <div class="price-period">per night</div>
-          </div>
-          <button class="update-btn">
-            <span class="btn-text">CHECK AVAILABILITY</span>
-            <span class="btn-icon">→</span>
-          </button>
-        </div>
-      </div>
-    </div> -->
-    <!-- Breadcrumb Navigation -->
+      <!-- Breadcrumb Navigation -->
     <div class="breadcrumb">
       <span>Home</span> > <span>Cambodia Hotels</span> >
       <span>Kampot Hotels</span> >
@@ -135,106 +86,12 @@
       <button class="tab-btn">Location</button>
       <button class="tab-btn">Policies</button>
     </div>
-
     <!-- Main Content Area -->
     <div class="main-content-area">
       <!-- Left Content -->
       <div class="left-content">
-        <!-- Property Highlights -->
-        <div class="highlights-section">
-          <h3>Highlights</h3>
-          <div class="highlights-grid">
-            <div class="highlight-item">
-              <span class="highlight-icon">🏊‍♂️</span>
-              <div>
-                <div class="highlight-title">770 metres to Farm Link</div>
-                <div class="highlight-subtitle">Great for activities</div>
-              </div>
-            </div>
-            <div class="highlight-item">
-              <span class="highlight-icon">🌅</span>
-              <div>
-                <div class="highlight-title">Great View</div>
-              </div>
-            </div>
-            <div class="highlight-item">
-              <span class="highlight-icon">🕒</span>
-              <div>
-                <div class="highlight-title">Front desk (24-hour)</div>
-              </div>
-            </div>
-            <div class="highlight-item">
-              <span class="highlight-icon">📶</span>
-              <div>
-                <div class="highlight-title">Free Wi-Fi in all rooms!</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Staycation Offers -->
-        <div class="staycation-section">
-          <h3>Staycation offers available</h3>
-          <p class="staycation-subtitle">Get special benefits for your stay</p>
-
-          <div class="offers-grid">
-            <div class="offer-item">
-              <span class="offer-icon">🍽️</span>
-              <div class="offer-content">
-                <h4>Food and Drinks</h4>
-                <p>✅ Breakfast (buffet)</p>
-                <p>✅ Coffee shop</p>
-                <p>✅ Room service</p>
-                <a href="#" class="see-amenities-link">See all amenities</a>
-              </div>
-            </div>
-            <div class="offer-item">
-              <span class="offer-icon">💆‍♀️</span>
-              <div class="offer-content">
-                <h4>Wellness</h4>
-                <p>✅ Massage</p>
-              </div>
-            </div>
-            <div class="offer-item">
-              <span class="offer-icon">🎫</span>
-              <div class="offer-content">
-                <h4>Tours & Tickets</h4>
-                <p>✅ Water park</p>
-              </div>
-            </div>
-            <div class="offer-item">
-              <span class="offer-icon">🏃‍♂️</span>
-              <div class="offer-content">
-                <h4>Sports and Entertainment</h4>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Facilities -->
-        <div class="facilities-section">
-          <h3>Facilities</h3>
-          <div class="facilities-columns">
-            <div class="facility-column">
-              <div class="facility-item">✅ Free Wi-Fi</div>
-              <div class="facility-item">✅ Bar</div>
-            </div>
-            <div class="facility-column">
-              <div class="facility-item">✅ Free parking</div>
-              <div class="facility-item">✅ Water sports</div>
-            </div>
-            <div class="facility-column">
-              <div class="facility-item">✅ Front desk (24-hour)</div>
-              <div class="facility-item">✅ Restaurant</div>
-            </div>
-            <div class="facility-column">
-              <div class="facility-item">✅ Water park</div>
-              <div class="facility-item">✅ Massage</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- About Us -->
+        <!-- About Us>-->
         <div class="about-section">
           <h3>About us</h3>
           <p>
@@ -245,11 +102,6 @@
           </p>
           <a href="#" class="read-more-link">Read more</a>
 
-          <div class="demand-notice">
-            <span class="fire-icon">🔥</span>
-            <strong>This property is in high demand!</strong>
-            <p>3 travellers have booked today.</p>
-          </div>
         </div>
 
         <!-- Room Selection -->
@@ -264,15 +116,6 @@
             <button class="filter-btn">🏨 Pay at the hotel (19)</button>
             <a href="#" class="show-more-filters">Show 1 more</a>
           </div>
-
-          <div class="room-availability-notice">
-            <span class="warning-icon">⚠️</span>
-            <strong
-              >Hurry up! 1 room type has already sold out for your
-              dates!</strong
-            >
-          </div>
-
           <!-- Room Cards -->
           <div class="room-cards">
             <RoomTypeCard :room="room" @reserve="reserveRoom" />
