@@ -47,45 +47,56 @@
         </div>
     </div>
 </template>
-
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+
 const email = ref('');
 const password = ref('');
 const error = ref('');
 const router = useRouter();
-// Backend base URL
-const API_BASE_URL = 'http://localhost:8100';
 
 const handleSignIn = async () => {
   error.value = '';
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/login`, {
+    const response = await axios.post('/api/login', {
       email: email.value,
       password: password.value
     });
 
     const token = response.data.token;
 
-    // Store token (in localStorage or Pinia/Vuex)
+    // Save token
     localStorage.setItem('token', token);
 
+    // Set token for future requests
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
     console.log('Login successful', response.data);
+
     router.push('/setting');
-    // Redirect or fetch user info...
   } catch (err) {
     console.error('Login failed', err);
-    if (err.response?.status === 422) {
+    if (err.response?.status === 422 || err.response?.status === 401) {
       error.value = err.response.data.message || 'Invalid credentials.';
     } else {
-      error.value = 'Login failed.';
+      error.value = 'Login failed. Please try again.';
     }
   }
 };
+
+/* Optional: If token exists, redirect to dashboard */
+onMounted(() => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    router.push('/setting');
+  }
+});
 </script>
+
 
 
 

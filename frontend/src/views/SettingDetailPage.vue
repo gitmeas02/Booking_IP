@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-row gap-10 p-10 bg-gray-100 min-h-screen font-sans lg:flex-col lg:p-5 lg:gap-5">
+  <div class="flex flex-col md:flex-row gap-10 p-10 bg-gray-100 min-h-screen font-sans md:p-5 md:gap-5">
     <SideNav v-model:selectedIndex="selectedIndex" />
-    <div class="flex-1 bg-white rounded-xl p-8 shadow-md lg:p-6 sm:p-4">
+    <div class="flex-1 bg-white rounded-xl p-8 shadow-md md:p-6 sm:p-4">
       <component :is="CurrentSection" />
     </div>
   </div>

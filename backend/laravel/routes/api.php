@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
 // use App\Models\OwnerApplication;
@@ -30,14 +32,26 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/switch-role', [RoleController::class, 'switchRole']);
 Route::get('/user-roles', [RoleController::class, 'getUserRoles']);
 
-Route::middleware('auth:sanctum')->group(callback: function () {
-    Route::post('/apply-owner', [OwnerController::class, 'apply']);
-    Route::post('/approve-owner/{id}', [OwnerController::class, 'approve']); // Optional for admin
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/owner/apply', [OwnerController::class, 'apply']);
 });
-
-//
+// company
+Route::middleware('auth:sanctum')->prefix('company')->group(function () {
+Route::post(  '/approve-owner/{id}', [OwnerController::class, 'approve']);
+});
+//owner
 Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
     Route::post('/property/{id}/room', [RoomTypeController::class, 'store']);
     Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
+    Route::get('/application/{id}/images', [ImageController::class, 'getUserApplicationImages']);
+   //http://localhost:8100/api/owner/application/7/images
 });
+// amenity
+Route::get('/amenities', [AmenityController::class, 'index']);
+
+//Images
+
+
+// Update Route
+Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'updateMe']);
 

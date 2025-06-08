@@ -20,7 +20,6 @@ return new class extends Migration
             // Optional service offerings
             $table->boolean('breakfast')->default(false);
             $table->boolean('parking')->default(false);
-            $table->boolean('allow_pet')->default(false);
             $table->timestamps();
         });
     }

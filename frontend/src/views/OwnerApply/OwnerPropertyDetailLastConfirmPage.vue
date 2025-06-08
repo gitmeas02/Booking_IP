@@ -68,10 +68,10 @@
                         @click="handleBack">
                         Back
                     </button>
-                    <button
-                        class="px-6 py-2 text-white bg-black rounded-md shadow-md hover:bg-gray-300 hover:text-black focus:outline-none focus:ring-2 focus:ring-amber-400"
-                        @click="handleContinue">
-                        Continue
+                   <button
+                    class="px-6 py-2 text-white bg-black rounded-md shadow-md hover:bg-gray-300 hover:text-black focus:outline-none focus:ring-2 "
+                    @click="handleContinue">
+                    Continue
                     </button>
                 </div>
             </div>
@@ -83,23 +83,41 @@
         </div>
     </div>
 </template>
-
 <script>
-import { Icon } from '@iconify/vue';
+import { defineComponent } from "vue";
+import { useValidationStore } from "@/stores/validationStore";
+import { useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
 
-export default {
-    components: {
-        Icon
-    },
-    methods: {
-        handleBack() {
-            // Your logic here
-        },
-        handleContinue() {
-            // Your logic here
+export default defineComponent({
+  components: { Icon },
+  setup() {
+    const store = useValidationStore();
+    const router = useRouter();
+
+    const handleBack = () => {
+
+      router.push({ name: "OwnerPropertyPage10" });
+    };
+
+    const handleContinue = async () => {
+      try {
+        const success =  store.submit(); // assume it returns a boolean
+        console.log("Current property data:", JSON.stringify(store.property, null, 2));
+        if (success) {
+          router.push("/admin");
+        } else {
+          console.log("Submission failed:", store.property);
         }
-    }
-};
+      } catch (err) {
+        console.error("An error occurred during submission:", err);
+      }
+    };
+
+    return { store, handleBack, handleContinue };
+  },
+});
 </script>
+
 
 <style scoped></style>

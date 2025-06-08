@@ -19,16 +19,17 @@ export default defineConfig({
     Components({
       resolvers: [ElementPlusResolver()],
     }),  ],
-  server:{
-    port:3000,
-    proxy:{
-      '/api':{
-      target:'http://localhost:5000',
-      changeOrigin:true,
-      rewrite:(path)=>path.replace(/^\/api/,'')
-    }
-  },
-},
+    server: {
+      port: 3000,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8100',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, '/api'), // ✅ keeps /api
+        }
+      }
+    },
+
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

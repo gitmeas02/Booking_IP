@@ -13,7 +13,11 @@ export const useRoomStore = defineStore("room", {
       { id: "Free Parking", name: "Free Parking", icon: "🅿️" },
       { id: "Hot Water", name: "Hot Water", icon: "💧" },
     ],
-
+    destination: null,
+    startDate: null,
+    endDate: null,
+    adults: 1,
+    children: 0,
   }),
   actions: {
     async fetchRooms() {
@@ -234,6 +238,8 @@ export const useRoomStore = defineStore("room", {
     getHotelById: (state) => (id) => {
       return state.hotels.find((hotel) => hotel.id === id);
     },
+   searchRoomBy_name_hotelName_range_date(name,start_date,end_date){
 
+   }
   },
 });

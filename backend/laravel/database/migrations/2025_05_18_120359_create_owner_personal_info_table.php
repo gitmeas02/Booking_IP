@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('owner_personal_info', function (Blueprint $table) {
+        Schema::create('owner_personal_infos', function (Blueprint $table) {
            $table->id();
             // Foreign key to owner_applications
             $table->unsignedBigInteger('application_id');
             $table->foreign('application_id')->references('id')->on('owner_applications')->onDelete('cascade');
 
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('middle_name')->nullable();
+            $table->string('full_name');
             $table->string('email');
             $table->string('phone_number');
             $table->string('country_region');
@@ -30,6 +28,7 @@ return new class extends Migration
             $table->string('id_first_name');
             $table->string('id_last_name');
             $table->string('id_middle_name')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -38,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('owner_personal_info');
+        Schema::dropIfExists('owner_personal_infos');
     }
 };

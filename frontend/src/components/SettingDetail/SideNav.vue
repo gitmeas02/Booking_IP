@@ -41,7 +41,7 @@ const items = [
   background: #fff;
   border-radius: 12px;
   padding: 16px 0;
-  width: 250px;
+  width: 300px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }

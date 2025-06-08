@@ -12,15 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('application_amenities', function (Blueprint $table) {
-             $table->id();
-            // Foreign key to owner_applications
+            $table->id();
             $table->unsignedBigInteger('application_id');
             $table->foreign('application_id')->references('id')->on('owner_applications')->onDelete('cascade');
-
-            // Foreign key to amenities
             $table->unsignedBigInteger('amenity_id');
             $table->foreign('amenity_id')->references('id')->on('amenities')->onDelete('cascade');
-
             $table->timestamps();
         });
     }

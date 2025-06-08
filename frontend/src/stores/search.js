@@ -13,7 +13,7 @@ export const useSearchStore = defineStore('search', {
   }),
 
   actions: {
-    async fetchRoom() {
+    async SearchRooms() {
       const hotels = [
         {
           id: 1,
@@ -127,7 +127,6 @@ export const useSearchStore = defineStore('search', {
 
       // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 500))
-
       // Filter based on destination
       const filtered = hotels
         .filter(hotel => {

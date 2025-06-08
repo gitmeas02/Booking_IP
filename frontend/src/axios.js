@@ -1,9 +1,15 @@
-// src/axios.js
-import axios from 'axios'
+// import axios from 'axios'
 
-const instance = axios.create({
-  baseURL: 'http://localhost:8100', // Laravel backend
-  withCredentials: true             // REQUIRED for Sanctum
-})
+// const api = axios.create({
+//   baseURL: '/api',
+//   withCredentials: true,
+// })
+// api.interceptors.request.use(config => {
+//   const token = localStorage.getItem('token')
+//   if (token) {
+//     config.headers.Authorization = `Bearer ${token}`
+//   }
+//   return config
+// })
 
-export default instance
+// export default api

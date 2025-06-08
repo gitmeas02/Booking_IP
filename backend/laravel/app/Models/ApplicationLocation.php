@@ -5,17 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class ApplicationLocation extends Model
-{
+{  
+   protected $table='application_locations';
    protected $fillable = [
-        'owner_application_id',
+        'application_id',
+        'street',
         'apartment_floor',
         'country',
         'city',
         'postcode',
     ];
 
-    public function application()
+    public function ownerApplication()
     {
-        return $this->belongsTo(OwnerApplication::class, 'owner_application_id');
+        return $this->belongsTo(OwnerApplication::class, 'application_id');
     }
 }
