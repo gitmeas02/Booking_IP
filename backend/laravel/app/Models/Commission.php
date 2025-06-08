@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Commission extends Model
 {
     protected $fillable = [
-        'owner_application_id',
+        'application_id',
         'total_commission',
         'month',
         'status',
@@ -15,6 +15,6 @@ class Commission extends Model
 
     public function application()
     {
-        return $this->belongsTo(OwnerApplication::class, 'owner_application_id');
+        return $this->belongsTo(OwnerApplication::class, 'application_id');
     }
 }

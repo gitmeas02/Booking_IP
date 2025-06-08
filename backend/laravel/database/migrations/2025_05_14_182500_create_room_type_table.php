@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('room_type', function (Blueprint $table) {
+        Schema::create('room_types', function (Blueprint $table) {
         $table->id();
-        $table->unsignedBigInteger('owner_application_id'); // FK to track ownership
+        $table->unsignedBigInteger('application_id'); // FK to track ownership
         $table->string('name'); // e.g., Deluxe King            $table->decimal('base_price', 10, 2); // default price
         $table->integer('max_guest');
         $table->text('description')->nullable();
         $table->boolean('is_available')->default(true); // globally available or not
         $table->timestamps();
 
-        $table->foreign('owner_application_id')->references('id')->on('owner_applications')->onDelete('cascade');
+        $table->foreign('application_id')->references('id')->on('owner_applications')->onDelete('cascade');
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('room_type');
+        Schema::dropIfExists('room_types');
     }
 };

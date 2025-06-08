@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class MonthlyPayment extends Model
 {
   protected $fillable = [
-        'owner_application_id',
+        'application_id',
         'payment_amount',
         'payment_date',
         'payment_month',
@@ -15,6 +15,6 @@ class MonthlyPayment extends Model
 
     public function ownerApplication()
     {
-        return $this->belongsTo(OwnerApplication::class, 'owner_application_id');
+        return $this->belongsTo(OwnerApplication::class, 'application_id');
     }
 }

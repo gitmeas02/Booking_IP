@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class RoomType extends Model
 {
     use HasFactory;
-
-    protected $fillable = ['owner_application_id', 'name', 'capacity', 'default_price', 'description'];
+    protected $table ="room_types";
+    protected $fillable = ['application_id', 'name', 'capacity', 'default_price', 'description'];
 
     public function property()
     {
-        return $this->belongsTo(OwnerApplication::class, 'owner_application_id');
+        return $this->belongsTo(OwnerApplication::class, 'application_id');
     }
 
     public function images()

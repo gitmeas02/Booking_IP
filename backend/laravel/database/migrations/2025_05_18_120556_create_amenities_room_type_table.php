@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             // Foreign key to room_types (assuming your rooms table is called room_types)
             $table->unsignedBigInteger('room_id');
-            $table->foreign('room_id')->references('id')->on('room_type')->onDelete('cascade');
+            $table->foreign('room_id')->references('id')->on('room_types')->onDelete('cascade');
 
             // Foreign key to amenities
             $table->unsignedBigInteger('amenity_id');

@@ -61,16 +61,16 @@ public function user()
 
     public function roomTypes() 
     {
-        return $this->hasMany(RoomType::class, 'owner_application_id');
+        return $this->hasMany(RoomType::class, 'application_id');
     }
 
     public function feedbacks() 
     {
-        return $this->hasMany(Feedback::class, 'owner_application_id');
+        return $this->hasMany(Feedback::class, 'application_id');
     }
 
     public function commissions() 
     {
-        return $this->hasMany(Commission::class, 'owner_application_id');
+        return $this->hasMany(Commission::class, 'application_id');
     }
 }

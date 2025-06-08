@@ -29,7 +29,7 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('room_id')->references('id')->on('room_type')->onDelete('cascade');
+            $table->foreign('room_id')->references('id')->on('room_types')->onDelete('cascade');
             $table->foreign('owner_application_id')->references('id')->on('owner_applications')->onDelete('cascade');
 
         });

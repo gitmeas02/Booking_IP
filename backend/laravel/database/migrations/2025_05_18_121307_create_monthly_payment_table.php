@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
 
         // Foreign key to hotels (properties)
-        $table->unsignedBigInteger('owner_applications_id');
-        $table->foreign('owner_applications_id')->references('id')->on('owner_applications')->onDelete('cascade');
+        $table->unsignedBigInteger('applications_id');
+        $table->foreign('applications_id')->references('id')->on('owner_applications')->onDelete('cascade');
 
         $table->decimal('payment_amount', 10, 2); // amount due for the month
 
