@@ -129,7 +129,7 @@ const matchingRooms = computed(() => {
 onMounted(async () => {
   await roomStore.fetchRooms();
   await roomStore.fetchHotels();
-  await searchRoom.SearchRooms();
+  await searchRoom.searchRooms();
 });
 const guestDetails = ref({
   rooms: 1,

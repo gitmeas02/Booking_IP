@@ -4,16 +4,16 @@ import { defineStore } from 'pinia'
 export const useSearchStore = defineStore('search', {
   state: () => ({
     rooms: [],
-    destination: null, // validate 
-    startDate: null,
-    endDate: null,
+    destination: '',
+    startDate: null,  
+    endDate: null,    
     adults: 1,
     children: 0,
     withPet: false,
   }),
 
   actions: {
-    async SearchRooms() {
+    async searchRooms() {
       const hotels = [
         {
           id: 1,
@@ -125,20 +125,24 @@ export const useSearchStore = defineStore('search', {
         },
       ]
 
-      // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 500))
-      // Filter based on destination
+
       const filtered = hotels
         .filter(hotel => {
-          return !this.destination || hotel.location.city.toLowerCase().includes(this.destination.toLowerCase())
+          return !this.destination ||
+            hotel.location.city.toLowerCase().includes(this.destination.toLowerCase())
         })
-        .flatMap(hotel => hotel.rooms.map(room => ({ ...room, hotel: hotel.name, city: hotel.location.city })))
+        .flatMap(hotel => hotel.rooms.map(room => ({
+          ...room,
+          hotel: hotel.name,
+          city: hotel.location.city
+        })))
 
       this.rooms = filtered
     },
 
-    setDestination(dest) {
-      this.destination = dest
+    setDestination(value) {
+      this.destination = value
     },
 
     setDates({ start, end }) {
@@ -146,16 +150,12 @@ export const useSearchStore = defineStore('search', {
       this.endDate = end
     },
 
-    setRooms(roomsArray) {
-      this.rooms = roomsArray
-    },
-
     setGuests({ adults, children }) {
       this.adults = adults
       this.children = children
     },
 
-    toggleSearch(value) {
+    togglePet(value) {
       this.withPet = value
     },
 
