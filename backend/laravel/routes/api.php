@@ -6,7 +6,8 @@ use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
 // use App\Models\OwnerApplication;
-use App\Http\Controllers\RoomTypeController;
+use App\Http\Controllers\Room\RoomTypeController;
+use App\Models\RoomType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -41,13 +42,14 @@ Route::post(  '/approve-owner/{id}', [OwnerController::class, 'approve']);
 });
 //owner
 Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
-    Route::post('/property/{id}/room', [RoomTypeController::class, 'store']);
+    Route::post('/property/{id}/room', [RoomTypeController::class, 'storeMultiple']);
     Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
     Route::get('/application/{id}/images', [ImageController::class, 'getUserApplicationImages']);
    //http://localhost:8100/api/owner/application/7/images
 });
 // amenity
 Route::get('/amenities', [AmenityController::class, 'index']);
+Route::get('/rooms', [RoomTypeController::class, 'getRooms']);
 
 //Images
 
