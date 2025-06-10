@@ -57,3 +57,18 @@ Route::get('/rooms', [RoomTypeController::class, 'getRooms']);
 // Update Route
 Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'updateMe']);
 
+// {
+//   "rooms": [
+//     {
+//       "name": "Single Bed",
+//       "description": "Spacious room with king bed",
+//       "capacity": 2,
+//       "default_price": 150.00,
+//       "amenities":[1,2,3,4,5],
+//       "images": [
+//         { "url": "https://example.com/images/deluxe1.jpg" },
+//         { "url": "https://example.com/images/deluxe2.jpg" }
+//       ]
+//     }
+//   ]
+// }

@@ -23,7 +23,7 @@ class RoomType extends Model
 
     public function amenities()
     {
-        return $this->belongsToMany(Amenity::class);
+        return $this->belongsToMany(Amenity::class,'amenities_room_type', 'room_id', 'amenity_id');
     }
 
     public function prices()

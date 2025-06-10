@@ -109,8 +109,7 @@
           <button
             class="px-6 py-2 text-white bg-black rounded-md shadow-md hover:bg-gray-300 hover:text-black focus:outline-none focus:ring-2 focus:ring-amber-400"
             @click="handleContinue"
-            :disabled="!checkInFrom || !checkInUntil || !checkOutFrom || !checkOutUntil || typeof allowChildren !== 'boolean' || typeof petsAllowed !== 'boolean'"
-          >
+            :disabled="!checkInFrom || !checkInUntil || !checkOutFrom || !checkOutUntil || typeof allowChildren !== 'boolean' || typeof petsAllowed !== 'boolean'">
             Continue
           </button>
         </div>

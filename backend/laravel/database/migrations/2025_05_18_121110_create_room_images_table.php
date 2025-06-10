@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreign('room_type_id')->references('id')->on('room_types')->onDelete('cascade');
             // Image URL
             $table->string('image_url');
+            $table->string('thumbnail_url');
             $table->timestamps();
         });
     }

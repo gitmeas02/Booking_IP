@@ -15,7 +15,7 @@ return new class extends Migration
         $table->id();
         $table->foreignId('application_id')->constrained('owner_applications')->onDelete('cascade');        $table->string('name'); // e.g., Deluxe King            $table->decimal('base_price', 10, 2); // default price
         $table->integer('capacity');
-        $table->double('default_price');
+        $table->decimal('default_price', 8, 2);
         $table->text('description')->nullable();
         $table->boolean('is_available')->default(true); // globally available or not
         $table->timestamps();
