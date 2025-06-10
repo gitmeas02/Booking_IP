@@ -17,17 +17,20 @@ class OwnerSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-     public function run(): void
+    public function run(): void
     {
         DB::transaction(function () {
             // Create or get role
+            $userRole = Role::firstOrCreate(['name' => 'user']);
             $ownerRole = Role::firstOrCreate(['name' => 'owner']);
+
 
             // Create test user
             $user = User::factory()->create([
                 'name' => 'Owner Test User',
                 'email' => 'owner@example.com',
                 'password' => bcrypt('password'),
+                'current_role_id'=>1
             ]);
 
             // Create application
@@ -106,6 +109,7 @@ class OwnerSeeder extends Seeder
             ]);
 
             // Assign owner role to user
+            $user->roles()->syncWithoutDetaching([$userRole->id]);
             $user->roles()->syncWithoutDetaching([$ownerRole->id]);
         });
     }

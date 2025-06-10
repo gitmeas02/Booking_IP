@@ -27,19 +27,24 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 //Role Check API 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/check-role/{role}', [RoleController::class, 'checkRole']);
+    Route::get('/user-roles/{user}', [RoleController::class, 'getUserRoles']);
+    // Role switching
+    Route::post('/switch-role', [RoleController::class, 'switchRole']);
+    
+    // Role management (admin only - add middleware as needed)
+    Route::post('/assign-role', [RoleController::class, 'assignRole']);
+    Route::post('/remove-role', [RoleController::class, 'removeRole']);
+
 });
 
-Route::post('/switch-role', [RoleController::class, 'switchRole']);
-Route::get('/user-roles', [RoleController::class, 'getUserRoles']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/owner/apply', [OwnerController::class, 'apply']);
 });
 // company
-Route::middleware('auth:sanctum')->prefix('company')->group(function () {
+// Route::middleware('auth:sanctum')->prefix('company')->group(function () {
 Route::post(  '/approve-owner/{id}', [OwnerController::class, 'approve']);
-});
+// });
 //owner
 Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
     Route::post('/property/{id}/room', [RoomTypeController::class, 'storeMultiple']);

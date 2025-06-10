@@ -19,6 +19,30 @@ import index2 from "./index2";
 
 import { createRouter, createWebHistory } from "vue-router";
 import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
+import axios from "axios";
+
+// Create Axios instance with base URL
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials:true
+});
+
+// Add interceptor for authentication token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 const routes = [
   ...index2,
   {
@@ -31,17 +55,18 @@ const routes = [
     name: "CurrentPastBooking",
     component: HistoryKeeper,
     meta: {
-      requiresAuth: true ,
-      roles: ['user'] 
+      requiresAuth: true,
+      roles: ['user', 'owner'] 
     }
   },
   {
     path: "/checkout/:id",
     name: "checkout",
     component: CheckoutPage,
-    // meta:{requiresAuth:true,
-    //   roles: ['user'] 
-    // }
+    meta: {
+      requiresAuth: true,
+      roles: ['user', 'owner'] 
+    }
   },
   {
     path: "/listroom",
@@ -51,36 +76,44 @@ const routes = [
   {
     path: "/products-details/:id",
     name: "ProductsDetails",
-    props: true ,
+    props: true,
     component: ProductDetailPage,
   },
   {
     path: "/chat",
     name: "Chat",
     component: Chatbox,
+    meta: {
+      requiresAuth: true,
+      roles: ['user', 'owner'] 
+    }
   },
   {
     path: "/upload-property",
     name: "uploadProperty",
     component: UploadProperty,
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'] 
+    }
   },
   {
     path: "/setting",
     name: "SettingUser",
     component: SettingPage,
     meta: {
-      requiresAuth: true ,
-      roles: ['user']
+      requiresAuth: true,
+      roles: ['user', 'owner'] 
     }
   },
   {
     path: "/setting-details",
     name: "SettingDetail",
     component: SettingDetailPage,
-    // meta: {
-    //   requiresAuth: true ,
-    //   requiresRole: 'user' // Only accessible by user role
-    // }
+    meta: {
+      requiresAuth: true,
+      roles: ['user', 'owner']
+    }
   },
   {
     path: "/authentication",
@@ -104,10 +137,8 @@ const routes = [
       },
     ],
   },
-
-
   {
-    path: "/owner", // Only accessible by owner role
+    path: "/owner",
     name: "Owner",
     component: Admin,
     meta: {
@@ -115,42 +146,64 @@ const routes = [
       roles: ['owner'] 
     }
   },
-    // Catch-all route - redirects to home
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/'
-    },
-
+  // Catch-all route - redirects to home
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
-// Navigation guards
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  const isAuthenticated = !!token
 
-  if(token){
-    if(to.path.startsWith('/authentication')){
+// Navigation guards - FIXED VERSION
+router.beforeEach(async (to, from, next) => {
+  try {
+    // Skip auth check for authentication routes to avoid infinite loops
+    if (to.path.startsWith('/authentication')) {
+      return next();
+    }
+
+    const res = await axiosInstance.get('/me');
+    const isAuthenticated = !!res?.data?.user;
+    const userId = res?.data?.user?.id;
+
+    // If user is authenticated and trying to access signin, redirect to settings
+    if (to.path === '/authentication/signin' && isAuthenticated) {
       return next('/setting');
     }
-    // If route requires authentication
-    if (to.meta.requiresAuth) {
-      return next(); // authenticated, allow access
+
+    // Check if route requires authentication
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      return next('/authentication/signin');
     }
-    } else {
-    // If not logged in and trying to access a protected route
+
+    // Check role-based access
+    if (isAuthenticated && to.meta.roles) {
+      const roleRes = await axiosInstance.get(`/user-roles/${userId}`);
+      const userRoles = roleRes.data.roles.map(r => r.name);
+      const hasAccess = to.meta.roles.some(role => userRoles.includes(role));
+      
+      if (!hasAccess) {
+        return next('/');
+      }
+    }
+
+    next();
+  } catch (error) {
+    console.warn('Auth check failed:', error);
+    
+    // If route requires auth but we can't verify, redirect to signin
     if (to.meta.requiresAuth) {
       return next('/authentication/signin');
     }
+    
+    // For public routes, allow access even if auth check fails
+    next();
   }
-
-  next(); // default allow
 });
-
-
 
 // Error handling
 router.onError((error) => {
@@ -159,22 +212,3 @@ router.onError((error) => {
 });
 
 export default router;
-
-
-// if (to.meta.requiresAuth && !token) {
-//   // If route requires authentication but user is not logged in
-//   return next('/login'); // Redirect to login page
-// }
-// if (to.meta.requiresRole && to.meta.requiresRole !== userRole) {
-//   // If the user doesn't have the required role for the route
-//   if (userRole === 'user') {
-//     return next('/setting'); // Redirect user to setting page
-//   }
-//   if (userRole === 'owner') {
-//     return next('/owner-dashboard'); // Redirect owner to dashboard
-//   }
-//   return next('/property-register'); // If no role or other roles, redirect to property register page
-// }
-
-// next(); // Allow navigation to route
-// });

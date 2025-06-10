@@ -233,7 +233,7 @@ import axios from 'axios';
 async function fetchHotels() {
   isLoading.value = true;
   try {
-    const response = await axios.get("api/hotels");
+    const response = await axios.get("http://localhost:5000/hotels");
     const data = response.data;
     hotels.value = data;
     rooms.value = hotels.value.flatMap((hotel) =>

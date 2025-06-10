@@ -38,7 +38,9 @@ class AuthController extends Controller
         // $userRole = Role::where('name', 'company')->firstOrFail();
         $userRole = Role::where('name', 'user')->firstOrFail();
         $user->roles()->attach($userRole->id);
-    
+        $user->current_role_id = $userRole->id;
+        $user->save();
+
 
         return response()->json([
             'message' => 'User registered successfully',
@@ -69,10 +71,16 @@ class AuthController extends Controller
         ]);
     }
     public function me(Request $request)
-    {     $user = $request->user();
+    {     
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+        $user->load(['roles', 'currentRole']);
         return response()->json([
             'user' => $user,
             'roles' => $user->roles->pluck('name'),
+            'current_role' => $user->getCurrentRoleName(),
             'applications' => $user->ownerApplication()->get(),
         ]);
     }
