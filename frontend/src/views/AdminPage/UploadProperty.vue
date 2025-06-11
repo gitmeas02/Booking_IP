@@ -8,9 +8,16 @@
             </div>
 
             <!-- Navigation -->
-            <div class="navigation">
-                <button class="nav-button">Home</button>
+            <div class="flex">
+                <button class=" flex items-center h-fit py-1 px-2 underline" @click="goBack">
+                    <Icon icon="ep:arrow-left-bold"></Icon>
+                    <p>Back</p>
+                </button>
+                <div class="navigation">
+                    <button class="nav-button">Home</button>
+                </div>
             </div>
+
 
             <!-- Photo Upload Section -->
             <div class="upload-area" @dragover.prevent="onDragOver" @drop.prevent="onDrop" @click="triggerFileInput">
@@ -117,8 +124,7 @@
                     <Icon icon="mingcute:left-fill" />
                 </button>
                 <img :src="photos[currentPhotoIndex].url" class="modal-image" />
-                <button class="modal-nav right" @click="nextPhoto"
-                    :disabled="currentPhotoIndex === photos.length - 1">
+                <button class="modal-nav right" @click="nextPhoto" :disabled="currentPhotoIndex === photos.length - 1">
                     <Icon icon="mingcute:right-fill" />
                 </button>
             </div>
@@ -153,6 +159,12 @@ export default {
     //     };
 
     // },
+
+    methods:{
+        goBack() {
+            this.$router.back(); // Go to previous route
+        }
+    },
 
     setup() {
         // ========================
@@ -690,7 +702,7 @@ export default {
     max-height: 90vh;
     object-fit: contain;
     border-radius: 8px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
     background: #fff;
 }
 
@@ -698,7 +710,7 @@ export default {
     position: fixed;
     top: 32px;
     right: 32px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     color: white;
     width: 48px;
     height: 48px;
@@ -713,7 +725,7 @@ export default {
 }
 
 .modal-nav {
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     color: white;
     width: 56px;
     height: 56px;
@@ -725,7 +737,7 @@ export default {
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    transition:  0.2s;
+    transition: 0.2s;
 }
 
 .modal-nav.left {
@@ -741,5 +753,4 @@ export default {
     top: 50%;
     transform: translateY(-50%);
 }
-
 </style>
