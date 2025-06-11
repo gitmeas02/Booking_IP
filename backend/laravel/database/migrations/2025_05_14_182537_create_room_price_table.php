@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('room_type_id')->constrained('room_type')->onDelete('cascade');
             $table->date('start_date');
             $table->date('end_date');
-            $table->integer('custom_price');
+            $table->double('percentage');
+            $table->integer('custom_price'); // price when 
             $table->timestamps();
         });
     }
