@@ -9,7 +9,7 @@ const router = useRouter()                 // <-- get router instance
 const store = useSearchStore()
 
 const destinationInput = ref('')
-// const value1 = ref(false) // Pet toggle switch
+const value1 = ref(false) // Pet toggle switch
 
 const handleDateChange = (start, end) => {
   store.setDates({ start, end })  // Update store with new dates
@@ -69,7 +69,7 @@ const handleSearch = () => {
 
       <!-- Guests and Pet Toggle -->
       <div class="selectRoom">
-        <!--
+        
         <div style="margin-top: 20px;">
           <SelectRoom />
         </div>
@@ -77,7 +77,7 @@ const handleSearch = () => {
           Traveling with pet?
           <el-switch v-model="value1" />
         </div>
-        -->
+       
       </div>
     </div>
   </div>
