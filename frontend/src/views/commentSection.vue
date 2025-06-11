@@ -294,7 +294,9 @@ function handleReply({ parentId, replyText }) {
 }
 
 .comments-list {
-  space-y: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .load-more-section {
