@@ -8,7 +8,7 @@ class Feedback extends Model
 {
     protected $fillable = [
         'user_id',
-        'owner_application_id',
+        'application_id',
         'feedback',
         'rating',
     ];

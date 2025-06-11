@@ -24,8 +24,11 @@ return new class extends Migration
             $table->string('passport')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedBigInteger('current_role_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
+
+            $table->foreign('current_role_id')->references('id')->on('roles')->onDelete('set null');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -48,7 +51,11 @@ return new class extends Migration
      * Reverse the migrations.
      */
     public function down(): void
-    {
+    {   
+        Schema::table('users', function (Blueprint $table) {
+        $table->dropForeign(['current_role_id']);
+        $table->dropColumn('current_role_id');
+       });
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');

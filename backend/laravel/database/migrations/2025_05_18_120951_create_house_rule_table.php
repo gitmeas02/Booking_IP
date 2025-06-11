@@ -19,6 +19,8 @@ return new class extends Migration
 
             // Check-in and check-out times
             $table->time('checkin_from')->nullable();   // e.g., 14:00
+            $table->time('checkin_to')->nullable();  // e.g., 08:00
+            
             $table->time('checkout_from')->nullable();  // e.g., 08:00
             $table->time('checkout_to')->nullable();    // e.g., 11:00
             $table->boolean('allow_pet')->default(false);

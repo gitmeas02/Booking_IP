@@ -24,7 +24,7 @@ return new class extends Migration
         });
         Schema::create('amenity_room_type', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('room_type_id')->constrained('room_type')->onDelete('cascade');
+            $table->foreignId('room_type_id')->constrained('room_types')->onDelete('cascade');
             $table->foreignId('amenity_id')->constrained('amenities')->onDelete('cascade');
             $table->timestamps();
         });

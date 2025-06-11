@@ -1,6 +1,6 @@
 <template>
   <button @click="goToToday" class="p-2 bg-amber-200 m-1 rounded">Today</button>
-
+  <button class=" py-2 px-4 bg-amber-500" @click="router.push('/upload-property')">To Uplaod Room</button>
   <div class="flex items-center justify-between p-4 bg-white shadow-md">
     <div class="calendar-header flex items-center gap-4">
       <ChevronLeft @click="previousWeek" class="cursor-pointer" />
@@ -10,7 +10,6 @@
       <ChevronRight @click="nextWeek" class="cursor-pointer" />
     </div>
   </div>
-
   <div class="overflow-x-auto">
     <div class="min-w-max">
       <div
@@ -229,11 +228,13 @@ const hotels = ref([]);
 const rooms = ref([]);
 
 import axios from 'axios';
+import { useRouter } from "vue-router";
+import router from "@/router";
 
 async function fetchHotels() {
   isLoading.value = true;
   try {
-    const response = await axios.get("api/hotels");
+    const response = await axios.get("http://localhost:5000/hotels");
     const data = response.data;
     hotels.value = data;
     rooms.value = hotels.value.flatMap((hotel) =>

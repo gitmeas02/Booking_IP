@@ -11,6 +11,7 @@ class HouseRule extends Model
     protected $fillable = [
         'application_id',
         'checkin_from',
+        'checkin_to',
         'checkout_from',
         'checkout_to',
         'allow_pet',

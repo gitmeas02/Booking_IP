@@ -156,11 +156,15 @@ class OwnerController extends Controller
         $application = OwnerApplication::findOrFail($id);
         $application->status = 'approved';
         $application->expires_at = now()->addYear();
-        $application->save();
 
-        $ownerRole = Role::where('name', 'owner')->first();
+
+        $ownerRole = Role::where('name', 'owner')->firstOrFail();
+
+    // Update user's current role
+        $application->user->current_role_id = $ownerRole->id;
+        $application->user->save(); 
         $application->user->roles()->syncWithoutDetaching([$ownerRole->id]);
-
+        $application->save();
         return response()->json([
             'message' => 'Application approved. User is now an owner.',
             'user_roles' => $application->user->roles->pluck('name')

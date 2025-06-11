@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('commission', function (Blueprint $table) {
             $table->id();
                 // Foreign key to owner_applications
-            $table->unsignedBigInteger('owner_application_id');
-            $table->foreign('owner_application_id')->references('id')->on('owner_applications')->onDelete('cascade');
+            $table->unsignedBigInteger('application_id');
+            $table->foreign('application_id')->references('id')->on('owner_applications')->onDelete('cascade');
 
             $table->decimal('total_commission', 10, 2); // e.g. 1234.56
             $table->date('month'); // Store year-month, e.g. 2024-05-01 (just the first day of the month)

@@ -75,7 +75,7 @@ const handleSignIn = async () => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
     console.log('Login successful', response.data);
-
+      location.reload();
     router.push('/setting');
   } catch (err) {
     console.error('Login failed', err);

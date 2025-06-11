@@ -9,7 +9,7 @@ class RoomImage extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['room_type_id', 'image_url'];
+    protected $fillable = ['room_type_id', 'image_url','thumbnail_url'];
 
     public function roomType()
     {

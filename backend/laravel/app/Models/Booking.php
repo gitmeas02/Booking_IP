@@ -9,7 +9,7 @@ class Booking extends Model
    protected $fillable = [
         'user_id',
         'room_id',
-        'owner_application_id',
+        'application_id',
         'user_commission',
         'hotel_commission',
         'check_in_date',
@@ -33,7 +33,7 @@ class Booking extends Model
 
     public function ownerApplication()
     {
-        return $this->belongsTo(OwnerApplication::class, 'owner_application_id');
+        return $this->belongsTo(OwnerApplication::class, 'application_id');
     }
 
     public function payment()

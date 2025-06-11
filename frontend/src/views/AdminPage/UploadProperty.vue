@@ -62,6 +62,19 @@
             v-model="roomType"
           />
         </div>
+          <div class="flex w-screen flex-col">
+          <label
+            for="roomType"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >People</label
+          >
+          <input
+            type="text"
+            class="form-input w-full border border-gray-300 p-2 focus:ring focus:ring-blue-200"
+            placeholder="How Many People Can Stay? eg.(5)"
+            v-model="people"
+          />
+        </div>
 
         <!-- Price Control -->
         <div class="border-l-2 border-r-2 border-black pl-6 pr-6">
@@ -248,6 +261,7 @@ export default {
     // ========================
     // Reactive Variables
     // ========================
+    const people = ref("");
     const roomNumber = ref("");
     const roomType = ref("");
     const price = ref(77);
