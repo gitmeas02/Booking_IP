@@ -96,49 +96,171 @@
 
     <!-- Navigation Tabs -->
     <div class="navigation-tabs">
-      <button class="tab-btn active">Overview</button>
-      <button class="tab-btn">Rooms</button>
-      <button class="tab-btn">Trip recommendations</button>
-      <button class="tab-btn">Facilities</button>
-      <button class="tab-btn">Reviews</button>
-      <button class="tab-btn">Location</button>
-      <button class="tab-btn">Policies</button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'overview' }"
+        @click="activeTab = 'overview'"
+      >
+        Overview
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'rooms' }"
+        @click="activeTab = 'rooms'"
+      >
+        Rooms
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'recommendations' }"
+        @click="activeTab = 'recommendations'"
+      >
+        Trip recommendations
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'comments' }"
+        @click="scrollToComments"
+      >
+        Comments
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'facilities' }"
+        @click="activeTab = 'facilities'"
+      >
+        Facilities
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'reviews' }"
+        @click="activeTab = 'reviews'"
+      >
+        Reviews
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'location' }"
+        @click="activeTab = 'location'"
+      >
+        Location
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'policies' }"
+        @click="activeTab = 'policies'"
+      >
+        Policies
+      </button>
     </div>
 
     <!-- Main Content Area -->
     <div class="main-content-area">
       <!-- Left Content -->
       <div class="left-content">
-        <!-- About Us>-->
-        <div class="about-section">
-          <h3>About us</h3>
-          <p>
-            {{
-              hotel.description?.[0] ||
-              "Nestled in Kampot City Center, Bamboo Bungalows offers two travellers an ideal blend of relaxation and exploration. Enjoy riverside dining..."
-            }}
-          </p>
-          <a href="#" class="read-more-link">Read more</a>
+        <!-- Overview Tab Content -->
+        <div v-if="activeTab === 'overview'">
+          <!-- About Us -->
+          <div class="about-section">
+            <h3>About us</h3>
+            <p>
+              {{
+                hotel.description?.[0] ||
+                "Nestled in Kampot City Center, Bamboo Bungalows offers two travellers an ideal blend of relaxation and exploration. Enjoy riverside dining..."
+              }}
+            </p>
+            <a href="#" class="read-more-link">Read more</a>
+          </div>
+
+          <!-- Room Selection -->
+          <div class="room-selection-section">
+            <h3>Select your room</h3>
+            <div class="room-filters">
+              <button class="filter-btn">🚭 Non-smoking (21)</button>
+              <button class="filter-btn">📏 ≥ 20 m² (20)</button>
+              <button class="filter-btn">🛏️ ≥ 40 m² (4)</button>
+              <button class="filter-btn">💳 Pay later option (15)</button>
+              <button class="filter-btn">❌ Free cancellation (26)</button>
+              <button class="filter-btn">🏨 Pay at the hotel (19)</button>
+              <a href="#" class="show-more-filters">Show 1 more</a>
+            </div>
+            <!-- Room Cards -->
+            <div class="room-cards">
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+            </div>
+          </div>
         </div>
 
-        <!-- Room Selection -->
-        <div class="room-selection-section">
-          <h3>Select your room</h3>
-          <div class="room-filters">
-            <button class="filter-btn">🚭 Non-smoking (21)</button>
-            <button class="filter-btn">📏 ≥ 20 m² (20)</button>
-            <button class="filter-btn">🛏️ ≥ 40 m² (4)</button>
-            <button class="filter-btn">💳 Pay later option (15)</button>
-            <button class="filter-btn">❌ Free cancellation (26)</button>
-            <button class="filter-btn">🏨 Pay at the hotel (19)</button>
-            <a href="#" class="show-more-filters">Show 1 more</a>
+        <!-- Facilities Tab Content -->
+        <div v-if="activeTab === 'facilities'" class="facilities-tab-content">
+          <div class="facilities-section">
+            <h3>Hotel Facilities</h3>
+            <div class="facilities-columns">
+              <div
+                v-for="amenity in hotelAmenities"
+                :key="amenity.id"
+                class="facility-item"
+              >
+                {{ amenity.name }}
+              </div>
+            </div>
           </div>
-          <!-- Room Cards -->
+        </div>
+
+        <!-- Other tab contents can be added here -->
+        <div v-if="activeTab === 'rooms'" class="rooms-tab-content">
+          <h3>Available Rooms</h3>
           <div class="room-cards">
             <RoomTypeCard :room="room" @reserve="reserveRoom" />
             <RoomTypeCard :room="room" @reserve="reserveRoom" />
-            <RoomTypeCard :room="room" @reserve="reserveRoom" />
-            <RoomTypeCard :room="room" @reserve="reserveRoom" />
+          </div>
+        </div>
+
+        <div v-if="activeTab === 'location'" class="location-tab-content">
+          <h3>Location & Nearby</h3>
+          <p>{{ hotel.location?.address }}, {{ hotel.location?.city }}</p>
+          <!-- Map and location details would go here -->
+        </div>
+
+        <div v-if="activeTab === 'policies'" class="policies-tab-content">
+          <h3>Hotel Policies</h3>
+          <p>Check-in: 3:00 PM - 11:00 PM</p>
+          <p>Check-out: 12:00 PM</p>
+          <p>
+            Cancellation policy and other hotel policies would be displayed
+            here.
+          </p>
+        </div>
+
+        <div
+          v-if="activeTab === 'recommendations'"
+          class="recommendations-tab-content"
+        >
+          <h3>Trip Recommendations</h3>
+          <p>Discover nearby attractions and activities for your stay.</p>
+        </div>
+
+        <div v-if="activeTab === 'reviews'" class="reviews-tab-content">
+          <h3>Guest Reviews</h3>
+          <p>Detailed guest reviews and ratings would be displayed here.</p>
+        </div>
+
+        <!-- Comments Tab Content -->
+        <div v-if="activeTab === 'comments'" class="comments-tab-content">
+          <div class="comments-room-section">
+            <div class="section-header">
+              <h3 class="section-title">Available Rooms</h3>
+              <p class="section-subtitle">Book one of these rooms while browsing reviews</p>
+            </div>
+            <div class="room-cards-grid">
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+            </div>
           </div>
         </div>
       </div>
@@ -296,6 +418,12 @@
         </button>
       </div>
     </div>
+
+
+    <!-- Comment Section at Bottom -->
+    <div ref="commentsSection" class="comments-bottom-section">
+      <CommentSection />
+    </div>
   </div>
 
   <div v-else>
@@ -309,11 +437,18 @@ import { ref, computed, onMounted, watch, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useRoomStore } from "@/stores/store";
 import { ChevronLeft, ChevronRight, X } from "lucide-vue-next";
+import CommentSection from "./commentSection.vue";
 
 const roomStore = useRoomStore();
 const route = useRoute();
 const router = useRouter();
 const roomId = parseInt(route.params.id);
+
+// Add activeTab state
+const activeTab = ref("overview");
+
+// Add template ref for comments section
+const commentsSection = ref(null);
 
 const checkInDate = ref("");
 const checkOutDate = ref("");
@@ -425,6 +560,17 @@ const prevPhoto = () => {
 // Handle scroll event for booking bar background change
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 100;
+};
+
+// Add scroll to comments function
+const scrollToComments = () => {
+  activeTab.value = 'comments';
+  if (commentsSection.value) {
+    commentsSection.value.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
 };
 
 onMounted(async () => {
@@ -1709,6 +1855,84 @@ onUnmounted(() => {
 
   .bottom-booking-bar.scrolled .price-display {
     background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Comments Bottom Section */
+.comments-bottom-section {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 2px solid #e7e7e7;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Enhanced Mobile Responsive for Comments */
+@media (max-width: 768px) {
+  .comments-bottom-section {
+    margin-top: 32px;
+    padding-top: 24px;
+  }
+}
+
+/* Additional Room Options Section */
+.additional-rooms-section {
+  margin-top: 32px;
+}
+
+.section-header {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #262626;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  color: #6b6b6b;
+  margin-top: 4px;
+}
+
+.room-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+/* Comments Room Section */
+.comments-room-section {
+  margin-bottom: 32px;
+}
+
+.comments-room-section .section-header {
+  margin-bottom: 20px;
+}
+
+.comments-room-section .section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.comments-room-section .section-subtitle {
+  font-size: 14px;
+  color: #6b6b6b;
+}
+
+.comments-room-section .room-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Mobile responsive for comments room section */
+@media (max-width: 768px) {
+  .comments-room-section .room-cards-grid {
+    gap: 12px;
   }
 }
 </style>
