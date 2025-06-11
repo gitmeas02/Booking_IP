@@ -21,28 +21,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
 import axios from "axios";
 
-// Create Axios instance with base URL
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-  withCredentials:true
-});
-
-// Add interceptor for authentication token
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
 const routes = [
   ...index2,
   {
@@ -88,15 +66,15 @@ const routes = [
       roles: ['user', 'owner'] 
     }
   },
-  {
-    path: "/upload-property",
-    name: "uploadProperty",
-    component: UploadProperty,
-    meta: {
-      requiresAuth: true,
-      roles: ['owner'] 
-    }
-  },
+{
+  path: "/upload-property",
+  name: "uploadProperty",
+  component: UploadProperty,
+  meta: {
+    requiresAuth: true,
+    roles: ['owner']
+  }
+},
   {
     path: "/setting",
     name: "SettingUser",
@@ -153,6 +131,29 @@ const routes = [
   },
 ];
 
+
+// Create Axios instance with base URL
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials:true
+});
+
+// Add interceptor for authentication token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
@@ -183,9 +184,13 @@ router.beforeEach(async (to, from, next) => {
     // Check role-based access
     if (isAuthenticated && to.meta.roles) {
       const roleRes = await axiosInstance.get(`/user-roles/${userId}`);
-      const userRoles = roleRes.data.roles.map(r => r.name);
-      const hasAccess = to.meta.roles.some(role => userRoles.includes(role));
-      
+
+      console.log("printing roleRes")
+      console.log(roleRes)
+      // const userRoles = roleRes.data.roles.map(r => r.name);
+      // const hasAccess = to.meta.roles.some(role => userRoles.includes(role));
+      const hasAccess = to.meta.roles.includes(roleRes.data.current_role);
+      // if()
       if (!hasAccess) {
         return next('/');
       }

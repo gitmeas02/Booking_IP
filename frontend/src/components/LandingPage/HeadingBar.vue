@@ -286,7 +286,7 @@
 </template>
 
 <script setup>
-import { RouterLink, useRouter } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import {
   User,
   CircleDollarSign,
@@ -297,7 +297,7 @@ import {
   X,
   ChevronDown,
 } from "lucide-vue-next";
-import { onMounted, ref, computed, onUnmounted } from "vue";
+import { onMounted, ref, computed, onUnmounted, watch } from "vue";
 import axios from 'axios';
 
 // Create Axios instance with VITE_API_BASE_URL from .env
@@ -335,6 +335,7 @@ axiosInstance.interceptors.response.use(
 );
 
 const router = useRouter();
+const route = useRoute();
 const isAuthenticated = ref(false);
 const isMobileMenuOpen = ref(false);
 const cartItemsCount = ref(0);
@@ -387,27 +388,27 @@ const toggleCurrencyDropdown = () => {
 };
 
 // Select currency
-const selectCurrency = async (currency) => {
-  selectedCurrency.value = currency;
-  isCurrencyDropdownOpen.value = false;
-  try {
-    await axiosInstance.post('/set-currency', { currency });
-  } catch (err) {
-    console.error('Failed to set currency:', err);
-    showError('Failed to update currency. Please try again.');
-  }
-};
+// const selectCurrency = async (currency) => {
+//   selectedCurrency.value = currency;
+//   isCurrencyDropdownOpen.value = false;
+//   try {
+//     await axiosInstance.post('/set-currency', { currency });
+//   } catch (err) {
+//     console.error('Failed to set currency:', err);
+//     showError('Failed to update currency. Please try again.');
+//   }
+// };
 
 // Fetch cart count
-const fetchCartCount = async () => {
-  try {
-    const res = await axiosInstance.get('/cart/count');
-    cartItemsCount.value = res.data.count || 0;
-  } catch (err) {
-    console.error('Failed to fetch cart count:', err);
-    showError('Failed to load cart data. Please try again.');
-  }
-};
+// const fetchCartCount = async () => {
+//   try {
+//     const res = await axiosInstance.get('/cart/count');
+//     cartItemsCount.value = res.data.count || 0;
+//   } catch (err) {
+//     console.error('Failed to fetch cart count:', err);
+//     showError('Failed to load cart data. Please try again.');
+//   }
+// };
 
 // Switch role and handle redirection
 const switchRole = async (role) => {
@@ -422,9 +423,15 @@ const switchRole = async (role) => {
     
     if (response.data && response.data.success) {
       currentRole.value = role;
+     
       isRoleSwitcherOpen.value = false;
       // Role-specific redirects are handled in router.beforeEach
       await fetchUserData(); // Refresh user data after role switch
+      if(role==='owner'){
+        router.push('/owner');
+      }else{
+        router.push('/')
+      }
     } else {
       throw new Error('Role switch failed');
     }
@@ -480,11 +487,26 @@ const handleClickOutside = (e) => {
     isCurrencyDropdownOpen.value = false;
   }
 };
-
+watch(route, (newRoute) => {
+  console.log('Current Route:', {
+    path: newRoute.path,
+    name: newRoute.name,
+    meta: newRoute.meta,
+    params: newRoute.params,
+    query: newRoute.query
+  });
+});
 onMounted(async () => {
   await fetchUserData();
   await fetchCartCount();
   document.addEventListener("click", handleClickOutside);
+  console.log('Initial Route:', {
+    path: route.path,
+    name: route.name,
+    meta: route.meta,
+    params: route.params,
+    query: route.query
+  });
 });
 
 onUnmounted(() => {
