@@ -19,7 +19,7 @@ import index2 from "./index2";
 
 import { createRouter, createWebHistory } from "vue-router";
 import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
-import OwnerBookingList from "@/views/OwnerApply/OwnerBookingList.vue";
+import OwnerBookingList from "@/views/OwnerBookingList.vue";
 
 const routes = [
   ...index2,
