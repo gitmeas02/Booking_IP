@@ -31,22 +31,24 @@
           />
         </div>
       </div>
-      
+
       <!-- Selection -->
       <div class="form-column space-y-4 p-4 bg-white rounded-2xl shadow-md">
         <!-- Room Info -->
+        <!-- Room Count -->
         <div class="flex w-screen flex-col">
           <label
-            for="roomNumber"
+            for="roomCount"
             class="block text-sm font-medium text-gray-700 mb-1"
-            >Room Number</label
+            >Number of Rooms</label
           >
           <input
-            id="roomNumber"
-            type="text"
-            placeholder="Enter total rooms (e.g., 5)"
+            id="roomCount"
+            type="number"
+            placeholder="Enter number of rooms (e.g., 5)"
             class="form-input w-full border border-gray-300 p-2 focus:ring focus:ring-blue-200"
-            v-model="roomNumber"
+            v-model="roomCount"
+            required
           />
         </div>
 
@@ -61,23 +63,27 @@
             class="form-input w-full border border-gray-300 p-2 focus:ring focus:ring-blue-200"
             placeholder="Input Room Type eg. Family Room"
             v-model="roomType"
+            required
           />
         </div>
 
+        <!-- Room Capacity -->
         <div class="flex w-screen flex-col">
           <label
-            for="people"
+            for="peopleCapacity"
             class="block text-sm font-medium text-gray-700 mb-1"
-            >People</label
+            >Room Capacity (People)</label
           >
           <input
-            type="text"
+            id="peopleCapacity"
+            type="number"
             class="form-input w-full border border-gray-300 p-2 focus:ring focus:ring-blue-200"
-            placeholder="How Many People Can Stay? eg.(5)"
-            v-model="people"
+            placeholder="How many people can stay? (e.g., 5)"
+            v-model="peopleCapacity"
+            required
           />
         </div>
-        
+
         <!-- Price and Discount -->
         <div class="flex justify-center items-center">
           <!-- Price Control -->
@@ -97,29 +103,6 @@
               </div>
               <button
                 @click="increasePrice"
-                class="price-button bg-green-100 hover:bg-green-200 text-gray-600 w-8 h-8"
-              >
-                +
-              </button>
-            </div>
-          </div>
-          <!-- Discount Control -->
-          <div class="border-l-2 border-r-2 border-black pl-6 pr-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Set Discount</label
-            >
-            <div class="flex items-center space-x-2">
-              <button
-                @click="decreasePercentage"
-                class="price-button bg-red-100 hover:bg-red-200 text-gray-600 w-8 h-8"
-              >
-                −
-              </button>
-              <div class="text-3xl font-semibold w-20 text-center">
-                % {{ percentage }}
-              </div>
-              <button
-                @click="increasePercentage"
                 class="price-button bg-green-100 hover:bg-green-200 text-gray-600 w-8 h-8"
               >
                 +
@@ -223,7 +206,7 @@
 
       <!-- Submit Button -->
       <div class="button-container mt-3">
-        <button class="host-button">Host Property</button>
+        <button class="host-button" @click="submitForm">Host Property</button>
       </div>
     </div>
 
@@ -257,23 +240,21 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { Icon } from '@iconify/vue';
-import roomImg from '@/assets/Bed/bed.png'; // Verify: is it room.png or bed.png?
-import axios from 'axios';
+import { ref, computed, onMounted } from "vue";
+import { Icon } from "@iconify/vue";
+import axios from "@/axios";
 
 export default {
-  name: 'UploadProperty',
+  name: "UploadProperty",
   components: {
     Icon,
   },
   setup() {
-    const percentage = ref(0);
-    const people = ref(1);
-    const roomNumber = ref(1);
-    const roomType = ref('');
+    const peopleCapacity = ref(1);
+    const roomCount = ref(1);
+    const roomType = ref("");
     const price = ref(0);
-    const description = ref('');
+    const description = ref("");
     const isEditing = ref(false);
     const updatePhotoInput = ref(null);
     const photoIndexToUpdate = ref(null);
@@ -282,12 +263,12 @@ export default {
     const currentPhotoIndex = ref(0);
     const amenitiesData = ref([]);
     const isLoadingAmenities = ref(false);
-    const photos = ref([{ url: roomImg }]);
+    const photos = ref([]);
     const maxPhotos = 10;
     const maxFileSize = 5 * 1024 * 1024; // 5MB
-
+    const appId = 1;
     const URL = import.meta.env.VITE_API_BASE_URL;
-    console.log('API Base URL:', URL);
+    console.log("API Base URL:", URL);
 
     const displayedPhotos = computed(() => photos.value.slice(0, 5));
     const remainingPhotoCount = computed(() => photos.value.length - 5);
@@ -297,11 +278,15 @@ export default {
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           const res = await axios.get(`${URL}/amenities`);
-          console.log('Amenities API response:', res.data.data);
+          console.log("Amenities API response:", res.data.data);
           if (!Array.isArray(res.data.data)) {
-            console.error('Expected an array, got:', typeof res.data.data, res.data.data);
+            console.error(
+              "Expected an array, got:",
+              typeof res.data.data,
+              res.data.data
+            );
             amenitiesData.value = [];
-            alert('Invalid amenities data received. Please contact support.');
+            alert("Invalid amenities data received. Please contact support.");
             return;
           }
           amenitiesData.value = res.data.data.map((group) => ({
@@ -322,7 +307,9 @@ export default {
             config: error.config,
           });
           if (attempt === retries) {
-            alert('Failed to load amenities after multiple attempts. Please try again.');
+            alert(
+              "Failed to load amenities after multiple attempts. Please try again."
+            );
             amenitiesData.value = [];
           } else {
             await new Promise((resolve) => setTimeout(resolve, delay));
@@ -334,38 +321,91 @@ export default {
     }
 
     async function submitForm() {
-      const formData = {
-        roomNumber: roomNumber.value,
-        roomType: roomType.value,
-        people: people.value,
-        price: price.value,
-        discountPercentage: percentage.value,
-        description: description.value,
-        photos: photos.value.map((photo) => photo.url),
-        amenities: amenitiesData.value.flatMap((group) =>
-          group.amenities
+      const formData = new FormData();
+
+      // Build rooms array
+      const rooms = [];
+      for (let i = 1; i <= roomCount.value; i++) {
+        const roomName =
+          roomCount.value > 1 ? `${roomType.value} #${i}` : roomType.value;
+        const room = {
+          name: roomName,
+          capacity: peopleCapacity.value,
+          default_price: price.value,
+          description: description.value || null,
+          amenities: amenitiesData.value
+            .flatMap((group) => group.amenities)
             .filter((a) => a.selected)
-            .map((a) => ({ id: a.id, name: a.amenity_name }))
-        ),
-      };
+            .map((a) => a.id),
+        };
+        rooms.push(room);
+      }
 
-      if (!formData.roomNumber || !formData.roomType || !formData.people) {
-        alert('Please fill in all required fields.');
+      // Validate required fields
+      if (!roomCount.value || !roomType.value || !peopleCapacity.value) {
+        alert("Please fill in all required fields.");
         return;
       }
 
-      if (!formData.amenities.length) {
-        alert('Please select at least one amenity.');
+      if (!rooms[0].amenities.length) {
+        alert("Please select at least one amenity.");
         return;
       }
+
+      if (!photos.value.length) {
+        alert("Please upload at least one image.");
+        return;
+      }
+
+      // Append rooms to FormData with proper indexing
+      rooms.forEach((room, index) => {
+        formData.append(`rooms[${index}][name]`, room.name);
+        formData.append(`rooms[${index}][capacity]`, room.capacity);
+        formData.append(`rooms[${index}][default_price]`, room.default_price);
+        if (room.description) {
+          formData.append(`rooms[${index}][description]`, room.description);
+        }
+        room.amenities.forEach((amenityId, amenityIndex) => {
+          formData.append(
+            `rooms[${index}][amenities][${amenityIndex}]`,
+            amenityId
+          );
+        });
+      });
+
+      // Append images for each room
+      photos.value.forEach((photo, index) => {
+        formData.append(`rooms[0][images][${index}]`, photo.file);
+      });
 
       try {
-        const res = await axios.post(`${URL}/properties`, formData);
-        console.log('Property created:', res.data);
-        alert('Property hosted successfully!');
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("You must be logged in to submit.");
+          return;
+        }
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        const res = await axios.post(
+          `${URL}/owner/property/${appId}/room`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        console.log("Property created:", res.data);
+        alert("Property hosted successfully!");
       } catch (error) {
-        console.error('Failed to host property:', error);
-        alert('Failed to host property. Please try again.');
+        console.error(
+          "Failed to host property:",
+          error.response?.data || error
+        );
+        const errors = error.response?.data?.errors;
+        if (errors) {
+          const errorMessages = Object.values(errors).flat().join("\n");
+          alert(`Failed to host property:\n${errorMessages}`);
+        } else {
+          alert("Failed to host property. Please try again.");
+        }
       }
     }
 
@@ -376,17 +416,17 @@ export default {
       }
 
       files.forEach((file) => {
-        if (!file.type.startsWith('image/')) {
-          alert('Only image files are allowed.');
+        if (!file.type.startsWith("image/")) {
+          alert("Only image files are allowed.");
           return;
         }
         if (file.size > maxFileSize) {
-          alert('File size exceeds 5MB limit.');
+          alert("File size exceeds 5MB limit.");
           return;
         }
         const reader = new FileReader();
         reader.onload = (e) => {
-          photos.value.push({ url: e.target.result });
+          photos.value.push({ url: e.target.result, file }); // Store both URL and File
         };
         reader.readAsDataURL(file);
       });
@@ -403,14 +443,6 @@ export default {
 
     const decreasePrice = () => {
       if (price.value > 0) price.value -= 1;
-    };
-
-    const increasePercentage = () => {
-      if (percentage.value < 100) percentage.value++;
-    };
-
-    const decreasePercentage = () => {
-      if (percentage.value > 0) percentage.value -= 1;
     };
 
     const triggerFileInput = () => {
@@ -440,7 +472,7 @@ export default {
 
     const handlePhotoUpdate = (event) => {
       const file = event.target.files[0];
-      if (file && file.type.startsWith('image/')) {
+      if (file && file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = (e) => {
           if (photoIndexToUpdate.value !== null) {
@@ -477,9 +509,8 @@ export default {
     };
 
     return {
-      roomNumber,
+      roomCount,
       roomType,
-      percentage,
       price,
       description,
       isEditing,
@@ -490,15 +521,13 @@ export default {
       currentPhotoIndex,
       photos,
       amenitiesData,
-      people,
       displayedPhotos,
       remainingPhotoCount,
       increasePrice,
       decreasePrice,
-      increasePercentage,
-      decreasePercentage,
       triggerFileInput,
       handleFileUpload,
+      peopleCapacity,
       onDrop,
       onDragOver,
       toggleEditMode,

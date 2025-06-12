@@ -14,7 +14,7 @@ use Storage;
 
 class RoomTypeController extends Controller
 {
-   public function storeMultiple(Request $request, $ownerApplicationId)
+ public function storeMultiple(Request $request, $ownerApplicationId)
 {
     $data = $request->validate([
         'rooms' => 'required|array|min:1',
@@ -22,73 +22,54 @@ class RoomTypeController extends Controller
         'rooms.*.name' => 'required|string',
         'rooms.*.description' => 'nullable|string',
         'rooms.*.capacity' => 'required|integer|min:1',
-        'rooms.*.amenities' => 'nullable|array|exists:amenities,id', // Moved amenities validation here
+        'rooms.*.amenities' => 'nullable|array|exists:amenities,id',
         'rooms.*.default_price' => 'required|numeric',
         'rooms.*.images' => 'nullable|array',
         'rooms.*.images.*' => 'required|image|max:48128',
-        // 'rooms.*.images' => 'nullable|array',
-        // 'rooms.*.images.*.url' => 'required|string',
     ]);
 
     foreach ($data['rooms'] as $roomData) {
-        $capacity = $roomData['capacity'];
+        $room = RoomType::create([
+            'name' => $roomData['name'],
+            'capacity' => $roomData['capacity'],
+            'description' => $roomData['description'] ?? null,
+            'default_price' => $roomData['default_price'],
+            'application_id' => $ownerApplicationId,
+        ]);
 
-        for ($i = 1; $i <= $capacity; $i++) {
-            // Create unique name like "Deluxe King #1", "Deluxe King #2"
-            $roomName = $capacity > 1 ? $roomData['name'] . " #$i" : $roomData['name'];
+        if (!empty($roomData['amenities'])) {
+            $room->amenities()->sync($roomData['amenities']);
+        }
 
-            // Create room type
-            $room = RoomType::create([
-                'name' => $roomName,
-                'capacity' => 1, // Each individual room entry is for 1 room
-                'description' => $roomData['description'] ?? null,
-                'default_price' => $roomData['default_price'],
-                'application_id' => $ownerApplicationId,
-            ]);
+        if (!empty($roomData['images'])) {
+            $images = [];
+            foreach ($roomData['images'] as $image) {
+                $fileName = 'room_' . $room->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $imagePath = 'room-images/' . $fileName;
+                Storage::disk('minio')->put($imagePath, file_get_contents($image));
+                $relativeImagePath = 'ownerimages/' . $imagePath;
 
-            // Sync amenities if provided
-            if (!empty($roomData['amenities'])) {
-                $room->amenities()->sync($roomData['amenities']);
-            }
-
-            // Handle images
-            if (!empty($roomData['images'])) {
-
-                // $images = array_map(function ($image) {
-                //     return new RoomImage(['image_url' => $image['url']]);
-                // }, $roomData['images']);
-                // $room->images()->saveMany($images);
-                $images = [];
-                foreach($roomData['images'] as $image){
-                    $fileName='room_'.$room->id . '_' . time() . '_'.uniqid() . '.' . $image->getClientOriginalExtension();
-                    $path= Storage::disk('minio')->put('room-images/',$image, $fileName);
-                    $url= Storage::disk('minio')->url($path);
-                     //thumbnailfile name
-                    $thumbnailFileName='thum_'. $fileName;
-                    // resize image
-                    $thumbnail=Image::make($image)->resize(200,200, function($constraint){
+                $thumbnailFileName = 'thum_' . $fileName;
+                $thumbnailPath = 'rooms/thumbnails/' . $thumbnailFileName;
+                $thumbnail = Image::make($image)
+                    ->resize(200, 200, function ($constraint) {
                         $constraint->aspectRatio();
                         $constraint->upsize();
-                    })->encode($image->getClientOriginalExtension());
-                    //path in minio thumbnails
-                    $thumbnailPath='rooms/thumbnails'. $thumbnailFileName;
-                    //post to minio
-                    Storage::disk('minio')->put($thumbnailPath, $thumbnail->getEncoded());
+                    })
+                    ->encode($image->getClientOriginalExtension());
+                Storage::disk('minio')->put($thumbnailPath, $thumbnail->getEncoded());
+                $relativeThumbnailPath = 'ownerimages/' . $thumbnailPath;
 
-                    $thumbnailUrl = Storage::disk('minio')->url($thumbnailPath);
-                    // Storage::disk('minio')->put('thumbnails/rooms'. $thumbnailFileName);
-                    $images[] = new RoomImage([
-                        'image_url'=>$url,
-                        'thumbnail_url'=> $thumbnailUrl,
-                    ]);
-
-                }
-                $room->images()->saveMany($images);
+                $images[] = new RoomImage([
+                    'image_url' => $relativeImagePath,
+                    'thumbnail_url' => $relativeThumbnailPath,
+                ]);
             }
+            $room->images()->saveMany($images);
         }
     }
 
-    return response()->json(['message' => 'Multiple rooms created based on capacity']);
+    return response()->json(['message' => 'Rooms created successfully'], 201);
 }
 
 public function deleteRoomByIdAndOwnerApplication(Request $request, $roomId){

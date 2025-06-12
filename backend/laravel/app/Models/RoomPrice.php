@@ -9,7 +9,7 @@ class RoomPrice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['room_type_id', 'start_date', 'end_date', 'custom_price'];
+    protected $fillable = ['room_type_id', 'start_date', 'end_date', 'custom_price','percentage'];
 
     public function roomType()
     {
