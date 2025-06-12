@@ -31,6 +31,7 @@
           />
         </div>
       </div>
+      
       <!-- Selection -->
       <div class="form-column space-y-4 p-4 bg-white rounded-2xl shadow-md">
         <!-- Room Info -->
@@ -62,9 +63,10 @@
             v-model="roomType"
           />
         </div>
-          <div class="flex w-screen flex-col">
+
+        <div class="flex w-screen flex-col">
           <label
-            for="roomType"
+            for="people"
             class="block text-sm font-medium text-gray-700 mb-1"
             >People</label
           >
@@ -75,34 +77,58 @@
             v-model="people"
           />
         </div>
-
-        <!-- Price Control -->
-        <div class="border-l-2 border-r-2 border-black pl-6 pr-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Set Price</label
-          >
-          <div class="flex items-center space-x-2">
-            <button
-              @click="decreasePrice"
-              class="price-button bg-red-100 hover:bg-red-200 text-gray-600 w-8 h-8"
+        
+        <!-- Price and Discount -->
+        <div class="flex justify-center items-center">
+          <!-- Price Control -->
+          <div class="border-l-2 border-r-2 border-black pl-6 pr-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Set Price</label
             >
-              −
-            </button>
-            <div class="text-lg font-semibold w-20 text-center">
-              ${{ price }}
+            <div class="flex items-center space-x-2">
+              <button
+                @click="decreasePrice"
+                class="price-button bg-red-100 hover:bg-red-200 text-gray-600 w-8 h-8"
+              >
+                −
+              </button>
+              <div class="text-3xl font-semibold w-20 text-center">
+                ${{ price }}
+              </div>
+              <button
+                @click="increasePrice"
+                class="price-button bg-green-100 hover:bg-green-200 text-gray-600 w-8 h-8"
+              >
+                +
+              </button>
             </div>
-            <button
-              @click="increasePrice"
-              class="price-button bg-green-100 hover:bg-green-200 text-gray-600 w-8 h-8"
+          </div>
+          <!-- Discount Control -->
+          <div class="border-l-2 border-r-2 border-black pl-6 pr-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Set Discount</label
             >
-              +
-            </button>
+            <div class="flex items-center space-x-2">
+              <button
+                @click="decreasePercentage"
+                class="price-button bg-red-100 hover:bg-red-200 text-gray-600 w-8 h-8"
+              >
+                −
+              </button>
+              <div class="text-3xl font-semibold w-20 text-center">
+                % {{ percentage }}
+              </div>
+              <button
+                @click="increasePercentage"
+                class="price-button bg-green-100 hover:bg-green-200 text-gray-600 w-8 h-8"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
-
-        <!-- Hotel Selection -->
       </div>
-      <!-- Selection -->
+
       <!-- Tab Navigation -->
       <div class="tab-nav pt-10">
         <div class="tab active" @click="toggleEditMode">
@@ -159,31 +185,31 @@
         <div class="p-4">
           <p class="text-2xl font-bold mb-6">Facilities</p>
         </div>
-      <div class="">
-          <div class=" grid grid-cols-1 md:grid-cols-2">
-          <div
-            v-for="(group, i) in facilitiesGrouped"
-            :key="group.category"
-            class=" p-2"
-          >
-            <h2 class="text-xl font-semibold mb-4">{{ group.category }}</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3  gap-3">
-              <label
-                v-for="(item, j) in group.items"
-                :key="item.name"
-                class="flex items-center space-x-1 cursor-pointer font-mono"
-              >
-                <input
-                  type="checkbox"
-                  v-model="item.selected"
-                  class="form-checkbox text-indigo-600"
-                />
-                <span class="text-gray-700">{{ item.name }}</span>
-              </label>
+        <div class="facilities-container">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div
+              v-for="group in amenitiesData"
+              :key="group.id"
+              class="facility-group p-4 border rounded-lg"
+            >
+              <h2 class="text-xl font-semibold mb-4">{{ group.name }}</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label
+                  v-for="amenity in group.amenities"
+                  :key="amenity.id"
+                  class="flex items-center space-x-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    v-model="amenity.selected"
+                    class="form-checkbox text-indigo-600"
+                  />
+                  <span class="text-gray-700">{{ amenity.amenity_name }}</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
 
       <!-- Description Area -->
@@ -231,205 +257,145 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
-import { Icon } from "@iconify/vue";
-import roomImg from "@/assets/Bed/room.png";
+import { ref, computed, onMounted } from 'vue';
+import { Icon } from '@iconify/vue';
+import roomImg from '@/assets/Bed/bed.png'; // Verify: is it room.png or bed.png?
+import axios from 'axios';
 
 export default {
-  name: "UploadProperty",
+  name: 'UploadProperty',
   components: {
     Icon,
   },
-
-  // data() {
-  //     return {
-  //         icons: {
-  //             "Air Conditioning": "material-symbols:air",
-  //             "TV": "material-symbols:tv",
-  //             "Mini Bar": "mdi:glass-cocktail",
-  //             "Free Breakfast": "material-symbols:fastfood-outline-rounded",
-  //             "Free Wi-Fi": "material-symbols:wifi",
-  //             "Hot Water": "material-symbols:shower-outline-rounded",
-  //             "Phone Call": "material-symbols:deskphone-outline",
-  //         }
-
-  //     };
-
-  // },
-
   setup() {
-    // ========================
-    // Reactive Variables
-    // ========================
-    const people = ref("");
-    const roomNumber = ref("");
-    const roomType = ref("");
-    const price = ref(77);
-    const selectedHotel = ref("");
-    const description = ref("");
+    const percentage = ref(0);
+    const people = ref(1);
+    const roomNumber = ref(1);
+    const roomType = ref('');
+    const price = ref(0);
+    const description = ref('');
     const isEditing = ref(false);
     const updatePhotoInput = ref(null);
     const photoIndexToUpdate = ref(null);
     const fileInput = ref(null);
     const modalVisible = ref(false);
     const currentPhotoIndex = ref(0);
+    const amenitiesData = ref([]);
+    const isLoadingAmenities = ref(false);
+    const photos = ref([{ url: roomImg }]);
+    const maxPhotos = 10;
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
 
-    // ========================
-    // Data Sources
-    // ========================
-    const photos = ref([
-      { url: roomImg },
-      { url: roomImg },
-      { url: roomImg },
-      { url: roomImg },
-      { url: roomImg },
-      { url: roomImg },
-      { url: roomImg },
-    ]);
+    const URL = import.meta.env.VITE_API_BASE_URL;
+    console.log('API Base URL:', URL);
 
-    const hotels = ref([
-      { id: 1, name: "Grand Hotel" },
-      { id: 2, name: "City Center Hotel" },
-      { id: 3, name: "Beach Resort" },
-    ]);
-    const chunkedGroups = computed(() => {
-      const chunks = [];
-      for (let i = 0; i < facilitiesGrouped.value.length; i += 2) {
-        chunks.push(facilitiesGrouped.value.slice(i, i + 2));
-      }
-      return chunks;
-    });
-    const facilitiesGrouped = ref([
-      {
-        category: "Room",
-        items: [
-          { name: "Air conditioning", selected: false },
-          { name: "Heating", selected: false },
-          { name: "Free Wi-Fi", selected: false },
-          { name: "Flat-screen TV", selected: false },
-          { name: "Safe", selected: false },
-          { name: "Mini fridge", selected: false },
-          { name: "Microwave", selected: false },
-          { name: "Coffee/tea maker", selected: false },
-          { name: "Balcony or terrace", selected: false },
-        ],
-      },
-      {
-        category: "Bathroom",
-        items: [
-          { name: "Private bathroom", selected: false },
-          { name: "Shower", selected: false },
-          { name: "Bathtub", selected: false },
-          { name: "Towels", selected: false },
-          { name: "Hairdryer", selected: false },
-          { name: "Toiletries", selected: false },
-          { name: "Hot water", selected: false },
-        ],
-      },
-      {
-        category: "Kitchen",
-        items: [
-          { name: "Kitchen", selected: false },
-          { name: "Kitchenette", selected: false },
-          { name: "Stove", selected: false },
-          { name: "Oven", selected: false },
-          { name: "Toaster", selected: false },
-          { name: "Dishwasher", selected: false },
-        ],
-      },
-      {
-        category: "Leisure & Wellness",
-        items: [
-          { name: "Swimming pool", selected: false },
-          { name: "Hot tub", selected: false },
-          { name: "Spa", selected: false },
-          { name: "Sauna", selected: false },
-          { name: "Fitness center", selected: false },
-          { name: "Beachfront", selected: false },
-        ],
-      },
-      {
-        category: "Property",
-        items: [
-          { name: "24-hour front desk", selected: false },
-          { name: "Daily housekeeping", selected: false },
-          { name: "Elevator", selected: false },
-          { name: "Free parking", selected: false },
-          { name: "Pet-friendly", selected: false },
-        ],
-      },
-      {
-        category: "Business",
-        items: [
-          { name: "Business center", selected: false },
-          { name: "Meeting room", selected: false },
-          { name: "High-speed internet", selected: false },
-        ],
-      },
-      {
-        category: "Food & Beverage",
-        items: [
-          { name: "Restaurant", selected: false },
-          { name: "Bar", selected: false },
-          { name: "Room service", selected: false },
-          { name: "Breakfast included", selected: false },
-          { name: "Mini-market", selected: false },
-        ],
-      },
-      {
-        category: "Accessibility",
-        items: [
-          { name: "Wheelchair accessible", selected: false },
-          { name: "Accessible bathroom", selected: false },
-        ],
-      },
-      {
-        category: "Transportation",
-        items: [
-          { name: "Airport shuttle", selected: false },
-          { name: "Car rental", selected: false },
-          { name: "EV charging station", selected: false },
-        ],
-      },
-      {
-        category: "Family & Kids",
-        items: [
-          { name: "Baby cot", selected: false },
-          { name: "Kids’ play area", selected: false },
-          { name: "Board games", selected: false },
-        ],
-      },
-      {
-        category: "Pet",
-        items: [
-          { name: "Pet bowls", selected: false },
-          { name: "Pet bed", selected: false },
-        ],
-      },
-      {
-        category: "Safety",
-        items: [
-          { name: "Smoke alarms", selected: false },
-          { name: "Fire extinguishers", selected: false },
-          { name: "CCTV", selected: false },
-        ],
-      },
-    ]);
-
-    // ========================
-    // Computed Properties
-    // ========================
     const displayedPhotos = computed(() => photos.value.slice(0, 5));
     const remainingPhotoCount = computed(() => photos.value.length - 5);
 
-    // ========================
-    // Event Handlers
-    // ========================
-    const goToEditIfMore = (index) => {
-      if (index === 4 && remainingPhotoCount.value > 0) {
-        isEditing.value = true;
+    async function getAmenities(retries = 3, delay = 1000) {
+      isLoadingAmenities.value = true;
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const res = await axios.get(`${URL}/amenities`);
+          console.log('Amenities API response:', res.data.data);
+          if (!Array.isArray(res.data.data)) {
+            console.error('Expected an array, got:', typeof res.data.data, res.data.data);
+            amenitiesData.value = [];
+            alert('Invalid amenities data received. Please contact support.');
+            return;
+          }
+          amenitiesData.value = res.data.data.map((group) => ({
+            ...group,
+            amenities: Array.isArray(group.amenities)
+              ? group.amenities.map((a) => ({
+                  ...a,
+                  selected: false,
+                }))
+              : [],
+          }));
+          return;
+        } catch (error) {
+          console.error(`Attempt ${attempt} failed:`, {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: error.config,
+          });
+          if (attempt === retries) {
+            alert('Failed to load amenities after multiple attempts. Please try again.');
+            amenitiesData.value = [];
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
+        } finally {
+          isLoadingAmenities.value = false;
+        }
       }
+    }
+
+    async function submitForm() {
+      const formData = {
+        roomNumber: roomNumber.value,
+        roomType: roomType.value,
+        people: people.value,
+        price: price.value,
+        discountPercentage: percentage.value,
+        description: description.value,
+        photos: photos.value.map((photo) => photo.url),
+        amenities: amenitiesData.value.flatMap((group) =>
+          group.amenities
+            .filter((a) => a.selected)
+            .map((a) => ({ id: a.id, name: a.amenity_name }))
+        ),
+      };
+
+      if (!formData.roomNumber || !formData.roomType || !formData.people) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      if (!formData.amenities.length) {
+        alert('Please select at least one amenity.');
+        return;
+      }
+
+      try {
+        const res = await axios.post(`${URL}/properties`, formData);
+        console.log('Property created:', res.data);
+        alert('Property hosted successfully!');
+      } catch (error) {
+        console.error('Failed to host property:', error);
+        alert('Failed to host property. Please try again.');
+      }
+    }
+
+    const previewImages = (files) => {
+      if (photos.value.length + files.length > maxPhotos) {
+        alert(`Cannot upload more than ${maxPhotos} photos.`);
+        return;
+      }
+
+      files.forEach((file) => {
+        if (!file.type.startsWith('image/')) {
+          alert('Only image files are allowed.');
+          return;
+        }
+        if (file.size > maxFileSize) {
+          alert('File size exceeds 5MB limit.');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          photos.value.push({ url: e.target.result });
+        };
+        reader.readAsDataURL(file);
+      });
+      isEditing.value = true;
     };
+
+    onMounted(() => {
+      getAmenities();
+    });
 
     const increasePrice = () => {
       price.value += 1;
@@ -437,6 +403,14 @@ export default {
 
     const decreasePrice = () => {
       if (price.value > 0) price.value -= 1;
+    };
+
+    const increasePercentage = () => {
+      if (percentage.value < 100) percentage.value++;
+    };
+
+    const decreasePercentage = () => {
+      if (percentage.value > 0) percentage.value -= 1;
     };
 
     const triggerFileInput = () => {
@@ -453,22 +427,7 @@ export default {
       previewImages(files);
     };
 
-    const onDragOver = () => {
-      // Optional: handle UI feedback
-    };
-
-    const previewImages = (files) => {
-      isEditing.value = true;
-      files.forEach((file) => {
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            photos.value.push({ url: e.target.result });
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    };
+    const onDragOver = () => {};
 
     const toggleEditMode = () => {
       isEditing.value = !isEditing.value;
@@ -481,7 +440,7 @@ export default {
 
     const handlePhotoUpdate = (event) => {
       const file = event.target.files[0];
-      if (file && file.type.startsWith("image/")) {
+      if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (e) => {
           if (photoIndexToUpdate.value !== null) {
@@ -520,8 +479,8 @@ export default {
     return {
       roomNumber,
       roomType,
+      percentage,
       price,
-      selectedHotel,
       description,
       isEditing,
       updatePhotoInput,
@@ -530,15 +489,14 @@ export default {
       modalVisible,
       currentPhotoIndex,
       photos,
-      hotels,
-      facilitiesGrouped,
-      //   chunkedGroups,
-      //   facilities,
+      amenitiesData,
+      people,
       displayedPhotos,
       remainingPhotoCount,
-      goToEditIfMore,
       increasePrice,
       decreasePrice,
+      increasePercentage,
+      decreasePercentage,
       triggerFileInput,
       handleFileUpload,
       onDrop,
@@ -551,6 +509,8 @@ export default {
       closeModal,
       nextPhoto,
       prevPhoto,
+      submitForm,
+      isLoadingAmenities,
     };
   },
 };
@@ -733,10 +693,8 @@ export default {
   width: 100%;
   height: 97%;
   bottom: 7px;
-  /* left: 0; */
   background-color: rgba(128, 128, 128, 0.6);
   color: white;
-  /* padding: 3px 8px; */
   font-size: 32px;
   display: flex;
   align-items: center;
@@ -746,25 +704,28 @@ export default {
 /* ========================
    Form Section
 ======================== */
-/* .form-layout {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  flex-direction: row;
-  margin: 10px 50px;
-} */
-
-/* @media (max-width: 768px) {
-  .form-layout {
-    grid-template-columns: 1fr;
-  }
-} */
-
 .form-column {
   display: flex;
   gap: 15px;
   align-items: center;
   justify-content: space-between;
+}
+
+/* ========================
+   Facilities Section
+======================== */
+.facilities-container {
+  margin-bottom: 20px;
+}
+
+.facility-group {
+  background-color: #f9f9f9;
+}
+
+.facility-group h2 {
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
 }
 
 /* ========================
@@ -809,32 +770,6 @@ export default {
   text-align: center;
   padding: 8px;
 }
-
-/* ========================
-   Facilities Grid
-======================== */
-/* .facilities-section {
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  padding: 10px;
-}
-
-.facilities-title {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.facilities-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
-}
-.facility-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-} */
 
 /* ========================
    Description Box

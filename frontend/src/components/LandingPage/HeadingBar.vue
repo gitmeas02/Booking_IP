@@ -475,9 +475,9 @@ const fetchUserData = async () => {
   } finally {
     isLoading.value = false;
   }
-};
+}; 
 
-// Handle clicks outside of dropdowns
+// Handle clicks outside of dropdowns 
 const handleClickOutside = (e) => {
   if (!e.target.closest("header")) {
     closeMobileMenu();
@@ -498,7 +498,7 @@ watch(route, (newRoute) => {
 });
 onMounted(async () => {
   await fetchUserData();
-  await fetchCartCount();
+  // await fetchCartCount();
   document.addEventListener("click", handleClickOutside);
   console.log('Initial Route:', {
     path: route.path,
