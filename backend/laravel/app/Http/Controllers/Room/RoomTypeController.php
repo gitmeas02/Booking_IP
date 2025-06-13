@@ -24,8 +24,8 @@ class RoomTypeController extends Controller
         'rooms.*.capacity' => 'required|integer|min:1',
         'rooms.*.amenities' => 'nullable|array|exists:amenities,id',
         'rooms.*.default_price' => 'required|numeric',
-        'rooms.*.images' => 'nullable|array',
-        'rooms.*.images.*' => 'required|image|max:48128',
+        'rooms.0.images' => 'nullable|array',
+        'rooms.0.images.*' => 'required|image|max:48128',
     ]);
 
     foreach ($data['rooms'] as $roomData) {
@@ -41,32 +41,59 @@ class RoomTypeController extends Controller
             $room->amenities()->sync($roomData['amenities']);
         }
 
-        if (!empty($roomData['images'])) {
-            $images = [];
-            foreach ($roomData['images'] as $image) {
-                $fileName = 'room_' . $room->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $imagePath = 'room-images/' . $fileName;
-                Storage::disk('minio')->put($imagePath, file_get_contents($image));
-                $relativeImagePath = 'ownerimages/' . $imagePath;
+        // if (!empty($roomData['images'])) {
+        //     $images = [];
+        //     foreach ($roomData['images'] as $image) {
+        //         $fileName = 'room_' . $room->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        //         $imagePath = 'room-images/' . $fileName;
+        //         Storage::disk('minio')->put($imagePath, file_get_contents($image));
+        //         $relativeImagePath = 'ownerimages/' . $imagePath;
 
-                $thumbnailFileName = 'thum_' . $fileName;
-                $thumbnailPath = 'rooms/thumbnails/' . $thumbnailFileName;
-                $thumbnail = Image::make($image)
-                    ->resize(200, 200, function ($constraint) {
-                        $constraint->aspectRatio();
-                        $constraint->upsize();
-                    })
-                    ->encode($image->getClientOriginalExtension());
-                Storage::disk('minio')->put($thumbnailPath, $thumbnail->getEncoded());
-                $relativeThumbnailPath = 'ownerimages/' . $thumbnailPath;
+        //         $thumbnailFileName = 'thum_' . $fileName;
+        //         $thumbnailPath = 'rooms/thumbnails/' . $thumbnailFileName;
+        //         $thumbnail = Image::make($image)
+        //             ->resize(200, 200, function ($constraint) {
+        //                 $constraint->aspectRatio();
+        //                 $constraint->upsize();
+        //             })
+        //             ->encode($image->getClientOriginalExtension());
+        //         Storage::disk('minio')->put($thumbnailPath, $thumbnail->getEncoded());
+        //         $relativeThumbnailPath = 'ownerimages/' . $thumbnailPath;
 
-                $images[] = new RoomImage([
-                    'image_url' => $relativeImagePath,
-                    'thumbnail_url' => $relativeThumbnailPath,
-                ]);
-            }
-            $room->images()->saveMany($images);
+        //         $images[] = new RoomImage([
+        //             'image_url' => $relativeImagePath,
+        //             'thumbnail_url' => $relativeThumbnailPath,
+        //         ]);
+        //     }
+        //     $room->images()->saveMany($images);
+        // }
+        $sharedImage = $request->file('rooms.0.images')??[];
+        if(!empty($sharedImage)){
+          $images = [];
+          foreach($sharedImage as $image){
+           $fileName = 'room_' . $room->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $imagePath = 'room-images/' . $fileName;
+            Storage::disk('minio')->put($imagePath, file_get_contents($image));
+            $relativeImagePath = 'ownerimages/' . $imagePath;
+
+            $thumbnailFileName = 'thum_' . $fileName;
+            $thumbnailPath = 'rooms/thumbnails/' . $thumbnailFileName;
+            $thumbnail = Image::make($image)
+                ->resize(200, 200, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })
+            ->encode($image->getClientOriginalExtension());
+            Storage::disk('minio')->put($thumbnailPath, $thumbnail->getEncoded());
+            $relativeThumbnailPath = 'ownerimages/' . $thumbnailPath;
+
+           $images[] = new RoomImage([
+            'image_url' => $relativeImagePath,
+            'thumbnail_url' => $relativeThumbnailPath,
+        ]);
+          }
         }
+        $room->images()->saveMany($images);
     }
 
     return response()->json(['message' => 'Rooms created successfully'], 201);

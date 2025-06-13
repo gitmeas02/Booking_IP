@@ -9,7 +9,7 @@ class RoomType extends Model
 {
     use HasFactory;
     protected $table ="room_types";
-    protected $fillable = ['application_id', 'name', 'capacity', 'default_price', 'description','people'];
+    protected $fillable = ['application_id', 'name', 'capacity', 'default_price', 'description'];
 
     public function property()
     {

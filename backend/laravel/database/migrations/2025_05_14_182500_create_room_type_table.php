@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('room_types', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('application_id')->constrained('owner_applications')->onDelete('cascade');        $table->string('name'); // e.g., Deluxe King            $table->decimal('base_price', 10, 2); // default price
-        $table->integer('capacity'); //this mean howw many this rooms for example there a room type (King Bed)2rooms
+        $table->foreignId('application_id')->constrained('owner_applications')->onDelete('cascade');      
+        $table->string('name'); // e.g., Deluxe King            $table->decimal('base_price', 10, 2); // default price
+        $table->integer('capacity'); //this mean how many room and capacity of people , it mean fronend generate room name by capacity
         $table->decimal('default_price', 8, 2);
         $table->text('description')->nullable();
         $table->boolean('is_available')->default(true); // globally available or not
-        $table->integer('people')->default(1);// how many people allow to sleep in this rooms
         $table->timestamps();
         });
     }
