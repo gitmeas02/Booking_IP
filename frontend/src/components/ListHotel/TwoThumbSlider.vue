@@ -88,15 +88,18 @@ export default {
 
 .double-slider-box {
   background-color: #fff;
-
   border-radius: 10px;
-  max-width: 20rem;
+  max-width: 100%;
+  width: 100%;
+  padding: 1rem;
+  box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
 }
 
 .range-title {
   margin-bottom: 0.5rem;
   font-size: 1.2rem;
+  text-align: center;
 }
 
 .range-slider {
@@ -122,36 +125,31 @@ input[type="range"] {
   transform: translateY(-50%);
   appearance: none;
   background: none;
-  pointer-events: none; /* disable pointer events on track */
+  pointer-events: none;
 }
 
-/* Slight offset so they don't stack perfectly */
-.thumb-left {
-  z-index: 3;
-}
-
+.thumb-left,
 .thumb-right {
   z-index: 3;
 }
 
-/* Re-enable interaction for thumbs only */
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;
-  pointer-events: auto; /* enable interaction on thumb */
-  height: 25px;
-  width: 25px;
+  pointer-events: auto;
+  height: 20px;
+  width: 20px;
   background: white;
-  border: 3px solid gray;
+  border: 2px solid gray;
   border-radius: 50%;
   cursor: pointer;
 }
 
 input[type="range"]::-moz-range-thumb {
   pointer-events: auto;
-  height: 25px;
-  width: 25px;
+  height: 20px;
+  width: 20px;
   background: white;
-  border: 3px solid gray;
+  border: 2px solid gray;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -160,38 +158,57 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .value {
-  font-size: 1.1rem;
+  font-size: 1rem;
+  flex: 1 1 45%;
 }
 
-.min{
-  padding-left: 10px;
+.min,
+.max {
+  padding: 0.25rem 0.5rem;
   text-align: left;
-}
-.max{
-  padding-right: 10px;
-  text-align: right;
+  font-weight: 600;
 }
 
 .value-box {
   display: flex;
   align-items: center;
-  border: black 1px solid;
-  width: 94px;
-}
-
-.currency{
-  width: fit-content;
-  padding: 2px;
-}
-
-.price{
+  border: 1px solid black;
   width: 100%;
-  text-align: center;
-  border-left: black 1px solid;
+  max-width: 120px;
+  margin-top: 0.25rem;
 }
 
+.currency {
+  padding: 0.25rem;
+  white-space: nowrap;
+}
+
+.price {
+  flex: 1;
+  text-align: center;
+  border-left: 1px solid black;
+  padding: 0.25rem;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 480px) {
+  .range-title {
+    font-size: 1rem;
+  }
+
+  .value-display {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .value-box {
+    max-width: 100%;
+  }
+}
 
 </style>

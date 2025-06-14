@@ -1,6 +1,6 @@
 <template> 
   <div
-    class="hotel-card cursor-pointer"
+    class="hotel-card"
     @click="$router.push({ name: 'ProductsDetails', params: { id: room.id } })"
   >
     <!-- Image -->
@@ -129,12 +129,13 @@ function viewHotel(id) {
     flex-direction: row;
     align-items: center;
     justify-content: start;
-    width: fit-content;
+    /* width: fit-content; */
 }
 
 .image {
     width: 279px;
     height: 220px;
+    border-radius: 10px 0 0 10px;
     overflow: hidden;
 }
 
@@ -147,8 +148,10 @@ function viewHotel(id) {
 .hotel-card-info {
     width: 472px;
     height: fit-content;
-    outline: 1px solid #dddede;
-    border-radius: 4px;
+    border-top: gray 1px solid;
+    border-right: gray 1px solid;
+    border-bottom: gray 1px solid;
+    border-radius: 0 10px 10px 0;
     height: 220px;
 }
 
@@ -318,46 +321,90 @@ function viewHotel(id) {
 }
 
 .view-button {
-    background-color: #2563eb;
-    color: white;
-    font-size: 13px;
-    width: 88px;
-    height: 23px;
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
+  background-color: #2563eb;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .view-button:hover {
-    background-color: #1d4ed8;
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.view-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
 }
 
 /* Media query for responsive design */
 @media (max-width: 768px) {
+  .hotel-card {
+    flex-direction: column;
+    width: 100%;
+  }
 
-    .hotel-header,
-    .location-container {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+  .image {
+    width: 100%;
+    height: 200px;
+    border-radius: 10px 10px 0 0;
+  }
 
-    .review-container {
-        margin-top: 16px;
-        text-align: left;
-    }
+  .hotel-card-info {
+    width: 100%;
+    height: auto;
+    border-radius: 0 0 10px 10px;
+    border-top: none;
+  }
 
-    .review-score-container {
-        justify-content: flex-start;
-    }
+  .hotel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+  }
 
-    .location-link,
-    .map-link,
-    .distance-text {
-        margin: 8px 0;
-    }
+  .review-container {
+    margin-top: 12px;
+    text-align: left;
+  }
 
-    .amenities-list {
-        gap: 16px;
-    }
+  .location-container {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .price-container {
+    padding: 12px;
+  }
+
+  .room-info {
+    padding: 12px;
+  }
+
+  .amenities-list {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .action-container {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .view-button {
+    width: 100%;
+    max-width: 200px;
+    font-size: 16px;
+    padding: 10px;
+  }
 }
+
 </style>

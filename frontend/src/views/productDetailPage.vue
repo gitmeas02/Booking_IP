@@ -21,13 +21,8 @@
       </div>
 
       <div class="main-image-container">
-        <img
-          :src="images[currentImageIndex]"
-          alt="Hotel room"
-          class="main-image"
-          v-if="images.length"
-          @click="openPhotoModal(currentImageIndex)"
-        />
+        <img :src="images[currentImageIndex]" alt="Hotel room" class="main-image" v-if="images.length"
+          @click="openPhotoModal(currentImageIndex)" />
         <div class="navigation-dots">
           <span
             v-for="(_, index) in images"
@@ -399,6 +394,7 @@
     <div v-if="modalVisible" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
         <button class="modal-close" @click="closeModal">
+          <X stroke-width="3" />
           <X stroke-width="3" />
         </button>
         <button
