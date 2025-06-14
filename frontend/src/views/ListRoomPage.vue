@@ -1,4 +1,5 @@
 <template>
+  
   <div class="flex items-center justify-center flex-col pt-14 pl-14 pr-14">
      <div class="rounded-xl bg-[#0A2647] w-full px-14 pt-7 pb-7">
       <div  class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
@@ -10,7 +11,7 @@
       <DateRangePicker />
       <SelectRoom/>
       </div>
-    </form>
+    </div>
     <div class="container">
       <div class="filter-section">
         <div class="filter-box">
@@ -60,8 +61,6 @@
           :key="index"
           :room="room"
         />
-
-        <img  src="http://localhost:9000/ownerimages/owner_applications_images/683c03e5ab1e8.png" alt="">
       </div>
     </div>
   </div>
@@ -77,11 +76,6 @@ import { onMounted } from "vue";
 import { computed, ref } from "vue";
 import { Search } from "lucide-vue-next";
 
-import { useSearchStore} from '@/stores/search'
-const searchRoom = useSearchStore();
-
-
-//------------------------------------------------------------------
 const selected = ref([]);
 const showMore = ref(false);
 const limit = 3;
@@ -111,19 +105,10 @@ const matchingRooms = computed(() => {
   });
 
   return allRooms;
-}
-);
-
+});
 onMounted(async () => {
   await roomStore.fetchRooms();
   await roomStore.fetchHotels();
-  await searchRoom.SearchRooms();
-});
-const guestDetails = ref({
-  rooms: 1,
-  adults: 2,
-  children: 2,
-  childAges: [null, null]
 });
 </script>
 
