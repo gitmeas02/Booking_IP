@@ -271,7 +271,7 @@ class PaymentController extends Controller
      */
     public function generateForWeb(Request $request)
     {
-        $amount = $request->input('amount', 500);
+        $amount = $request->input('amount', 200);
         $bookingReference = $request->input('booking_reference');
         
         $result = $this->khqrService->generateIndividual($amount, 'Hotel Booking Payment');
@@ -288,7 +288,7 @@ class PaymentController extends Controller
             'qr_md5' => $result['md5'],
             'amount' => $amount,
             'currency' => 'KHR',
-            'merchant_name' => 'Hotel Booking Payment',
+            'merchant_name' => 'Pteas Khmer',
             'status' => 'pending',
             'expires_at' => Carbon::now()->addMinutes(5),
             'booking_reference' => $bookingReference,
