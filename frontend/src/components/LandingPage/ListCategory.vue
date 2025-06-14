@@ -17,35 +17,35 @@
 import LandingCard from './LandingCard.vue';
 const categoryList = [
     {
-        image: "https://images.unsplash.com/photo-1633015500433-0079867c0211?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGFwYXJ0bWVudCUyMGFlc3RoZXRpY3xlbnwwfHwwfHx8MA%3D%3D",
+        image: "https://i.pinimg.com/736x/e3/70/9d/e3709d99c1cedcf3c8511f7e2ee1d073.jpg",
         label: "Apartment"
     },
     {
-        image: "https://plus.unsplash.com/premium_photo-1682377521697-bc598b52b08a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8dmlsbGF8ZW58MHx8MHx8fDA%3D",
+        image: "https://i.pinimg.com/736x/24/b1/7c/24b17c44d5f60789e35956016d9dd13a.jpg",
         label: "Villa"
     },
     {
-        image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGhvdGVsfGVufDB8fDB8fHww",
+        image: "https://i.pinimg.com/736x/f4/b8/34/f4b834602bc12ea87dcfdb9fc587c02f.jpg",
         label: "Hotel"
     },
     {
-        image: "https://images.unsplash.com/photo-1651510689604-4d2d85daa479?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8a29oJTIwcm9uZ3xlbnwwfHwwfHx8MA%3D%3D",
+        image: "https://i.pinimg.com/736x/38/e5/c7/38e5c784036d0d789c37a50e3e634432.jpg",
         label: "Resort"
     },
+    // {
+    //     image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
+    //     label: "Cabin"
+    // },
+    // {
+    //     image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
+    //     label: "Vocation Home"
+    // },
+    // {
+    //     image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
+    //     label: "Hostel"
+    // },
     {
-        image: "https://images.unsplash.com/photo-1651510689604-4d2d85daa479?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8a29oJTIwcm9uZ3xlbnwwfHwwfHx8MA%3D%3D",
-        label: "Cabin"
-    },
-    {
-        image: "https://images.unsplash.com/photo-1651510689604-4d2d85daa479?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8a29oJTIwcm9uZ3xlbnwwfHwwfHx8MA%3D%3D",
-        label: "Vocation Home"
-    },
-    {
-        image: "https://images.unsplash.com/photo-1651510689604-4d2d85daa479?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8a29oJTIwcm9uZ3xlbnwwfHwwfHx8MA%3D%3D",
-        label: "Hostel"
-    },
-    {
-        image: "https://images.unsplash.com/photo-1651510689604-4d2d85daa479?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8a29oJTIwcm9uZ3xlbnwwfHwwfHx8MA%3D%3D",
+        image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
         label: "Homestay"
     },
     
