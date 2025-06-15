@@ -1,888 +1,530 @@
 <template>
-  <div class="admin-dashboard">
-    <header class="dashboard-header">
-      <h1>Room Booking Management</h1>
-      <p class="total-rooms">{{ filteredRooms.length }} Rooms</p>
-      <button class="btn-show-bookings" @click="showBookingsModal = true">
-        View All Bookings
+  <div class="p-4 space-y-4 bg-gray-50 min-h-screen">
+    <!-- Controls -->
+    <div class="flex justify-between items-center bg-white p-4 shadow rounded-lg">
+      <div class="flex gap-2 items-center">
+        <button 
+          @click="goToToday" 
+          class="px-3 py-1 bg-amber-200 hover:bg-amber-300 rounded transition-colors"
+        >
+          Today
+        </button>
+        <button 
+          @click="previousMonth" 
+          class="text-xl hover:bg-gray-100 p-2 rounded transition-colors"
+        >
+          ◀
+        </button>
+        <span class="font-bold text-lg min-w-[200px] text-center">
+          {{ months[selectedMonth] }} {{ selectedYear }}
+        </span>
+        <button 
+          @click="nextMonth" 
+          class="text-xl hover:bg-gray-100 p-2 rounded transition-colors"
+        >
+          ▶
+        </button>
+      </div>
+      <button 
+        class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded transition-colors" 
+        @click="router.push('/upload-property')"
+      >
+        Upload Room
       </button>
-    </header>
-    <button @click="scrollToToday" class="p-12 bg-amber-200 m-1">Today</button>
-    <div class="dashboard-content">
-      <!-- Calendar Navigation -->
-      <section class="calendar-control-section">
-        <div class="calendar-header">
-          <button class="calendar-nav" @click="previousWeek">‹</button>
-          <h2>{{ months[selectedMonth] }} {{ selectedYear }}</h2>
-          <button class="calendar-nav" @click="nextWeek">›</button>
-        </div>
-        <div class="date-range">
-          {{ formatDate(currentWeekStart) }} - {{ formatDate(getWeekEndDate()) }}
-        </div>
-      </section>
-
-   
-
-      <!-- Calendar Display -->
-      <section class="calendar-section overflow-x-auto pl-12 pr-12">
-  <table class="booking-table min-w-max table-auto w-full  border-collapse border border-gray-300">
-    <thead>
-      <tr>
-        <th class="room-header px-4 py-2 border border-gray-300">Room</th>
-        <th
-          v-for="day in visibleWeekDays"
-          :key="day.date"
-          class="day-header px-4 py-2 border border-gray-300"
-        >
-          {{ day.name }}<br>{{ day.date.split('-')[2] }}
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="room in filteredRooms" :key="room.id">
-        <td class="room-info flex flex-row items-center space-x-4 py-2 pl-10 border border-gray-300">
-          <img :src="room.image" alt="Room Image" class="room-image w-24 h-24 object-cover rounded" />
-          <div> 
-            <div class="room-name font-semibold text-lg w-[300px] overflow-hidden">{{ room.name }}</div>
-            <div class="room-type text-sm text-gray-600">{{ room.type }} - {{ room.number }}</div>
-          </div>
-        </td>
-
-        <td
-          v-for="day in visibleWeekDays"
-          :key="day.date"
-          :class="getStatusClass(getRoomStatus(room, day.date))"
-          :data-date="day.date"
-          @click="selectRoomDate(room, day.date)"
-          class="px-4 py-2 cursor-pointer border border-gray-300"
-        >
-          <div class="status-container flex justify-center items-center flex-col">
-            <div class="status-text">{{ getRoomStatus(room, day.date) }}</div>
-            <div class="room-price">${{ getRoomPrice(room, day.date) || '—' }}</div>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-
-
     </div>
 
-    <!-- Bookings Modal -->
-    <div v-if="showBookingsModal" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Current Bookings</h2>
-          <button class="close-modal" @click="showBookingsModal = false">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="bookings-calendar">
-            <div class="calendar-header">
-              <button @click="previousMonth">‹</button>
-              <h3>{{ months[bookingsMonth] }} {{ bookingsYear }}</h3>
-              <button @click="nextMonth">›</button>
-            </div>
-            <div class="calendar-grid">
-              <div class="day-header" v-for="day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="day">
-                {{ day }}
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-8">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
+      <p class="mt-2 text-gray-600">Loading rooms...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      {{ error }}
+      <button @click="fetchRooms" class="ml-2 underline">Retry</button>
+    </div>
+
+    <!-- Calendar Container -->
+    <div v-else class="bg-white shadow rounded-lg overflow-hidden">
+      <!-- Horizontal Scroll Container -->
+      <div class="overflow-x-auto">
+        <div class="min-w-max">
+          <!-- Calendar Header -->
+          <div 
+            class="grid text-center text-sm font-semibold bg-gray-100 border-b sticky top-0 z-10"
+            :style="{ gridTemplateColumns: `250px repeat(${monthDays.length}, minmax(80px, 1fr))` }"
+          >
+            <div class="p-3 border-r bg-gray-100 sticky left-0 z-20">Room</div>
+            <div 
+              v-for="(day, i) in monthDays" 
+              :key="'head-' + i" 
+              class="p-3 border-r whitespace-nowrap"
+            >
+              <div class="font-medium">{{ formatDisplayDate(day) }}</div>
+              <div class="text-xs text-gray-500">
+                {{ formatWeekday(day) }}
               </div>
-              <div 
-                v-for="day in calendarDays" 
-                :key="day.date"
-                :class="['calendar-day', { 'other-month': !day.isCurrentMonth }]"
-              >
-                <div class="day-number">{{ day.date.getDate() }}</div>
-                <div
-                  v-for="booking in getBookingsForDay(day.date)"
-                  :key="`${booking.roomId}-${booking.startDate}`"
-                  class="booking-event"
-                >
-                  {{ booking.roomName }} - {{ booking.guest }}
-                </div>
+            </div>
+          </div>
+
+          <!-- Room Rows -->
+          <div 
+            v-for="room in rooms" 
+            :key="room.id" 
+            class="grid text-center border-b hover:bg-gray-50 transition-colors"
+            :style="{ gridTemplateColumns: `250px repeat(${monthDays.length}, minmax(80px, 1fr))` }"
+          >
+            <!-- Room Info - Sticky -->
+            <div class="flex items-center gap-3 p-3 border-r bg-white sticky left-0 z-10 shadow-sm">
+              <img 
+                :src="room.image?.[0] || 'https://via.placeholder.com/50'" 
+                :alt="`${room.name} image`"
+                class="w-12 h-12 object-cover rounded-lg"
+                @error="handleImageError"
+              />
+              <div class="text-left">
+                <div class="font-bold text-sm">{{ room.hotel }}</div>
+                <div class="text-xs text-gray-500">{{ room.name }}</div>
+                <div class="text-xs text-blue-600">ID: {{ room.id }}</div>
+              </div>
+            </div>
+
+            <!-- Day Cells -->
+            <div
+              v-for="day in monthDays"
+              :key="`day-${room.id}-${day}`"
+              class="h-24 border-r text-xs flex flex-col items-center justify-center cursor-pointer relative transition-all duration-200"
+              :class="getDayStatusClass(room, day)"
+              @click="onDayClick(room, day)"
+              :title="getDayTooltip(room, day)"
+            >
+              <div class="font-semibold">${{ getDayPrice(room, day) }}</div>
+              <div class="text-xs opacity-75">{{ getDayStatus(room, day) }}</div>
+              <div v-if="isDateBooked(room, parseDate(day))" class="text-xs text-gray-600 truncate w-full px-1">
+                {{ getGuestName(room, day) }}
+              </div>
+              <div v-else-if="isDateBlocked(room, parseDate(day))" class="text-xs text-gray-600 truncate w-full px-1">
+                {{ getBlockDateRange(room, day) }}
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
+    <!-- Legend -->
+    <div class="flex gap-4 text-sm bg-white p-4 rounded-lg shadow flex-wrap">
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
+        <span>Available</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+        <span>Booked</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 bg-gray-200 border border-gray-300 rounded"></div>
+        <span>Blocked</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
+        <span>Hover to edit</span>
+      </div>
+    </div>
+
+    <!-- Room Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="font-semibold text-gray-700">Total Rooms</h3>
+        <p class="text-2xl font-bold text-blue-600">{{ rooms.length }}</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="font-semibold text-gray-700">Available Days</h3>
+        <p class="text-2xl font-bold text-green-600">{{ availableDaysCount }}</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="font-semibold text-gray-700">Booked Days</h3>
+        <p class="text-2xl font-bold text-red-600">{{ bookedDaysCount }}</p>
+      </div>
+    </div>
+
+    <!-- Popup Component -->
+    <ControllDateRoom
+      v-if="showPopup"
+      :roomImage="selectedRoom.image?.[0]"
+      :startDate="selectedStartDate"
+      :endDate="selectedEndDate"
+      :hotelName="selectedRoom.hotel"
+      :roomDetail="selectedRoom.name"
+      :displayDate="selectedStartDate"
+      :initialPrice="selectedPrice"
+      :initialStatus="selectedStatus"
+      @cancel="closePopup"
+      @update="handleUpdate"
+    />
+  </div>
 </template>
 
-<script>
-import { useRoomStore } from '@/stores/store.js'
-import { onMounted, computed } from 'vue'
-export default {
-  name: 'AdminDashboard',
-  data() {
-    const currentDate = new Date();
-    return {
-      months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
-               'August', 'September', 'October', 'November', 'December'],
-      selectedMonth: currentDate.getMonth(),
-      selectedYear: currentDate.getFullYear(),
-      currentWeekStart: this.getWeekStartDate(currentDate),
-      selectedRoomId: '',
-      selectedDate: this.formatDate(currentDate),
-      roomPrice: 0,
-      showBookingsModal: false,
-      bookingsMonth: currentDate.getMonth(),
-      bookingsYear: currentDate.getFullYear(),
-      selectedMonth: new Date().getMonth(),
-      selectedYear: new Date().getFullYear(),
-      rooms: [
-        {
-          id: 1,
-          name: 'Royal Palace cell to create visible room',
-          image: './src/assets/image.png',
-          type: 'Queen Bed',
-          number: '469',
-          basePrice: 168,
-          dynamicPricing: {},
-          bookings: [
-            { startDate: this.formatDate(new Date(2025, 3, 10)), 
-              endDate: this.formatDate(new Date(2025, 3, 13)), 
-              guest: 'Emma Wilson' }
-          ],
-          blockedDates: [this.formatDate(new Date(2025, 3, 5)),this.formatDate(new Date(2025, 3, 14)),]
-        },
-        {
-          id: 2,
-          name: 'Ocean View',
-          image: './src/assets/image.png',
-          type: 'Deluxe Room',
-          number: '201',
-          basePrice: 220,
-          dynamicPricing: {
-            [this.formatDate(new Date(2025, 3, 15))]: 250
-          },
-          bookings: [
-            { startDate: this.formatDate(new Date(2025, 3, 8)), 
-              endDate: this.formatDate(new Date(2025, 3, 10)), 
-              guest: 'John Smith' }
-          ],
-          blockedDates: []
-        },
-        {
-          id: 3,
-          name: 'Ocean View',
-          image: './src/assets/image.png',
-          type: 'Deluxe Room',
-          number: '201',
-          basePrice: 220,
-          dynamicPricing: {
-            [this.formatDate(new Date(2025, 3, 15))]: 250
-          },
-          bookings: [
-            { startDate: this.formatDate(new Date(2025, 4, 8)), 
-              endDate: this.formatDate(new Date(2025, 4, 10)), 
-              guest: 'John Smith' }
-          ],
-          blockedDates: []
-        }
-      ]
-    }
-  },
-  computed: {
-    filteredRooms() {
-      return this.rooms;
-    },
-    visibleWeekDays() {
-      const days = [];
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(this.currentWeekStart);
-        date.setDate(date.getDate() + i);
-        days.push({
-          name: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
-          date: this.formatDate(date)
-        });
-      }
-      return days;
-    },
-    selectedRoom() {
-      return this.rooms.find(room => room.id === this.selectedRoomId);
-    },
-    calendarDays() {
-      const days = [];
-      const firstDayOfMonth = new Date(this.bookingsYear, this.bookingsMonth, 1);
-      const lastDayOfMonth = new Date(this.bookingsYear, this.bookingsMonth + 1, 0);
-      
-      // Days from previous month
-      const prevMonthDays = firstDayOfMonth.getDay();
-      for (let i = prevMonthDays - 1; i >= 0; i--) {
-        const date = new Date(firstDayOfMonth);
-        date.setDate(date.getDate() - (i + 1));
-        days.push({ date, isCurrentMonth: false });
-      }
-      
-      // Current month days
-      for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
-        const date = new Date(this.bookingsYear, this.bookingsMonth, i);
-        days.push({ date, isCurrentMonth: true });
-      }
-      
-      // Days from next month
-      const nextMonthDays = 6 - lastDayOfMonth.getDay();
-      for (let i = 1; i <= nextMonthDays; i++) {
-        const date = new Date(lastDayOfMonth);
-        date.setDate(date.getDate() + i);
-        days.push({ date, isCurrentMonth: false });
-      }
-      
-      return days;
-    },
-    allBookings() {
-      return this.rooms.flatMap(room => 
-        room.bookings.map(booking => ({
-          ...booking,
-          roomId: room.id,
-          roomName: `${room.name} (${room.type})`
-        }))
-      );
-    }
-  },
-  methods: {
-    // Date Helpers
-    getWeekStartDate(date) {
-      const day = date.getDay();
-      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(date.setDate(diff));
-    },
-    getWeekEndDate() {
-      const endDate = new Date(this.currentWeekStart);
-      endDate.setDate(endDate.getDate() + 6);
-      return endDate;
-    },
-    formatDate(date) {
-      if (!(date instanceof Date)) date = new Date(date);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    },
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+import ControllDateRoom from '@/components/AdminComponents/ControllDateRoom.vue';
 
-    // Calendar Navigation
-    previousWeek() {
-      const newDate = new Date(this.currentWeekStart);
-      newDate.setDate(newDate.getDate() - 7);
-      this.currentWeekStart = newDate;
-      this.updateMonthYear();
-    },
-    nextWeek() {
-      const newDate = new Date(this.currentWeekStart);
-      newDate.setDate(newDate.getDate() + 7);
-      this.currentWeekStart = newDate;
-      this.updateMonthYear();
-    },
-    updateMonthYear() {
-      this.selectedMonth = this.currentWeekStart.getMonth();
-      this.selectedYear = this.currentWeekStart.getFullYear();
-    },
-    previousMonth() {
-      if (this.bookingsMonth === 0) {
-        this.bookingsMonth = 11;
-        this.bookingsYear--;
-      } else {
-        this.bookingsMonth--;
-      }
-    },
-    nextMonth() {
-      if (this.bookingsMonth === 11) {
-        this.bookingsMonth = 0;
-        this.bookingsYear++;
-      } else {
-        this.bookingsMonth++;
-      }
-    },
+const router = useRouter();
 
-    // Room Status Helpers
-    getRoomStatus(room, date) {
-      if (room.blockedDates.includes(date)) return 'Blocked';
-      
-      const isBooked = room.bookings.some(booking => 
-        date >= booking.startDate && date <= booking.endDate
-      );
-      if (isBooked) {
-        const booking = room.bookings.find(b => date >= b.startDate && date <= b.endDate);
-        return `Booked - ${booking.guest}`;
-      }
-      
-      return 'Available';
-    },
-    getRoomPrice(room, date) {
-      return room.dynamicPricing[date] || room.basePrice;
-    },
-    getStatusClass(status) {
-      if (status === 'Available') return 'available';
-      if (status.startsWith('Booked')) return 'booked';
-      if (status === 'Blocked') return 'blocked';
-      return '';
-    },
-    getBookingsForDay(date) {
-      const formattedDate = this.formatDate(date);
-      return this.allBookings.filter(booking => 
-        formattedDate >= booking.startDate && formattedDate <= booking.endDate
-      );
-    },
+// Constants
+const months = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
-    // Selection Helpers
-    selectRoomDate(room, date) {
-        this.store.setSelectedRoom(room.id)
-        this.store.setSelectedDate(date)
-        this.loadRoomData()
-        },
+// Reactive state
+const selectedMonth = ref(new Date().getMonth());
+const selectedYear = ref(new Date().getFullYear());
+const rooms = ref([]);
+const loading = ref(false);
+const error = ref('');
 
-    loadRoomData() {
-      if (!this.selectedRoomId || !this.selectedDate) return;
-      const room = this.selectedRoom;
-      this.roomPrice = this.getRoomPrice(room, this.selectedDate);
-    },
-    editPrice(room, date) {
-        this.store.setSelectedRoom(room.id)
-        this.store.setSelectedDate(date)
-        this.store.setRoomPrice(this.getRoomPrice(room, date))
+// Popup state
+const showPopup = ref(false);
+const selectedRoom = ref({});
+const selectedStartDate = ref('');
+const selectedEndDate = ref('');
+const selectedPrice = ref(0);
+const selectedStatus = ref('');
 
-        this.$nextTick(() => {
-            document.querySelector('input[type="number"]').focus()
-        })
-        },
+// Computed properties
+const monthDays = computed(() => {
+  const days = [];
+  const date = new Date(selectedYear.value, selectedMonth.value, 1);
+  
+  while (date.getMonth() === selectedMonth.value) {
+    days.push(formatDate(new Date(date)));
+    date.setDate(date.getDate() + 1);
+  }
+  
+  return days;
+});
 
+const availableDaysCount = computed(() => {
+  return rooms.value.reduce((total, room) => {
+    return total + monthDays.value.filter(day => {
+      const date = parseDate(day);
+      return !isDateBooked(room, date) && !isDateBlocked(room, date);
+    }).length;
+  }, 0);
+});
 
-    // Management Actions
-    // updatePrice() {
-    //   if (!this.selectedRoomId || !this.selectedDate) return;
-      
-    //   const room = this.selectedRoom;
-    //   const price = Number(this.roomPrice);
-      
-    //   if (price > 0) {
-    //     this.$set(room.dynamicPricing, this.selectedDate, price);
-    //   } else {
-    //     if (room.dynamicPricing[this.selectedDate]) {
-    //       this.$delete(room.dynamicPricing, this.selectedDate);
-    //     }
-    //   }
-    // },
+const bookedDaysCount = computed(() => {
+  return rooms.value.reduce((total, room) => {
+    return total + monthDays.value.filter(day => {
+      const date = parseDate(day);
+      return isDateBooked(room, date);
+    }).length;
+  }, 0);
+});
 
-    blockRoom() {
-      if (!this.selectedRoomId || !this.selectedDate) return;
-      
-      const room = this.selectedRoom;
-      const date = this.selectedDate;
-      
-      if (!room.blockedDates.includes(date)) {
-        room.blockedDates.push(date);
-      }
-    },
-    openRoom() {
-      if (!this.selectedRoomId || !this.selectedDate) return;
-      
-      const room = this.selectedRoom;
-      const date = this.selectedDate;
-      const index = room.blockedDates.indexOf(date);
-      
-      if (index > -1) {
-        room.blockedDates.splice(index, 1);
-      }
-    },
-    scrollToToday() {
+// Utility functions
+function formatDate(date) {
+  return date.toISOString().split('T')[0];
+}
+
+function parseDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function formatDisplayDate(dateStr) {
+  const date = parseDate(dateStr);
+  return date.getDate();
+}
+
+function formatWeekday(dateStr) {
+  const date = parseDate(dateStr);
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+function handleImageError(event) {
+  event.target.src = 'https://via.placeholder.com/50?text=No+Image';
+}
+
+// Navigation functions
+function previousMonth() {
+  if (selectedMonth.value === 0) {
+    selectedMonth.value = 11;
+    selectedYear.value--;
+  } else {
+    selectedMonth.value--;
+  }
+}
+
+function nextMonth() {
+  if (selectedMonth.value === 11) {
+    selectedMonth.value = 0;
+    selectedYear.value++;
+  } else {
+    selectedMonth.value++;
+  }
+}
+
+function goToToday() {
   const today = new Date();
-  this.currentWeekStart = this.getWeekStartDate(today); // ⬅️ reset week to current
-  this.updateMonthYear(); // ⬅️ update display headers
+  selectedMonth.value = today.getMonth();
+  selectedYear.value = today.getFullYear();
+}
 
-  this.$nextTick(() => {
-    const todaySelector = `[data-date="${this.formatDate(today)}"]`;
-    const todayElement = document.querySelector(todaySelector);
-
-    if (todayElement) {
-      todayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+// Room data management
+async function fetchRooms() {
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    const response = await axios.get("http://localhost:5000/hotels", {
+      timeout: 10000 // 10 second timeout
+    });
+    
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error('Invalid data format received from server');
     }
+    
+    rooms.value = response.data.flatMap(hotel => 
+      hotel.rooms?.map(room => ({
+        ...room,
+        hotel: hotel.name,
+        hotelId: hotel.id,
+        // Ensure required properties exist
+        bookings: room.bookings || [],
+        blockedDates: room.blockedDates || [],
+        price: room.price || [],
+        basePrice: room.basePrice || 0
+      })) || []
+    );
+    
+  } catch (err) {
+    console.error('Error fetching rooms:', err);
+    error.value = err.response?.data?.message || err.message || 'Failed to load rooms';
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Status checking functions
+function isDateBooked(room, date) {
+  if (!room.bookings) return false;
+  
+  return room.bookings.some(booking => {
+    const bookingStart = parseDate(booking.startDate);
+    const bookingEnd = parseDate(booking.endDate);
+    return date >= bookingStart && date < bookingEnd;
   });
 }
 
-  },
- 
-  setup() {
-   
-    const store = useRoomStore()
+function isDateBlocked(room, date) {
+  if (!room.blockedDates) return false;
+  
+  return room.blockedDates.some(blocked => {
+    const blockedStart = parseDate(blocked.startDate);
+    const blockedEnd = parseDate(blocked.endDate);
+    return date >= blockedStart && date < blockedEnd;
+  });
+}
 
-    const roomPrice = computed({
-      get: () => store.roomPrice,
-      set: val => store.setRoomPrice(val)
-    })
-
-    const selectedRoomId = computed({
-      get: () => store.selectedRoomId,
-      set: val => store.setSelectedRoom(val)
-    })
-
-    const selectedDate = computed({
-      get: () => store.selectedDate,
-      set: val => store.setSelectedDate(val)
-    })
-
-    return {
-      store,
-      roomPrice,
-      selectedRoomId,
-      selectedDate
+function getDayPrice(room, dateStr) {
+  const date = parseDate(dateStr);
+  
+  // Check for specific pricing first
+  if (room.price && room.price.length > 0) {
+    for (const priceRange of room.price) {
+      const startDate = parseDate(priceRange.startDate);
+      const endDate = parseDate(priceRange.endDate);
+      
+      if (date >= startDate && date <= endDate) {
+        return priceRange.amount;
+      }
     }
-  },
-
-  mounted() {
-    this.loadRoomData();
-    this.store.setRooms(this.rooms)
-  },
+  }
+  
+  // Fall back to base price
+  return room.basePrice || 0;
 }
+
+function getDayStatus(room, dateStr) {
+  const date = parseDate(dateStr);
+  
+  if (isDateBooked(room, date)) return 'Booked';
+  if (isDateBlocked(room, date)) return 'Blocked';
+  return 'Available';
+}
+
+function getDayStatusClass(room, dayStr) {
+  const date = parseDate(dayStr);
+  
+  if (isDateBooked(room, date)) {
+    return 'bg-red-100 cursor-not-allowed text-red-700 border-red-200';
+  }
+  
+  if (isDateBlocked(room, date)) {
+    return 'bg-gray-200 text-gray-600 cursor-pointer hover:bg-gray-300';
+  }
+  
+  return 'bg-green-50 text-green-700 cursor-pointer hover:bg-blue-50 hover:border-blue-300';
+}
+
+function getDayTooltip(room, dateStr) {
+  const date = parseDate(dateStr);
+  const status = getDayStatus(room, dateStr);
+  const price = getDayPrice(room, dateStr);
+  let tooltip = `${room.hotel} - ${room.name}\nDate: ${dateStr}\nStatus: ${status}\nPrice: $${price}`;
+  
+  if (isDateBooked(room, date)) {
+    tooltip += `\nGuest: ${getGuestName(room, dateStr)}`;
+  } else if (isDateBlocked(room, date)) {
+    tooltip += `\nBlocked: ${getBlockDateRange(room, dateStr)}`;
+  }
+  
+  return tooltip;
+}
+
+// Get guest name for a booked date
+function getGuestName(room, dateStr) {
+  const date = parseDate(dateStr);
+  const booking = room.bookings?.find(booking => {
+    const bookingStart = parseDate(booking.startDate);
+    const bookingEnd = parseDate(booking.endDate);
+    return date >= bookingStart && date < bookingEnd;
+  });
+  return booking?.guestName || 'N/A';
+}
+
+// Get block date range for a blocked date
+function getBlockDateRange(room, dateStr) {
+  const date = parseDate(dateStr);
+  const block = room.blockedDates?.find(blocked => {
+    const blockedStart = parseDate(blocked.startDate);
+    const blockedEnd = parseDate(blocked.endDate);
+    return date >= blockedStart && date < blockedEnd;
+  });
+  if (block) {
+    return `${block.startDate} - ${block.endDate}`;
+  }
+  return '';
+}
+
+// Event handlers
+function onDayClick(room, dateStr) {
+  const date = parseDate(dateStr);
+  
+  // Don't allow editing booked dates
+  if (isDateBooked(room, date)) {
+    return;
+  }
+
+  selectedRoom.value = room;
+  selectedStartDate.value = dateStr;
+  
+  // Set end date to next day
+  const nextDay = new Date(date);
+  nextDay.setDate(nextDay.getDate() + 1);
+  selectedEndDate.value = formatDate(nextDay);
+  
+  selectedPrice.value = getDayPrice(room, dateStr);
+  selectedStatus.value = isDateBlocked(room, date) ? 'blocked' : 'available';
+  
+  showPopup.value = true;
+}
+
+function closePopup() {
+  showPopup.value = false;
+  selectedRoom.value = {};
+  selectedStartDate.value = '';
+  selectedEndDate.value = '';
+  selectedPrice.value = 0;
+  selectedStatus.value = '';
+}
+
+async function handleUpdate(updateData) {
+  try {
+    console.log('Update received:', updateData);
+    
+    // Here you would typically make an API call to update the data
+    // await axios.put(`/api/rooms/${selectedRoom.value.id}/availability`, updateData);
+    
+    // For now, just update local state
+    const room = rooms.value.find(r => r.id === selectedRoom.value.id);
+    if (room) {
+      // Update the room data based on the update
+      // This is a simplified example - you'd implement based on your API structure
+      if (updateData.price !== undefined) {
+        // Update or add price range
+        const existingPriceIndex = room.price.findIndex(p => 
+          parseDate(p.startDate) <= parseDate(selectedStartDate.value) &&
+          parseDate(p.endDate) >= parseDate(selectedStartDate.value)
+        );
+        
+        if (existingPriceIndex >= 0) {
+          room.price[existingPriceIndex].amount = updateData.price;
+        }
+      }
+    }
+    
+    showPopup.value = false;
+    
+  } catch (err) {
+    console.error('Error updating room:', err);
+    error.value = 'Failed to update room data';
+  }
+}
+
+// Watchers
+watch([selectedMonth, selectedYear], () => {
+  // Optionally refetch data when month changes
+  // fetchRooms();
+});
+
+// Lifecycle
+onMounted(() => {
+  fetchRooms();
+});
 </script>
+
 <style scoped>
-/* Base Styles */
-.admin-dashboard {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  max-width: auto;
-  margin: 0 auto;
-  padding: 0;
-  color: #333;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: auto;
+/* Custom scrollbar for better UX */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
 }
 
-.dashboard-header {
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.dashboard-header h1 {
-  font-size: 24px;
-  margin-bottom: 5px;
-  color: #2c3e50;
-}
-
-.total-rooms {
-  color: #7f8c8d;
-  font-size: 14px;
-}
-
-/* Calendar Controls */
-.calendar-control-section {
-  margin-bottom: 20px;
-  background-color: white;
-  /* padding: 15px; */
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 10px;
-}
-
-.calendar-nav {
-  background: none;
-  border: 1px solid #ddd;
-  padding: 5px 15px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.calendar-nav:hover {
-  background-color: #f0f0f0;
-}
-
-.date-range {
-  text-align: center;
-  color: #666;
-  font-weight: 500;
-}
-
-/* Management Controls */
-.management-controls {
-  background: #f5f5f5;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.control-panel h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #333;
-  font-size: 18px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ddd;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-}
-
-.form-group select,
-.form-group input[type="date"],
-.form-group input[type="number"] {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  width: 100%;
-  max-width: 300px;
-  font-size: 14px;
-  background-color: white;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-button:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-block {
-  background-color: #ef5350;
-  color: white;
-}
-
-.btn-open {
-  background-color: #66bb6a;
-  color: white;
-}
-
-.btn-show-bookings {
-  padding: 10px 20px;
-  background-color: #4a6fa5;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-show-bookings:hover {
-  background-color: #3a5a8a;
-}
-
-.btn-edit-price {
-  margin-top: 8px;
-  padding: 5px 8px;
-  font-size: 12px;
-  background-color: #ffd54f;
-  border: none;
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
   border-radius: 3px;
-  cursor: pointer;
-  width: 100%;
 }
 
-.btn-edit-price:hover {
-  background-color: #ffc107;
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
 }
 
-/* Calendar Table */
-/* .calendar-section {
-  background-color: white;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
-.booking-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  min-width: 800px;
+/* Animation for loading spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.booking-table th, 
-.booking-table td {
-  border: 1px solid #e0e0e0;
-  text-align: center;
-  vertical-align: middle;
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-.room-header, 
-.day-header, 
-.date-header {
-  background-color: #f5f7fa;
-  font-weight: 600;
-  color: #2c3e50;
+/* Transition effects */
+.transition-colors {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
-.day-header {
-  min-width: 100px;
+.transition-all {
+  transition: all 0.2s ease-in-out;
 }
-
-.room-info {
-  text-align: left;
-  min-width: 180px;
-  background-color: #f5f7fa;
-}
-
-.room-name {
-  font-weight: bold;
-  color: #2c3e50;
-  margin-bottom: 4px;
-}
-
-.room-type {
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.status-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 5px;
-}
-
-.status-text {
-  margin-bottom: 8px;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.booked-text {
-  color: #d32f2f;
-  font-weight: 500;
-}
-
-.room-price {
-  font-weight: bold;
-  font-size: 14px;
-  color: #2e7d32;
-} */
-
-/* Status Classes */
-.available {
-  background-color: #e8f5e9;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.available:hover {
-  background-color: #c8e6c9;
-}
-
-.booked {
-  background-color: #ffebee;
-  cursor: not-allowed;
-}
-
-.blocked {
-  background-color: #eceff1;
-  cursor: pointer;
-}
-
-.blocked:hover {
-  background-color: #cfd8dc;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 1000px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  background-color: white;
-  z-index: 10;
-}
-
-.modal-header h2 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.close-modal {
-  background: none;
-  border: none;
-  font-size: 28px;
-  cursor: pointer;
-  color: #7f8c8d;
-  padding: 0 10px;
-}
-
-.close-modal:hover {
-  color: #2c3e50;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-/* Bookings Calendar */
-.bookings-calendar {
-  width: 100%;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-}
-
-.day-header {
-  text-align: center;
-  font-weight: bold;
-  padding: 12px 8px;
-  background-color: #f5f7fa;
-  color: #2c3e50;
-}
-
-.calendar-day {
-  min-height: 100px;
-  border: 1px solid #e0e0e0;
-  padding: 8px;
-  background-color: white;
-  position: relative;
-}
-
-.calendar-day.other-month {
-  background-color: #f9f9f9;
-  color: #aaa;
-}
-
-.day-number {
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: inherit;
-}
-
-.booking-event {
-  background-color: #e3f2fd;
-  border-radius: 4px;
-  padding: 4px 6px;
-  font-size: 12px;
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #1565c0;
-  border-left: 3px solid #1976d2;
-}
-
-/* Responsive Design */
-@media (max-width: 992px) {
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .form-group select,
-  .form-group input[type="date"],
-  .form-group input[type="number"] {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .modal-content {
-    width: 95%;
-    padding: 10px;
-  }
-  
-  .calendar-day {
-    min-height: 80px;
-    padding: 4px;
-  }
-  
-  .booking-event {
-    font-size: 10px;
-    padding: 2px 4px;
-  }
-  
-  .button-group {
-    flex-direction: column;
-  }
-  
-  .button-group button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 576px) {
-  .admin-dashboard {
-    padding: 10px;
-  }
-  
-  .calendar-nav {
-    padding: 5px 10px;
-  }
-  
-  .calendar-day {
-    min-height: 60px;
-  }
-  
-  .day-number {
-    font-size: 12px;
-  }
-  
-  .booking-event {
-    display: none;
-  }
-}
-
 </style>

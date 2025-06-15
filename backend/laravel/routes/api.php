@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BlockRoom\BlockRoomController;
+use App\Http\Controllers\Houses\HouseListingController;
 use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
@@ -62,18 +64,17 @@ Route::get('/rooms', [RoomTypeController::class, 'getRooms']);
 // Update Route
 Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'updateMe']);
 
-// {
-//   "rooms": [
-//     {
-//       "name": "Single Bed",
-//       "description": "Spacious room with king bed",
-//       "capacity": 2,
-//       "default_price": 150.00,
-//       "amenities":[1,2,3,4,5],
-//       "images": [
-//         { "url": "https://example.com/images/deluxe1.jpg" },
-//         { "url": "https://example.com/images/deluxe2.jpg" }
-//       ]
-//     }
-//   ]
-// }
+//Get all Applications
+Route::get('/allhouse',[HouseListingController::class,'getAllHouses']);
+Route::get('/rooms/blocked-today', [BlockRoomController::class, 'getTodayBlockedRooms']);
+
+// api.php
+//block room
+// Block a room (POST)
+Route::post('/block-room/{roomId}', [BlockRoomController::class, 'blockRoom'])
+    ->middleware('auth:sanctum');
+
+// Unblock a room (PATCH or POST)
+Route::post('/unblock-room/{roomId}', [BlockRoomController::class, 'unblock'])
+    ->middleware('auth:sanctum');
+Route::get('/block-room/{roomid}', [HouseListingController::class, 'getBlockedDates'])->middleware('auth:sanctum');

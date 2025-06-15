@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Room\BlockedRoom;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,6 +25,9 @@ class RoomType extends Model
     public function amenities()
     {
         return $this->belongsToMany(Amenity::class,'amenities_room_type', 'room_id', 'amenity_id');
+    }
+    public function blockDates(){
+        return $this->hasMany(BlockedRoom::class);
     }
 
     public function prices()
