@@ -68,12 +68,11 @@ class UpdateTransactionStatus implements ShouldQueue
 
             Log::info('Checking transaction status automatically', [
                 'transaction_id' => $this->transactionId,
-                'md5' => $transaction->qr_md5,
                 'attempt' => $this->attempt
             ]);
 
-            // Check payment status using the correct KHQRService method
-            $result = $khqrService->checkTransactionByMD5($transaction->qr_md5);
+            // Use enhanced multi-method checking as recommended by Bakong documentation
+            $result = $this->checkTransactionWithMultipleMethods($transaction, $khqrService);
             
             if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
                 // Determine new status from API response
@@ -94,6 +93,7 @@ class UpdateTransactionStatus implements ShouldQueue
                         'old_status' => $oldStatus,
                         'new_status' => $newStatus,
                         'attempt' => $this->attempt,
+                        'method_used' => $result['method_used'] ?? 'unknown',
                         'api_response' => $result['data']
                     ]);
 
@@ -105,14 +105,16 @@ class UpdateTransactionStatus implements ShouldQueue
                     Log::info('No status change needed for automatic check', [
                         'transaction_id' => $this->transactionId,
                         'current_status' => $transaction->status,
-                        'attempt' => $this->attempt
+                        'attempt' => $this->attempt,
+                        'method_used' => $result['method_used'] ?? 'unknown'
                     ]);
                 }
             } else {
                 Log::info('Payment still pending - automatic check', [
                     'transaction_id' => $this->transactionId,
                     'attempt' => $this->attempt,
-                    'message' => $result['message'] ?? 'No payment data found'
+                    'message' => $result['message'] ?? 'No payment data found',
+                    'method_used' => $result['method_used'] ?? 'all_failed'
                 ]);
             }
 
@@ -130,6 +132,92 @@ class UpdateTransactionStatus implements ShouldQueue
                 $this->fail($e);
             }
         }
+    }
+
+    /**
+     * Check transaction using multiple methods as recommended by Bakong documentation
+     * Priority: Short Hash -> MD5 -> Full Hash
+     */
+    private function checkTransactionWithMultipleMethods(Transactions $transaction, KHQRService $khqrService): array
+    {
+        // Method 1: Short Hash with amount verification (RECOMMENDED by documentation)
+        if ($transaction->qr_short_hash && $transaction->amount) {
+            Log::info('Background job: Checking with short hash method', [
+                'transaction_id' => $transaction->transaction_id,
+                'short_hash' => $transaction->qr_short_hash,
+                'amount' => $transaction->amount,
+                'attempt' => $this->attempt
+            ]);
+
+            $result = $khqrService->checkTransactionByShortHash(
+                $transaction->qr_short_hash, 
+                (float)$transaction->amount, 
+                $transaction->currency ?? 'KHR'
+            );
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'short_hash';
+                return $result;
+            }
+
+            Log::info('Background job: Short hash method returned no data, trying MD5', [
+                'transaction_id' => $transaction->transaction_id,
+                'attempt' => $this->attempt,
+                'short_hash_result' => $result['message'] ?? 'No message'
+            ]);
+        }
+
+        // Method 2: MD5 Hash (traditional method)
+        if ($transaction->qr_md5) {
+            Log::info('Background job: Checking with MD5 method', [
+                'transaction_id' => $transaction->transaction_id,
+                'md5' => $transaction->qr_md5,
+                'attempt' => $this->attempt
+            ]);
+
+            $result = $khqrService->checkTransactionByMD5($transaction->qr_md5);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'md5';
+                return $result;
+            }
+
+            Log::info('Background job: MD5 method returned no data, trying full hash', [
+                'transaction_id' => $transaction->transaction_id,
+                'attempt' => $this->attempt,
+                'md5_result' => $result['message'] ?? 'No message'
+            ]);
+        }
+
+        // Method 3: Full Hash (SHA256)
+        if ($transaction->qr_full_hash) {
+            Log::info('Background job: Checking with full hash method', [
+                'transaction_id' => $transaction->transaction_id,
+                'full_hash' => $transaction->qr_full_hash,
+                'attempt' => $this->attempt
+            ]);
+
+            $result = $khqrService->checkTransactionByFullHash($transaction->qr_full_hash);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'full_hash';
+                return $result;
+            }
+
+            Log::info('Background job: Full hash method returned no data', [
+                'transaction_id' => $transaction->transaction_id,
+                'attempt' => $this->attempt,
+                'full_hash_result' => $result['message'] ?? 'No message'
+            ]);
+        }
+
+        // All methods failed
+        return [
+            'success' => false,
+            'message' => 'Transaction not found using any checking method',
+            'method_used' => 'all_failed',
+            'data' => null
+        ];
     }
 
     /**

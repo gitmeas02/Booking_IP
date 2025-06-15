@@ -87,7 +87,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Check payment status
+     * Check payment status with enhanced multi-method approach
      */
     public function checkStatus($transactionId)
     {
@@ -113,8 +113,8 @@ class PaymentController extends Controller
             ]);
         }
 
-        // For pending transactions, check with Bakong API and update status
-        $result = $this->khqrService->checkTransactionByMD5($transaction->qr_md5);
+        // For pending transactions, use enhanced checking with multiple methods
+        $result = $this->checkTransactionWithMultipleMethods($transaction);
 
         if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
             // Determine status from API response
@@ -130,7 +130,8 @@ class PaymentController extends Controller
 
                 Log::info("Transaction status updated via manual check", [
                     'transaction_id' => $transactionId,
-                    'new_status' => $newStatus
+                    'new_status' => $newStatus,
+                    'method_used' => $result['method_used'] ?? 'unknown'
                 ]);
             }
 
@@ -139,6 +140,7 @@ class PaymentController extends Controller
                 'status' => $newStatus,
                 'transaction' => $transaction->fresh(),
                 'api_response' => $result['data'],
+                'method_used' => $result['method_used'],
                 'message' => $newStatus === 'success' ? 'Payment completed successfully' : "Transaction status: {$newStatus}"
             ]);
         }
@@ -149,6 +151,86 @@ class PaymentController extends Controller
             'transaction' => $transaction,
             'message' => $result['message'] ?? 'Payment still pending'
         ]);
+    }
+
+    /**
+     * Check transaction using multiple methods as recommended by Bakong documentation
+     * Priority: Short Hash -> MD5 -> Full Hash
+     */
+    private function checkTransactionWithMultipleMethods(Transactions $transaction): array
+    {
+        // Method 1: Short Hash with amount verification (RECOMMENDED by documentation)
+        if ($transaction->qr_short_hash && $transaction->amount) {
+            Log::info('Checking with short hash method', [
+                'transaction_id' => $transaction->transaction_id,
+                'short_hash' => $transaction->qr_short_hash,
+                'amount' => $transaction->amount
+            ]);
+
+            $result = $this->khqrService->checkTransactionByShortHash(
+                $transaction->qr_short_hash, 
+                (float)$transaction->amount, 
+                $transaction->currency ?? 'KHR'
+            );
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'short_hash';
+                return $result;
+            }
+
+            Log::info('Short hash method returned no data, trying MD5', [
+                'transaction_id' => $transaction->transaction_id,
+                'short_hash_result' => $result['message'] ?? 'No message'
+            ]);
+        }
+
+        // Method 2: MD5 Hash (traditional method)
+        if ($transaction->qr_md5) {
+            Log::info('Checking with MD5 method', [
+                'transaction_id' => $transaction->transaction_id,
+                'md5' => $transaction->qr_md5
+            ]);
+
+            $result = $this->khqrService->checkTransactionByMD5($transaction->qr_md5);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'md5';
+                return $result;
+            }
+
+            Log::info('MD5 method returned no data, trying full hash', [
+                'transaction_id' => $transaction->transaction_id,
+                'md5_result' => $result['message'] ?? 'No message'
+            ]);
+        }
+
+        // Method 3: Full Hash (SHA256)
+        if ($transaction->qr_full_hash) {
+            Log::info('Checking with full hash method', [
+                'transaction_id' => $transaction->transaction_id,
+                'full_hash' => $transaction->qr_full_hash
+            ]);
+
+            $result = $this->khqrService->checkTransactionByFullHash($transaction->qr_full_hash);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'full_hash';
+                return $result;
+            }
+
+            Log::info('Full hash method returned no data', [
+                'transaction_id' => $transaction->transaction_id,
+                'full_hash_result' => $result['message'] ?? 'No message'
+            ]);
+        }
+
+        // All methods failed
+        return [
+            'success' => false,
+            'message' => 'Transaction not found using any checking method',
+            'method_used' => 'all_failed',
+            'data' => null
+        ];
     }
 
     /**
@@ -286,6 +368,8 @@ class PaymentController extends Controller
             'bakong_account_id' => 'sok_chanmakara@aclb',
             'qr_string' => $result['qr_string'],
             'qr_md5' => $result['md5'],
+            'qr_full_hash' => $result['full_hash'],
+            'qr_short_hash' => $result['short_hash'],
             'amount' => $amount,
             'currency' => 'KHR',
             'merchant_name' => 'Pteas Khmer',

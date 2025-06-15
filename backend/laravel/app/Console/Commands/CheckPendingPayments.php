@@ -79,8 +79,8 @@ class CheckPendingPayments extends Command
                     continue;
                 }
 
-                // Check with Bakong API
-                $result = $this->khqrService->checkTransactionByMD5($transaction->qr_md5);
+                // Check with Bakong API using enhanced multi-method approach
+                $result = $this->checkTransactionWithMultipleMethods($transaction);
 
                 if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
                     $newStatus = $this->determineStatusFromApiResponse($result['data']);
@@ -94,11 +94,11 @@ class CheckPendingPayments extends Command
                             ]);
                         }
                         
-                        $this->line("\n[UPDATED] Transaction {$transaction->transaction_id}: pending -> {$newStatus}");
+                        $this->line("\n[UPDATED] Transaction {$transaction->transaction_id}: pending -> {$newStatus} (Method: {$result['method_used']})");
                         $updated++;
                     }
                 } else {
-                    $this->line("\n[ERROR] Failed to check transaction {$transaction->transaction_id}: " . ($result['message'] ?? 'Unknown error'));
+                    $this->line("\n[ERROR] Failed to check transaction {$transaction->transaction_id}: " . ($result['message'] ?? 'Unknown error') . " (Methods tried: {$result['method_used']})");
                     $errors++;
                 }
 
@@ -172,5 +172,54 @@ class CheckPendingPayments extends Command
         }
 
         return 'pending';
+    }
+
+    /**
+     * Check transaction status using multiple methods as recommended by Bakong documentation
+     * Priority: Short Hash -> MD5 -> Full Hash
+     */
+    private function checkTransactionWithMultipleMethods(Transactions $transaction): array
+    {
+        // Method 1: Short Hash with amount verification (RECOMMENDED by documentation)
+        if ($transaction->qr_short_hash && $transaction->amount) {
+            $result = $this->khqrService->checkTransactionByShortHash(
+                $transaction->qr_short_hash, 
+                (float)$transaction->amount, 
+                $transaction->currency ?? 'KHR'
+            );
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'short_hash';
+                return $result;
+            }
+        }
+
+        // Method 2: MD5 Hash (traditional method)
+        if ($transaction->qr_md5) {
+            $result = $this->khqrService->checkTransactionByMD5($transaction->qr_md5);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'md5';
+                return $result;
+            }
+        }
+
+        // Method 3: Full Hash (SHA256)
+        if ($transaction->qr_full_hash) {
+            $result = $this->khqrService->checkTransactionByFullHash($transaction->qr_full_hash);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'full_hash';
+                return $result;
+            }
+        }
+
+        // All methods failed
+        return [
+            'success' => false,
+            'message' => 'Transaction not found using any checking method',
+            'method_used' => 'all_failed',
+            'data' => null
+        ];
     }
 }
