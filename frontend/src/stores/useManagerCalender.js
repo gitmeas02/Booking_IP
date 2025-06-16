@@ -196,7 +196,7 @@ export function useCalendarManager() {
         const startDate = parseDate(priceRange.startDate);
         const endDate = parseDate(priceRange.endDate);
         
-        if (date >= startDate && date <= endDate) {
+        if (date >= startDate && date < endDate) {
           return priceRange.amount;
         }
       }
@@ -655,8 +655,8 @@ export function useCalendarManager() {
       // Remove same date range if exists to avoid duplicate
       room.blockedDates = room.blockedDates.filter(block =>
         !(parseDate(block.startDate).getTime() === startDate.getTime() &&
-          parseDate(block.endDate).getTime() === endDate.getTime())
-      );
+          parseDate(block.endDate).getTime() === endDate.getTime()
+      ));
 
       // Push new block
       room.blockedDates.push({
@@ -672,23 +672,24 @@ export function useCalendarManager() {
       );
     }
 
-    // Handle Price update
+    // Handle Price update - this now applies to the entire date range
     if (updateData.price !== undefined) {
-      const existingPriceIndex = room.price.findIndex(p =>
-        parseDate(p.startDate) <= startDate && parseDate(p.endDate) >= startDate
-      );
+      // First, remove any overlapping price ranges
+      room.price = room.price.filter(p => {
+        const pStart = parseDate(p.startDate);
+        const pEnd = parseDate(p.endDate);
+        return !(pStart < endDate && pEnd > startDate);
+      });
 
-      const newPrice = {
+      // Then add the new price range
+      room.price.push({
         startDate: updateData.startDate || selectedStartDate.value,
         endDate: updateData.endDate || selectedEndDate.value,
         amount: updateData.price
-      };
+      });
 
-      if (existingPriceIndex >= 0) {
-        room.price[existingPriceIndex] = newPrice;
-      } else {
-        room.price.push(newPrice);
-      }
+      // Sort the price ranges by date
+      room.price.sort((a, b) => parseDate(a.startDate) - parseDate(b.startDate));
     }
 
     showPopup.value = false;
