@@ -16,5 +16,5 @@
 </template>
 
 <script setup>
-import { ChevronDown } from 'lucide-vue-next';
+
 </script>

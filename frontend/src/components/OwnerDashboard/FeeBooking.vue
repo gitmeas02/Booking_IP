@@ -9,46 +9,31 @@
       </div>
     </div>
 
-    <div>
+    <div v-for="(fee, idx) in feeBookings" :key="idx">
       <div class="flex justify-between px-4 py-2">
-        <div>THIS LAST MONTH</div>
+        <div>{{ fee.period }}</div>
         <div class="flex gap-12">
-          <div>2025/January/12</div>
-          <div>2025/January/12</div>
+          <div>{{ fee.startDate }}</div>
+          <div>{{ fee.endDate }}</div>
         </div>
         <div class="flex gap-12">
           <div>ID PAY FEE</div>
-          <div>2021827272</div>
+          <div>{{ fee.feeId }}</div>
         </div>
       </div>
-      <div class="pl-12">11,230 USD</div>
-    </div>
-
-    <div>
-      <div class="flex justify-between px-4 py-2">
-        <div>THIS LAST MONTH</div>
-        <div class="flex gap-12">
-          <div>2025/January/12</div>
-          <div>2025/January/12</div>
-        </div>
-        <div class="flex gap-12">
-          <div>ID PAY FEE</div>
-          <div>2021827272</div>
-        </div>
-      </div>
-      <div class="pl-12">11,230 USD</div>
+      <div class="pl-12">{{ fee.amount }} USD</div>
     </div>
 
     <div class="border-t pt-2">
       <div class="flex justify-between">
         <div class="px-4">TOTAL AMOUNT TO PAY FEE</div>
         <div class="flex gap-6">
-          <div>2025/January/12</div>
-          <div>2025/January/12</div>
-          <div>2 MONTHS</div>
+          <div>{{ total.startDate }}</div>
+          <div>{{ total.endDate }}</div>
+          <div>{{ total.duration }}</div>
         </div>
       </div>
-      <div class="pl-12">22,460 USD</div>
+      <div class="pl-12">{{ total.amount }} USD</div>
     </div>
   </div>
 </template>
@@ -56,6 +41,29 @@
 <script setup>
 import { MessageCircleQuestion } from 'lucide-vue-next';
 
+const feeBookings = [
+  {
+    period: 'THIS LAST MONTH',
+    startDate: '2025/January/11',
+    endDate: '2025/January/12',
+    feeId: '2021827272',
+    amount: '11,230'
+  },
+  {
+    period: 'THIS LAST MONTH',
+    startDate: '2025/January/12',
+    endDate: '2025/January/12',
+    feeId: '2021827272',
+    amount: '11,230'
+  }
+];
+
+const total = {
+  startDate: '2025/January/12',
+  endDate: '2025/January/12',
+  duration: '2 MONTHS',
+  amount: '22,460'
+};
 </script>
 
 <style scoped>

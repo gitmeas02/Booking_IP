@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col h-screen w-64 p-4 box-border border-r border-black">
+  <div class="flex flex-col h-screen w-64 p-4 box-border border-r border-black overflow-hidden">
     <!-- Top content -->
-    <div class="flex flex-col gap-2 flex-grow overflow-y-auto">
+    <div class="flex flex-col gap-2 flex-grow">
       <div id="agbalumo" class="flex items-center justify-center text-2xl font-bold mb-4 cursor-default">
         Admin Dashboard
       </div>
@@ -10,7 +10,7 @@
       </div>
 
       <!-- Booking -->
-      <RouterLink to="/" :class="[
+      <RouterLink to="/ownerdashboard" :class="[
         'flex items-center justify-between cursor-pointer w-full text-left text-xl hover:bg-gray-100',
         isBooking ? 'bg-[#572222] text-white' : ''
       ]">
@@ -116,5 +116,9 @@ const isSettings = computed(() => route.path === '/settings');
   font-family: "Agbalumo", system-ui;
   font-weight: 400;
   font-style: normal;
+}
+/* Prevent sidebar from scrolling and always fit the screen */
+.flex-col {
+  overflow: hidden !important;
 }
 </style>
