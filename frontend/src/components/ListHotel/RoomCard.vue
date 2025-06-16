@@ -1,4 +1,4 @@
-<template> 
+<template>
   <div
     class="hotel-card"
     @click="$router.push({ name: 'ProductsDetails', params: { id: room.id } })"
@@ -6,12 +6,17 @@
     <!-- Image -->
     <div class="image">
       <img
-        v-if="room.images?.length"
-        :src="room.images[0]"
-        :alt="`Image of ${room.name}`"
+        v-if="room.room_types[0]?.images?.length"
+        :src="
+          'http://localhost:9000/' + room.room_types[0].images[0].thumbnail_url
+        "
+        :alt="`Image of ${room.property_name}`"
         class="img"
       />
-      <div v-else class="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+      <div
+        v-else
+        class="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm"
+      >
         No Image
       </div>
     </div>
@@ -21,43 +26,59 @@
       <!-- Header -->
       <div class="hotel-header">
         <div class="hotel-name-container">
-          <h1 class="hotel-name">{{ room.hotel?.name }}</h1>
+          <h1 class="hotel-name">{{ room.property_name }}</h1>
           <div class="stars-container">
-            <span class="star-icon" v-for="n in room.hotel?.stars" :key="n">★</span>
+            <span class="star-icon" v-for="n in room?.star_rating" :key="n"
+              >★</span
+            >
           </div>
         </div>
 
         <div class="review-container">
           <div class="review-score-container">
             <span class="review-text">Review Score</span>
-            <div class="score-badge">{{ room.hotel?.reviewScore ?? 'N/A' }}</div>
+            <div class="score-badge">{{ 1 ?? "N/A" }}</div>
+            <!-- //.getRoomById   -->
           </div>
           <a href="#" class="comments-link">
-            Comments ({{ room.hotel?.comments?.length ?? 0 }})
+            Comments (1)
+            <!-- {{ room.feedback?.length ?? 0 }} -->
           </a>
         </div>
       </div>
 
       <!-- Location -->
       <div class="location-container">
-        <a href="#" class="location-link">{{ room.hotel?.location?.city }}</a>
-        <a href="#" class="map-link">Show On Map</a>
+        <a href="#" class="location-link">{{ room.location?.city }}</a>
+        <a
+          :href="
+            'https://www.google.com/maps?q=' +
+            encodeURIComponent(room.location?.street)
+          "
+          target="_blank"
+          class="map-link"
+        >
+          Show On Map
+        </a>
         <span class="distance-text">
-          {{ room.hotel?.location?.distanceFromCenter ?? 'N/A' }} from center
+          <!-- {{ room.hotel?.location?.distanceFromCenter ?? 'N/A' }} from center -->
+          {{ room.location.city ?? "N/A" }} from center
         </span>
       </div>
 
       <!-- Price -->
-      <div class="price-container">
-        <div class="price-text">US$ {{ room.price }}</div>
-      </div>
-
+      
       <!-- Room Info -->
       <div class="room-info">
-        <ul class="room-list">
-          <li class="room-list-item">Size: {{ room.size }}</li>
-          <li class="room-list-item">Beds: {{ room.beds }}</li>
-        </ul>
+          <p class="text-gray-700 text-xl">
+          Price: $
+          {{
+            room.room_types[0]?.room_prices?.length
+              ? room.room_types[0].room_prices[0].custom_price
+              : room.room_types[0].default_price
+          }}
+        </p>
+        <p>{{ room.room_types[0].description.slice(0,99) }}</p>
       </div>
 
       <!-- Amenities -->
@@ -65,24 +86,21 @@
         <div class="amenities-list">
           <div
             class="amenity-item"
-            v-for="(amenity, aIndex) in room.amenities"
+            v-for="(amenity, aIndex) in room.room_types[0].amenities.slice(0,6)"
             :key="aIndex"
           >
             <component
-              :is="icons[amenity]"
+              :is="icons[amenity.amenity_name]"
               class="w-4 h-4 text-gray-600"
             />
-            <span class="amenity-text">{{ amenity }}</span>
+            <span class="amenity-text">{{ amenity.amenity_name }}</span>
           </div>
         </div>
       </div>
 
       <!-- View Button -->
       <div class="action-container">
-        <button
-          class="view-button"
-          @click.stop="viewHotel(room.id)"
-        >
+        <button class="view-button" @click.stop="viewHotel(room.id)">
           View Hotel
         </button>
       </div>
@@ -92,232 +110,313 @@
 
 <script setup>
 import {
-  AirVent,
-  Coffee,
-  Phone,
-  ShowerHead,
-  Tv,
-  Wifi,
-  Wine
-} from 'lucide-vue-next';
-
-const props = defineProps({
-  room: { type: Object, required: true }
-});
+  AirVent, // for Air conditioning
+  Flame, // for Heating
+  Wifi, // for Free Wi-Fi, High-speed internet
+  Tv, // for Flat-screen TV
+  Lock, // for Safe
+  // Fridge, // for Mini fridge
+  Microwave, // for Microwave
+  Coffee, // for Coffee/tea maker
+  DoorOpen, // for Balcony or terrace
+  Bath, // for Private bathroom, Bathtub, Hot tub
+  // Shower, // for Shower, Hot water
+  Square, // for Towels (placeholder, as no direct towel icon)
+  // HairDryer, // for Hairdryer
+  Droplet, // for Toiletries (placeholder for soap/shampoo)
+  Utensils, // for Kitchen, Kitchenette, Restaurant
+  // Stove, // for Stove
+  // Oven, // for Oven
+  Sandwich, // for Toaster (replacing BreadSlice)
+  // Dishwasher, // for Dishwasher
+  Waves, // for Swimming pool
+  Heart, // for Spa (placeholder for wellness)
+  ThermometerSun, // for Sauna
+  Dumbbell, // for Fitness center
+  Sun, // for Beachfront
+  Clock, // for 24-hour front desk
+  // Broom, // for Daily housekeeping
+  // Elevator, // for Elevator
+  Car, // for Free parking, Car rental
+  PawPrint, // for Pet-friendly, Pet bowls, Pet bed
+  Briefcase, // for Business center
+  Users, // for Meeting room
+  Wine, // for Bar
+  Bell, // for Room service
+  EggFried, // for Breakfast included
+  ShoppingCart, // for Mini-market
+  // Wheelchair, // for Wheelchair accessible, Accessible bathroom
+  Plane, // for Airport shuttle
+  BatteryCharging, // for EV charging station
+  Baby, // for Baby cot
+  ToyBrick, // for Kids’ play area
+  // Dice, // for Board games
+  AlertTriangle, // for Smoke alarms
+  FireExtinguisher, // for Fire extinguishers
+  Camera, // for CCTV
+} from "lucide-vue-next";
 
 const icons = {
-  "Air Conditioning": AirVent,
-  "TV": Tv,
-  "Mini Bar": Wine,
-  "Free Breakfast": Coffee,
+  "Air conditioning": AirVent,
+  Heating: Flame,
   "Free Wi-Fi": Wifi,
-  "Hot Water": ShowerHead,
-  "Phone Call": Phone
+  "Flat-screen TV": Tv,
+  Safe: Lock,
+  // "Mini fridge": Fridge,
+  Microwave: Microwave,
+  "Coffee/tea maker": Coffee,
+  "Balcony or terrace": DoorOpen,
+  "Private bathroom": Bath,
+  // "Shower": Shower,
+  Bathtub: Bath,
+  Towels: Square, // Placeholder, no direct towel icon
+  // "Hairdryer": HairDryer,
+  Toiletries: Droplet, // Placeholder for soap/shampoo
+  // "Hot water": Shower,
+  Kitchen: Utensils,
+  Kitchenette: Utensils,
+  // "Stove": Stove,
+  // "Oven": Oven,
+  Toaster: Sandwich, // Replaced BreadSlice with Sandwich
+  // "Dishwasher": Dishwasher,
+  "Swimming pool": Waves,
+  "Hot tub": Bath, // No specific hot tub icon
+  Spa: Heart, // Placeholder for wellness
+  Sauna: ThermometerSun,
+  "Fitness center": Dumbbell,
+  Beachfront: Sun,
+  "24-hour front desk": Clock,
+  // "Daily housekeeping": Broom,
+  // "Elevator": Elevator,
+  "Free parking": Car,
+  "Pet-friendly": PawPrint,
+  "Business center": Briefcase,
+  "Meeting room": Users,
+  "High-speed internet": Wifi,
+  Restaurant: Utensils,
+  Bar: Wine,
+  "Room service": Bell,
+  "Breakfast included": EggFried,
+  "Mini-market": ShoppingCart,
+  // "Wheelchair accessible": Wheelchair,
+  // "Accessible bathroom": Wheelchair,
+  "Airport shuttle": Plane,
+  "Car rental": Car,
+  "EV charging station": BatteryCharging,
+  "Baby cot": Baby,
+  "Kids’ play area": ToyBrick,
+  // "Board games": Dice,
+  "Pet bowls": PawPrint,
+  "Pet bed": PawPrint,
+  "Smoke alarms": AlertTriangle,
+  "Fire extinguishers": FireExtinguisher,
+  CCTV: Camera,
 };
+const props = defineProps({
+  room: { type: Object, required: true },
+});
 
 function viewHotel(id) {
   // Optional: additional behavior before navigating
-  console.log('View hotel (room id):', id);
+  console.log("View hotel (room id):", id);
 }
 </script>
 
-
-
 <style scoped>
 .hotel-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: start;
-    /* width: fit-content; */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+  /* width: fit-content; */
 }
 
 .image {
-    width: 279px;
-    height: 220px;
-    border-radius: 10px 0 0 10px;
-    overflow: hidden;
+  width: 279px;
+  height: 220px;
+  border-radius: 10px 0 0 10px;
+  overflow: hidden;
 }
 
 .image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .hotel-card-info {
-    width: 472px;
-    height: fit-content;
-    border-top: gray 1px solid;
-    border-right: gray 1px solid;
-    border-bottom: gray 1px solid;
-    border-radius: 0 10px 10px 0;
-    height: 220px;
+  width: 472px;
+  height: fit-content;
+  border-top: gray 1px solid;
+  border-right: gray 1px solid;
+  border-bottom: gray 1px solid;
+  border-radius: 0 10px 10px 0;
+  height: 220px;
 }
 
 .hotel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-left: 17px;
-    padding-right: 17px;
-    padding-top: 5px;
-    padding-bottom: 0px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 17px;
+  padding-right: 17px;
+  padding-top: 5px;
+  padding-bottom: 0px;
 }
 
 .hotel-name-container {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .hotel-name {
-    font-size: 16px;
-    margin: 0;
+  font-size: 16px;
+  margin: 0;
 }
 
 .stars-container {
-    display: flex;
+  display: flex;
 }
 
 .star-icon {
-    display: inline-block;
-    font-size: 14px;
-    color: #facc15;
-    line-height: 1;
+  display: inline-block;
+  font-size: 14px;
+  color: #facc15;
+  line-height: 1;
 }
 
 .review-container {
-    text-align: right;
+  text-align: right;
 }
 
 .review-score-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .review-text {
-    font-size: 14px;
+  font-size: 14px;
 }
 
 .score-badge {
-    background-color: #1e3a8a;
-    color: white;
-    font-size: 14px;
-    width: 24px;
-    height: 23px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 3px;
+  background-color: #1e3a8a;
+  color: white;
+  font-size: 14px;
+  width: 24px;
+  height: 23px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
 }
 
 .comments-link {
-    display: flex;
-    height: fit-content;
-    color: #3b82f6;
-    font-size: 10px;
-    text-decoration: none;
+  display: flex;
+  height: fit-content;
+  color: #3b82f6;
+  font-size: 10px;
+  text-decoration: none;
 }
 
 .comments-link:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .location-container {
-    display: flex;
-    gap: 27px;
-    padding: 0px 21px;
+  display: flex;
+  gap: 27px;
+  padding: 0px 21px;
 }
 
 .location-link {
-    color: #3b82f6;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    text-decoration: none;
+  color: #3b82f6;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 .location-link:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .map-link {
-    color: #3b82f6;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    text-decoration: none;
+  color: #3b82f6;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 .map-link:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .distance-text {
-    color: #3b82f6;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
+  color: #3b82f6;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
 .price-container {
-    padding: 7px 20px;
+  padding: 7px 20px;
 }
 
 .price-text {
-    display: flex;
-    height: fit-content;
-    font-size: 12px;
-    margin: 0;
+  display: flex;
+  height: fit-content;
+  font-size: 12px;
+  margin: 0;
 }
 
 .room-info {
-    padding: 3px 12px;
+  padding: 3px 12px;
 }
 
 .room-list {
-    list-style-type: disc;
-    padding-left: 32px;
+  list-style-type: disc;
+  padding-left: 32px;
 }
 
 .room-list-item {
-    font-size: 12px;
+  font-size: 12px;
 }
 
 .amenities-container {
-    padding: 0;
+  padding: 0;
 }
 
 .amenities-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 7px;
-    padding: 0 21px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 7px;
+  padding: 0 21px;
 }
 
 .amenity-item {
-    display: flex;
-    align-items: center;
-    height: fit-content;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  height: fit-content;
+  gap: 8px;
 }
 
 .amenity-icon {
-    font-size: 20px;
+  font-size: 20px;
 }
 
 .amenity-text {
-    display: flex;
-    font-size: 10px;
-    color: #1f2937;
+  display: flex;
+  font-size: 10px;
+  color: #1f2937;
 }
 
 .action-container {
-    padding: 4px 16px;
-    display: flex;
-    justify-content: flex-end;
+  padding: 4px 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .view-button {
@@ -330,7 +429,8 @@ function viewHotel(id) {
   border-radius: 6px;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .view-button:hover {
@@ -406,5 +506,4 @@ function viewHotel(id) {
     padding: 10px;
   }
 }
-
 </style>

@@ -1,17 +1,26 @@
 <template>
-  
   <div class="flex items-center justify-center flex-col pt-14 pl-14 pr-14">
-     <div class="rounded-xl bg-[#0A2647] w-full px-14 pt-7 pb-7">
-      <div  class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
-        <input type="text" placeholder="Enter Your Destination or Property" class="bg-white h-16.5 w-full rounded-lg pl-10" />
-        <button class=" w-[200px] h-16 rounded-lg bg-white font-bold">Search</button>
+    <!-- Search Bar -->
+    <div class="rounded-xl bg-[#0A2647] w-full px-14 pt-7 pb-7">
+      <div class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
+        <input
+          type="text"
+          placeholder="Enter Your Destination or Property"
+          class="bg-white h-[66px] w-full rounded-lg pl-10"
+        />
+        <button class="w-[200px] h-[66px] rounded-lg bg-white font-bold">
+          Search
+        </button>
       </div>
 
-      <div class="flex items-center justify-conter flex-row pt-2 gap-2 w-full">
-      <DateRangePicker />
-      <SelectRoom/>
+      <!-- Filters -->
+      <div class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
+        <DateRangePicker />
+        <SelectRoom />
       </div>
     </div>
+
+    <!-- Property Filter + Room List -->
     <div class="container">
       <div class="filter-section">
         <div class="filter-box">
@@ -29,9 +38,7 @@
                 v-model="selected"
               />
               <span class="property-info">
-                <span class="icon" v-if="property.icon">{{
-                  property.icon
-                }}</span>
+                <span class="icon" v-if="property.icon">{{ property.icon }}</span>
                 {{ property.name }}
               </span>
             </label>
@@ -53,11 +60,10 @@
           <TwoThumbSlider />
         </div>
       </div>
-      <div class="room-list">
-        <!--    single room    -->
 
+      <div class="room-list">
         <RoomCard
-          v-for="(room, index) in matchingRooms"
+          v-for="(room, index) in hotels"
           :key="index"
           :room="room"
         />
@@ -65,20 +71,22 @@
     </div>
   </div>
 </template>
+
 <script setup>
+import { ref, computed, onMounted } from "vue";
 import DateRangePicker from "@/components/DatePicker/DateRangePicker.vue";
 import SelectRoom from "@/components/DatePicker/selectRoom.vue";
 import RoomCard from "@/components/ListHotel/RoomCard.vue";
 import TwoThumbSlider from "@/components/ListHotel/TwoThumbSlider.vue";
 import { useRoomStore } from "@/stores/store";
 import { Icon } from "@iconify/vue";
-import { onMounted } from "vue";
-import { computed, ref } from "vue";
-import { Search } from "lucide-vue-next";
 
 const selected = ref([]);
 const showMore = ref(false);
 const limit = 3;
+const hotels = ref([]);
+const loading = ref(true);
+const error = ref(null);
 
 const roomStore = useRoomStore();
 
@@ -87,31 +95,104 @@ const displayedProperties = computed(() =>
   showMore.value ? properties.value : properties.value.slice(0, limit)
 );
 
-// 🔥 Collect all rooms from all hotels and attach hotel object to each room
-const matchingRooms = computed(() => {
-  const allRooms = [];
-
-  roomStore.hotels.forEach((hotel) => {
-    const hotelRooms = roomStore.rooms.filter((room) =>
-      hotel.roomId.includes(room.id)
-    );
-
-    hotelRooms.forEach((room) => {
-      allRooms.push({
-        ...room,
-        hotel, // attach full hotel object
-      });
-    });
-  });
-
-  return allRooms;
-});
 onMounted(async () => {
-  await roomStore.fetchRooms();
-  await roomStore.fetchHotels();
+  try {
+    hotels.value = await roomStore.fetchHotels();
+  } catch (err) {
+    error.value = "Failed to load hotels";
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
 
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 25px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  width: 230px;
+  padding: 10px;
+}
+
+.filter-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.filter-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 25px;
+  height: 25px;
+}
+
+.property-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+}
+
+.property-count {
+  font-size: 14px;
+  color: #666;
+}
+
+.icon {
+  font-size: 18px;
+}
+
+.see-more {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.see-more:hover {
+  text-decoration: underline;
+}
+
+.filter-price {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+}
+
+.room-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background-color: #fff;
+}
+</style>
+<!-- 
 <style scoped>
 .container {
   display: flex;
@@ -214,4 +295,4 @@ onMounted(async () => {
   justify-content: space-between;
   width: fit-content;
 }
-</style>
+</style> -->

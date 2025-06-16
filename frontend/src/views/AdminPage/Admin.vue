@@ -286,7 +286,7 @@
     />
 
     <!-- Multi-Date Block/Unblock Confirmation Modal -->
-    <div v-if="showMultiBlockModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div v-if="showMultiBlockModal" class="fixed inset-0  bg-transparent bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 class="text-lg font-semibold mb-4">
           <span v-if="selectedRoom._unblockMode">Confirm Unblock Dates</span>
@@ -324,7 +324,7 @@
     </div>
 
     <!-- Single Date Unblock Confirmation Modal -->
-    <div v-if="showUnblockModal" class="fixed inset-0 bg-transparent bg-opacity-50 flex items-center justify-center z-50">
+    <div v-if="showUnblockModal" class="fixed inset-0  bg-transparent bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 class="text-lg font-semibold mb-4">Confirm Unblock</h3>
         <p class="text-gray-600 mb-4">
