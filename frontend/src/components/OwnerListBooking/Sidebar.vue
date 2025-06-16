@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen w-64 p-4 pb-20 box-border border-r border-black">
+  <div class="flex flex-col h-screen w-64 p-4 box-border border-r border-black">
     <!-- Top content -->
     <div class="flex flex-col gap-2 flex-grow overflow-y-auto">
       <div id="agbalumo" class="flex items-center justify-center text-2xl font-bold mb-4 cursor-default">
@@ -92,10 +92,6 @@
     </div>
   </div>
 </template>
-
-
-
-
 
 <script setup>
 import { Book, House, MessageSquare, ChevronRight, CalendarDays, CircleDollarSign, Headset, Settings } from 'lucide-vue-next';

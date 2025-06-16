@@ -20,6 +20,7 @@ import index2 from "./index2";
 import { createRouter, createWebHistory } from "vue-router";
 import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
 import OwnerBookingList from "@/views/OwnerBookingList.vue";
+import OwnerDashboard from "@/views/OwnerDashboard.vue"
 
 const routes = [
   ...index2,
@@ -60,6 +61,11 @@ const routes = [
     path: "/ownerbookinglist",
     name: "ownerBookingList",
     component: OwnerBookingList,
+  },
+  {
+    path: "/ownerdashboard",
+    name: "ownerdashboard",
+    component: OwnerDashboard,
   },
   {
     path: "/chat",
