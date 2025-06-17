@@ -52,7 +52,7 @@ const routes = [
     component: ListRoomPage,
   },
   {
-    path: "/products-details/:id",
+    path: "/product/:id",
     name: "ProductsDetails",
     props: true,
     component: ProductDetailPage,

@@ -1,11 +1,26 @@
-import axios from "axios";
+// stores/store.js
 import { defineStore } from "pinia";
+import axios from "axios";
 
 export const useRoomStore = defineStore("room", {
   state: () => ({
     hotels: [],
     properties: [],
+    rooms:[]
   }),
+
+  getters: {
+    getHouseById: (state) => {
+      return (id) => state.hotels.find(h => h.id === Number(id));
+    },
+    getRoomThrowHoteslId:(state)=>{
+      return (id)=>state.hotels.find(h=> h.id === Number(id)).rooms; // get rooms by hotel id
+    },
+    getRoomById:(state)=>{
+      return (id)=>state.rooms.find(r=> r.id=== Number(id)); // get room by id
+    }
+  },
+
 
   actions: {
     async fetchHotels() {
@@ -26,28 +41,5 @@ export const useRoomStore = defineStore("room", {
         throw error;
       }
     },
-  },
+  }
 });
-
- // getters: {
-  //   getRoomsByHotelId: (state) => (hotelId) => {
-  //     return state.rooms.filter((room) => room.hotelId === hotelId);
-  //   },
-  //   getRoomById: (state) => (id) => {
-  //     return state.rooms.find((room) => room.id === id);
-  //   },
-  //   getHotelById: (state) => (id) => {
-  //     return state.hotels.find((hotel) => hotel.id === id);
-  //   },
-  //   searchRoomBy_name_hotelName_range_date: (state) => (name, hotelName, start_date, end_date) => {
-  //     return state.rooms.filter((room) => {
-  //       const matchName = room.name.toLowerCase().includes(name.toLowerCase());
-  //       const matchHotel = state.hotels.find(h => h.id === room.hotelId && h.name.toLowerCase().includes(hotelName.toLowerCase()));
-  //       const matchDate = room.availableDates?.some(date => {
-  //         const dateObj = new Date(date);
-  //         return dateObj >= new Date(start_date) && dateObj <= new Date(end_date);
-  //       });
-  //       return matchName && matchHotel && matchDate;
-  //     });
-  //   }
-  // }

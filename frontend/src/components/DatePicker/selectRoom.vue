@@ -1,6 +1,5 @@
 <template>
     <div class="booking-dropdown-container">
-      <!-- Dropdown Trigger Button -->
       <button 
         class="dropdown-trigger" 
         @click="toggleDropdown"
@@ -12,9 +11,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <div class="summary-text">
-            {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }},
-            {{ children }} {{ children === 1 ? 'child' : 'children' }}
-            <div class="room-count">{{ rooms }} {{ rooms === 1 ? 'room' : 'rooms' }}</div>
+            {{ localAdults }} {{ localAdults === 1 ? 'adult' : 'adults' }},
+            {{ localChildren }} {{ localChildren === 1 ? 'child' : 'children' }}
+            <div class="room-count">{{ localRooms }} {{ localRooms === 1 ? 'room' : 'rooms' }}</div>
           </div>
         </div>
         <div class="dropdown-arrow">
@@ -22,30 +21,25 @@
         </div>
       </button>
   
-      <!-- Dropdown Menu -->
       <div 
         v-if="isOpen" 
         class="dropdown-menu"
         ref="dropdownMenu"
         @keydown.esc="closeDropdown"
-        @keydown.up.prevent="navigateOptions('up')"
-        @keydown.down.prevent="navigateOptions('down')"
-        @keydown.enter.prevent="selectFocusedOption"
         tabindex="-1"
       >
-        <!-- Room Selection -->
         <div class="option-group">
           <div class="option-label">Room</div>
           <div class="counter-controls">
             <button 
               class="counter-btn decrement" 
               @click="updateRooms(-1)"
-              :disabled="rooms <= 1"
+              :disabled="localRooms <= 1"
               aria-label="Decrease room count"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus"><path d="M5 12h14"/></svg>
             </button>
-            <span class="counter-value">{{ rooms }}</span>
+            <span class="counter-value">{{ localRooms }}</span>
             <button 
               class="counter-btn increment" 
               @click="updateRooms(1)"
@@ -56,7 +50,6 @@
           </div>
         </div>
   
-        <!-- Adults Selection -->
         <div class="option-group">
           <div class="option-label">
             Adults
@@ -66,12 +59,12 @@
             <button 
               class="counter-btn decrement" 
               @click="updateAdults(-1)"
-              :disabled="adults <= 1"
+              :disabled="localAdults <= 1"
               aria-label="Decrease adult count"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus"><path d="M5 12h14"/></svg>
             </button>
-            <span class="counter-value">{{ adults }}</span>
+            <span class="counter-value">{{ localAdults }}</span>
             <button 
               class="counter-btn increment" 
               @click="updateAdults(1)"
@@ -82,7 +75,6 @@
           </div>
         </div>
   
-        <!-- Children Selection -->
         <div class="option-group">
           <div class="option-label">
             Children
@@ -90,16 +82,16 @@
           </div>
           <div class="counter-controls">
             <button 
-              class="counter-btn decrement" 
+              class="counter-btn decrement"
               @click="updateChildren(-1)"
-              :disabled="children <= 0"
+              :disabled="localChildren <= 0"
               aria-label="Decrease children count"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus"><path d="M5 12h14"/></svg>
             </button>
-            <span class="counter-value">{{ children }}</span>
+            <span class="counter-value">{{ localChildren }}</span>
             <button 
-              class="counter-btn increment" 
+              class="counter-btn increment"
               @click="updateChildren(1)"
               aria-label="Increase children count"
             >
@@ -107,156 +99,85 @@
             </button>
           </div>
         </div>
-  
-        <!-- Child Age Selectors (shown only when children > 0) -->
-        <div v-if="children > 0" class="child-age-section">
-          <div class="pricing-note">
-            For accurate room pricing, make sure to enter your children's correct ages.
-          </div>
-          
-          <div 
-            v-for="index in children" 
-            :key="index" 
-            class="child-age-selector"
-          >
-            <div class="age-dropdown">
-              <button 
-                class="age-dropdown-trigger"
-                @click="toggleAgeDropdown(index)"
-                :aria-expanded="openAgeDropdown === index"
-              >
-                {{ childAges[index - 1] ? `${childAges[index - 1]} years` : `Age of Child ${index}` }}
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
-              </button>
-              
-              <div v-if="openAgeDropdown === index" class="age-options">
-                <div 
-                  v-for="age in 17" 
-                  :key="age" 
-                  class="age-option"
-                  :class="{ 'selected': childAges[index - 1] === age }"
-                  @click="selectChildAge(index - 1, age)"
-                >
-                  {{ age }} {{ age === 1 ? 'year' : 'years' }}
-                </div>
-                <div 
-                  class="age-option"
-                  :class="{ 'selected': childAges[index - 1] === 0 }"
-                  @click="selectChildAge(index - 1, 0)"
-                >
-                  Under 1 year
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'RoomBookingDropdown',
-    data() {
-      return {
-        isOpen: false,
-        rooms: 1,
-        adults: 2,
-        children: 2,
-        childAges: [null, null],
-        openAgeDropdown: null,
-        focusedOptionIndex: -1
-      }
-    },
-    mounted() {
-      document.addEventListener('click', this.handleOutsideClick)
-      // Initialize with some default child ages
-      this.childAges = Array(this.children).fill(null)
-    },
-    beforeUnmount() {
-      document.removeEventListener('click', this.handleOutsideClick)
-    },
-    methods: {
-      toggleDropdown() {
-        this.isOpen = !this.isOpen
-        if (this.isOpen) {
-          this.$nextTick(() => {
-            this.$refs.dropdownMenu.focus()
-          })
-        }
-      },
-      closeDropdown() {
-        this.isOpen = false
-        this.openAgeDropdown = null
-      },
-      handleOutsideClick(event) {
-        if (this.$el && !this.$el.contains(event.target)) {
-          this.closeDropdown()
-        }
-      },
-      updateRooms(change) {
-        const newValue = this.rooms + change
-        if (newValue >= 1) {
-          this.rooms = newValue
-        }
-      },
-      updateAdults(change) {
-        const newValue = this.adults + change
-        if (newValue >= 1) {
-          this.adults = newValue
-        }
-      },
-      updateChildren(change) {
-        const newValue = this.children + change
-        if (newValue >= 0) {
-          this.children = newValue
-          // Adjust childAges array size
-          if (change > 0) {
-            // Add new null entries for new children
-            this.childAges = [...this.childAges, ...Array(change).fill(null)]
-          } else if (change < 0) {
-            // Remove entries for removed children
-            this.childAges = this.childAges.slice(0, this.children)
-          }
-        }
-      },
-      toggleAgeDropdown(index) {
-        if (this.openAgeDropdown === index) {
-          this.openAgeDropdown = null
-        } else {
-          this.openAgeDropdown = index
-        }
-      },
-      selectChildAge(childIndex, age) {
-        this.childAges[childIndex] = age
-        this.openAgeDropdown = null
-      },
-      navigateOptions(direction) {
-        // Implementation for keyboard navigation
-        const optionElements = this.$refs.dropdownMenu.querySelectorAll('.option-group, .child-age-selector')
-        const optionsCount = optionElements.length
-        
-        if (direction === 'up') {
-          this.focusedOptionIndex = this.focusedOptionIndex <= 0 ? optionsCount - 1 : this.focusedOptionIndex - 1
-        } else {
-          this.focusedOptionIndex = this.focusedOptionIndex >= optionsCount - 1 ? 0 : this.focusedOptionIndex + 1
-        }
-        
-        if (optionElements[this.focusedOptionIndex]) {
-          optionElements[this.focusedOptionIndex].focus()
-        }
-      },
-      selectFocusedOption() {
-        // Implementation for selecting the focused option with Enter key
-        const optionElements = this.$refs.dropdownMenu.querySelectorAll('.option-group, .child-age-selector')
-        if (this.focusedOptionIndex >= 0 && optionElements[this.focusedOptionIndex]) {
-          optionElements[this.focusedOptionIndex].click()
-        }
-      }
+</template>
+<script>
+export default {
+  name: 'RoomBookingDropdown',
+  props: {
+    rooms: { type: Number, default: 1 },
+    adults: { type: Number, default: 2 },
+    children: { type: Number, default: 0 }
+  },
+  emits: ['change'],
+  data() {
+    return {
+      isOpen: false,
+      localRooms: this.rooms,
+      localAdults: this.adults,
+      localChildren: this.children,
     }
+  },
+  watch: {
+    rooms(val) { this.localRooms = val; },
+    adults(val) { this.localAdults = val; },
+    children(val) { this.localChildren = val; }
+  },
+  methods: {
+    toggleDropdown() {
+      this.isOpen = !this.isOpen
+      if (this.isOpen) {
+        this.$nextTick(() => {
+          this.$refs.dropdownMenu && this.$refs.dropdownMenu.focus()
+        })
+      }
+    },
+    closeDropdown() {
+      this.isOpen = false
+    },
+    handleOutsideClick(event) {
+      if (this.$el && !this.$el.contains(event.target)) {
+        this.closeDropdown()
+      }
+    },
+    updateRooms(change) {
+      const newValue = this.localRooms + change
+      if (newValue >= 1) {
+        this.localRooms = newValue
+        this.emitChange()
+      }
+    },
+    updateAdults(change) {
+      const newValue = this.localAdults + change
+      if (newValue >= 1) {
+        this.localAdults = newValue
+        this.emitChange()
+      }
+    },
+    updateChildren(change) {
+      const newValue = this.localChildren + change
+      if (newValue >= 0) {
+        this.localChildren = newValue
+        this.emitChange()
+      }
+    },
+    emitChange() {
+      this.$emit('change', {
+        rooms: this.localRooms,
+        adults: this.localAdults,
+        children: this.localChildren,
+      });
+    }
+  },
+  mounted() {
+    document.addEventListener('click', this.handleOutsideClick)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleOutsideClick)
   }
-  </script>
-  
+}
+</script>
   <style scoped>
   .booking-dropdown-container {
     position: relative;

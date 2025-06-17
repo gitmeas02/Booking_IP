@@ -1,31 +1,32 @@
 <template>
-  <div v-if="room && hotel" class="booking-container">
-    <!-- Hotel Listing Section -->
+  <div v-if="hotelDetail" class="booking-container">
     <div class="hotel-listing">
       <div class="hotel-header">
         <div>
-          <h1 class="hotel-name">{{ hotel.name }}</h1>
+          <h1 class="hotel-name">{{ hotelDetail.property_name }}</h1>
           <p class="hotel-location">
-            Location: {{ hotel.location?.address }},
-            {{ hotel.location?.commune }}, {{ hotel.location?.district }},
-            {{ hotel.location?.city }},
-            {{ hotel.location?.country }}
+            Location: {{ hotelDetail.location.street }}
           </p>
         </div>
         <div class="review-score">
-          <div class="score">{{ hotel.reviewScore }}</div>
+          <div class="score">8</div>
           <div class="score-text">
-            {{ getReviewScoreText(hotel.reviewScore) }}
+            0 reviews
           </div>
         </div>
       </div>
 
       <div class="main-image-container">
-        <img :src="images[currentImageIndex]" alt="Hotel room" class="main-image" v-if="images.length"
-          @click="openPhotoModal(currentImageIndex)" />
+        <img
+          v-if="hotelDetail.photos && hotelDetail.photos.length"
+          :src="'http://localhost:9000/ownerimages/' + hotelDetail.photos[currentImageIndex].url"
+          alt="Hotel main image"
+          class="main-image"
+          @click="openPhotoModal(currentImageIndex)"
+        />
         <div class="navigation-dots">
           <span
-            v-for="(_, index) in images"
+            v-for="(_, index) in hotelDetail.photos"
             :key="index"
             :class="['dot', { active: index === currentImageIndex }]"
             @click="
@@ -35,390 +36,360 @@
           ></span>
         </div>
       </div>
-
+      
       <div class="thumbnail-gallery">
         <div
-          v-for="(image, index) in images"
+          v-for="(image, index) in hotelDetail.photos"
           :key="index"
           class="thumbnail-container"
           @click="openPhotoModal(index)"
         >
-          <img :src="image" alt="Room thumbnail" class="thumbnail" />
-          <div v-if="index === images.length - 1" class="photo-count">
-            <span>{{ images.length }} photos</span>
+          <!-- FIXED: Use proper image URL construction -->
+          <img 
+            :src="'http://localhost:9000/ownerimages/' + image.url" 
+            alt="Room thumbnail" 
+            class="thumbnail" 
+          />
+          <!-- FIXED: Use hotelDetail.photos.length instead of images.length -->
+          <div v-if="index === hotelDetail.photos.length - 1" class="photo-count">
+            <span>{{ hotelDetail.photos.length }} photos</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <div style="margin-top: 20px"></div>
+      <div style="margin-top: 20px"></div>
 
-    <!-- Hotel Header with Navigation Tabs -->
-    <div class="hotel-header-section">
-      <div class="hotel-main-info">
-        <div class="hotel-badges">
-          <span class="best-seller-badge">Best seller</span>
+      <div class="hotel-header-section">
+        <div class="hotel-main-info">
+          <div class="hotel-badges">
+            <span class="best-seller-badge">Best seller</span>
+          </div>
+          <h1 class="hotel-name">{{ hotelDetail.property_name }}</h1>
+          <div class="hotel-meta">
+            <div class="rating-stars">⭐⭐⭐⭐</div>
+            <span class="location-text"
+              >{{ hotelDetail.location?.street }}, {{ hotelDetail.location?.city }}</span
+            >
+            <a href="#map" class="see-map-link">SEE MAP</a>
+          </div>
         </div>
-        <h1 class="hotel-name">{{ hotel.name }}</h1>
-        <div class="hotel-meta">
-          <div class="rating-stars">⭐⭐⭐⭐</div>
-          <span class="location-text"
-            >{{ hotel.location?.address }}, {{ hotel.location?.city }}</span
-          >
-          <a href="#map" class="see-map-link">SEE MAP</a>
+        <div class="hotel-review-section">
+          <div class="priceinfo-container">
+            <div class="price-info">
+              <button class="view-deal-btn">VIEW MY DEAL</button>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="hotel-review-section">
-        <div class="review-score-card">
-          <div class="score-number">{{ hotel.reviewScore }}</div>
-          <div class="score-label">
-            {{ getReviewScoreText(hotel.reviewScore) }}
-          </div>
-          <div class="review-count">{{ hotel.reviewCount || 946 }} reviews</div>
-        </div>
-        <div class="priceinfo-container">
-          <div class="price-info">
-            <div>
-              <span class="currency">USD</span>
-              <span class="price">${{ room.price }}</span>
+
+      <div class="navigation-tabs">
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'overview' }"
+          @click="activeTab = 'overview'"
+        >
+          Overview
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'rooms' }"
+          @click="activeTab = 'rooms'"
+        >
+          Rooms
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'recommendations' }"
+          @click="activeTab = 'recommendations'"
+        >
+          Trip recommendations
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'comments' }"
+          @click="scrollToComments"
+        >
+          Comments
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'facilities' }"
+          @click="activeTab = 'facilities'"
+        >
+          Facilities
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'reviews' }"
+          @click="activeTab = 'reviews'"
+        >
+          Reviews
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'location' }"
+          @click="activeTab = 'location'"
+        >
+          Location
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'policies' }"
+          @click="activeTab = 'policies'"
+        >
+          Policies
+        </button>
+      </div>
+
+      <div class="main-content-area">
+        <div class="left-content">
+          <div v-if="activeTab === 'overview'">
+            <div class="about-section">
+              <h3>About us</h3>
+              <p>
+                {{
+                  hotelDetail.description?.[0] ||
+                  "Nestled in Kampot City Center, Bamboo Bungalows offers two travellers an ideal blend of relaxation and exploration. Enjoy riverside dining..."
+                }}
+              </p>
+              <a href="#" class="read-more-link">Read more</a>
             </div>
 
-            <button class="view-deal-btn">VIEW MY DEAL</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <div class="navigation-tabs">
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'overview' }"
-        @click="activeTab = 'overview'"
-      >
-        Overview
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'rooms' }"
-        @click="activeTab = 'rooms'"
-      >
-        Rooms
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'recommendations' }"
-        @click="activeTab = 'recommendations'"
-      >
-        Trip recommendations
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'comments' }"
-        @click="scrollToComments"
-      >
-        Comments
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'facilities' }"
-        @click="activeTab = 'facilities'"
-      >
-        Facilities
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'reviews' }"
-        @click="activeTab = 'reviews'"
-      >
-        Reviews
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'location' }"
-        @click="activeTab = 'location'"
-      >
-        Location
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'policies' }"
-        @click="activeTab = 'policies'"
-      >
-        Policies
-      </button>
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="main-content-area">
-      <!-- Left Content -->
-      <div class="left-content">
-        <!-- Overview Tab Content -->
-        <div v-if="activeTab === 'overview'">
-          <!-- About Us -->
-          <div class="about-section">
-            <h3>About us</h3>
-            <p>
-              {{
-                hotel.description?.[0] ||
-                "Nestled in Kampot City Center, Bamboo Bungalows offers two travellers an ideal blend of relaxation and exploration. Enjoy riverside dining..."
-              }}
-            </p>
-            <a href="#" class="read-more-link">Read more</a>
-          </div>
-
-          <!-- Room Selection -->
-          <div class="room-selection-section">
-            <h3>Select your room</h3>
-            <div class="room-filters">
-              <button class="filter-btn">🚭 Non-smoking (21)</button>
-              <button class="filter-btn">📏 ≥ 20 m² (20)</button>
-              <button class="filter-btn">🛏️ ≥ 40 m² (4)</button>
-              <button class="filter-btn">💳 Pay later option (15)</button>
-              <button class="filter-btn">❌ Free cancellation (26)</button>
-              <button class="filter-btn">🏨 Pay at the hotel (19)</button>
-              <a href="#" class="show-more-filters">Show 1 more</a>
+            <div class="room-selection-section">
+              <h3>Select your room</h3>
+              <div class="room-filters">
+                <button class="filter-btn">🚭 Non-smoking (21)</button>
+                <button class="filter-btn">📏 ≥ 20 m² (20)</button>
+                <button class="filter-btn">🛏️ ≥ 40 m² (4)</button>
+                <button class="filter-btn">💳 Pay later option (15)</button>
+                <button class="filter-btn">❌ Free cancellation (26)</button>
+                <button class="filter-btn">🏨 Pay at the hotel (19)</button>
+                <a href="#" class="show-more-filters">Show 1 more</a>
+              </div>
+              <div class="room-cards">
+                <RoomTypeCard
+                  v-for="room in hotelDetail.room_types"
+                  :key="room.id"
+                  :room="room"
+                  @reserve="reserveRoom"
+                />
+              </div>
             </div>
-            <!-- Room Cards -->
+          </div>
+
+          <div v-if="activeTab === 'rooms'" class="rooms-tab-content">
+            <h3>Available Rooms</h3>
             <div class="room-cards">
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
+              <RoomTypeCard
+                v-for="room in hotelDetail.room_types"
+                :key="room.id"
+                :room="room"
+                @reserve="reserveRoom"
+              />
             </div>
           </div>
-        </div>
 
-        <!-- Facilities Tab Content -->
-        <div v-if="activeTab === 'facilities'" class="facilities-tab-content">
-          <div class="facilities-section">
-            <h3>Hotel Facilities</h3>
-            <div class="facilities-columns">
-              <div
-                v-for="amenity in hotelAmenities"
-                :key="amenity.id"
-                class="facility-item"
-              >
-                {{ amenity.name }}
+          <div v-if="activeTab === 'location'" class="location-tab-content">
+            <h3>Location & Nearby</h3>
+            <p>{{ hotelDetail.location?.address }}, {{ hotelDetail.location?.city }}</p>
+          </div>
+
+          <div v-if="activeTab === 'policies'" class="policies-tab-content">
+            <h3>Hotel Policies</h3>
+            <p>Check-in: 3:00 PM - 11:00 PM</p>
+            <p>Check-out: 12:00 PM</p>
+            <p>
+              Cancellation policy and other hotel policies would be displayed
+              here.
+            </p>
+          </div>
+
+          <div
+            v-if="activeTab === 'recommendations'"
+            class="recommendations-tab-content"
+          >
+            <h3>Trip Recommendations</h3>
+            <p>Discover nearby attractions and activities for your stay.</p>
+          </div>
+
+          <div v-if="activeTab === 'reviews'" class="reviews-tab-content">
+            <h3>Guest Reviews</h3>
+            <p>Detailed guest reviews and ratings would be displayed here.</p>
+          </div>
+
+          <div v-if="activeTab === 'comments'" class="comments-tab-content">
+            <div class="comments-room-section">
+              <div class="section-header">
+                <h3 class="section-title">Available Rooms</h3>
+                <p class="section-subtitle">Book one of these rooms while browsing reviews</p>
+              </div>
+              <div class="room-cards-grid">
+                <RoomTypeCard
+                  v-for="room in hotelDetail.room_types"
+                  :key="room.id"
+                  :room="room"
+                  @reserve="reserveRoom"
+                />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Other tab contents can be added here -->
-        <div v-if="activeTab === 'rooms'" class="rooms-tab-content">
-          <h3>Available Rooms</h3>
-          <div class="room-cards">
-            <RoomTypeCard :room="room" @reserve="reserveRoom" />
-            <RoomTypeCard :room="room" @reserve="reserveRoom" />
-          </div>
-        </div>
-
-        <div v-if="activeTab === 'location'" class="location-tab-content">
-          <h3>Location & Nearby</h3>
-          <p>{{ hotel.location?.address }}, {{ hotel.location?.city }}</p>
-          <!-- Map and location details would go here -->
-        </div>
-
-        <div v-if="activeTab === 'policies'" class="policies-tab-content">
-          <h3>Hotel Policies</h3>
-          <p>Check-in: 3:00 PM - 11:00 PM</p>
-          <p>Check-out: 12:00 PM</p>
-          <p>
-            Cancellation policy and other hotel policies would be displayed
-            here.
-          </p>
-        </div>
-
-        <div
-          v-if="activeTab === 'recommendations'"
-          class="recommendations-tab-content"
-        >
-          <h3>Trip Recommendations</h3>
-          <p>Discover nearby attractions and activities for your stay.</p>
-        </div>
-
-        <div v-if="activeTab === 'reviews'" class="reviews-tab-content">
-          <h3>Guest Reviews</h3>
-          <p>Detailed guest reviews and ratings would be displayed here.</p>
-        </div>
-
-        <!-- Comments Tab Content -->
-        <div v-if="activeTab === 'comments'" class="comments-tab-content">
-          <div class="comments-room-section">
-            <div class="section-header">
-              <h3 class="section-title">Available Rooms</h3>
-              <p class="section-subtitle">Book one of these rooms while browsing reviews</p>
-            </div>
-            <div class="room-cards-grid">
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
-              <RoomTypeCard :room="room" @reserve="reserveRoom" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Sidebar -->
-      <div class="right-sidebar">
-        <!-- Review Summary -->
-        <div class="review-summary-card">
-          <div class="review-header">
-            <div class="review-score-large">{{ hotel.reviewScore }}</div>
-            <div class="review-info">
-              <div class="review-status">
-                {{ getReviewScoreText(hotel.reviewScore) }}
-              </div>
-              <div class="review-count-text">
-                {{ hotel.reviewCount || 946 }} reviews
+        <div class="right-sidebar">
+          <div class="review-summary-card">
+            <div class="review-header">
+              <div class="review-score-large">0</div>
+              <div class="review-info">
+                <div class="review-status">
+                  <span class="review-status-text">Very good</span>
+                </div>
+                <div class="review-count-text">
+                  100 reviews
+                </div>
               </div>
             </div>
+
+            <div class="review-categories">
+              <div class="category-item">
+                <span class="category-label">Location 8.4</span>
+                <span class="category-badge">Excellent</span>
+              </div>
+              <div class="category-item">
+                <span class="category-label">Service 8.3</span>
+              </div>
+              <div class="category-item">
+                <span class="category-label">Value for money 7.8</span>
+              </div>
+              <div class="category-item">
+                <span class="category-label">Cleanliness 7.7</span>
+              </div>
+            </div>
+
+            <div class="guest-quote">
+              <div class="quote-text">"Great place to relax"</div>
+              <div class="quote-meta">👥 ●●●○○</div>
+            </div>
+
+            <a href="#" class="read-reviews-link">Read all reviews</a>
           </div>
 
-          <div class="review-categories">
-            <div class="category-item">
-              <span class="category-label">Location 8.4</span>
-              <span class="category-badge">Excellent</span>
+          <div class="map-card">
+            <div class="map-container">
+              <img
+                src="https://plus.unsplash.com/premium_photo-1682310071124-33632135b2ee?w=500"
+                alt="Map"
+                class="map-image"
+              />
+              <div class="map-marker">📍</div>
+              <button class="see-map-btn">SEE MAP</button>
             </div>
-            <div class="category-item">
-              <span class="category-label">Service 8.3</span>
+
+            <div class="location-score">
+              <span class="score">8.4</span>
+              <span class="label">Excellent</span>
+              <span class="subtext">1 location rating score</span>
             </div>
-            <div class="category-item">
-              <span class="category-label">Value for money 7.8</span>
+
+            <div class="location-badge">
+              <span class="location-icon">📍</span>
+              <span>Excellent location</span>
             </div>
-            <div class="category-item">
-              <span class="category-label">Cleanliness 7.7</span>
+
+            <div class="parking-info">
+              <span class="parking-icon">🅿️</span>
+              <span>Parking</span>
+              <span class="free-badge">FREE</span>
             </div>
+
+            <div class="landmarks-section">
+              <h4>Popular landmarks</h4>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏛️</span>
+                <span class="landmark-name">Farm Link</span>
+                <span class="landmark-distance">770 m</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🕌</span>
+                <span class="landmark-name">Bokor Mountain</span>
+                <span class="landmark-distance">1.8 km</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏛️</span>
+                <span class="landmark-name">Phnom Chhnork Cave Temple</span>
+                <span class="landmark-distance">11.5 km</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏔️</span>
+                <span class="landmark-name">Phnom Bokor National Park</span>
+                <span class="landmark-distance">16.6 km</span>
+              </div>
+
+              <h4>Closest landmarks</h4>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏛️</span>
+                <span class="landmark-name">Farm Link</span>
+                <span class="landmark-distance">770 m</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏞️</span>
+                <span class="landmark-name">Kampot River</span>
+                <span class="landmark-distance">1.1 km</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏪</span>
+                <span class="landmark-name">Phsar-meay Kampot</span>
+                <span class="landmark-distance">1.1 km</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🌿</span>
+                <span class="landmark-name">Bokor Office</span>
+                <span class="landmark-distance">1.2 km</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏪</span>
+                <span class="landmark-name">Rusty Mart</span>
+                <span class="landmark-distance">1.3 km</span>
+              </div>
+              <div class="landmark-item">
+                <span class="landmark-icon">🏛️</span>
+                <span class="landmark-name">Bokor Clinic</span>
+                <span class="landmark-distance">1.3 km</span>
+              </div>
+            </div>
+
+            <a href="#" class="see-nearby-link">See nearby places</a>
           </div>
-
-          <div class="guest-quote">
-            <div class="quote-text">"Great place to relax"</div>
-            <div class="quote-meta">👥 ●●●○○</div>
-          </div>
-
-          <a href="#" class="read-reviews-link">Read all reviews</a>
-        </div>
-
-        <!-- Map Section -->
-        <div class="map-card">
-          <div class="map-container">
-            <img
-              src="https://plus.unsplash.com/premium_photo-1682310071124-33632135b2ee?w=500"
-              alt="Map"
-              class="map-image"
-            />
-            <div class="map-marker">📍</div>
-            <button class="see-map-btn">SEE MAP</button>
-          </div>
-
-          <div class="location-score">
-            <span class="score">8.4</span>
-            <span class="label">Excellent</span>
-            <span class="subtext">1 location rating score</span>
-          </div>
-
-          <div class="location-badge">
-            <span class="location-icon">📍</span>
-            <span>Excellent location</span>
-          </div>
-
-          <div class="parking-info">
-            <span class="parking-icon">🅿️</span>
-            <span>Parking</span>
-            <span class="free-badge">FREE</span>
-          </div>
-
-          <div class="landmarks-section">
-            <h4>Popular landmarks</h4>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏛️</span>
-              <span class="landmark-name">Farm Link</span>
-              <span class="landmark-distance">770 m</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🕌</span>
-              <span class="landmark-name">Bokor Mountain</span>
-              <span class="landmark-distance">1.8 km</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏛️</span>
-              <span class="landmark-name">Phnom Chhnork Cave Temple</span>
-              <span class="landmark-distance">11.5 km</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏔️</span>
-              <span class="landmark-name">Phnom Bokor National Park</span>
-              <span class="landmark-distance">16.6 km</span>
-            </div>
-
-            <h4>Closest landmarks</h4>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏛️</span>
-              <span class="landmark-name">Farm Link</span>
-              <span class="landmark-distance">770 m</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏞️</span>
-              <span class="landmark-name">Kampot River</span>
-              <span class="landmark-distance">1.1 km</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏪</span>
-              <span class="landmark-name">Phsar-meay Kampot</span>
-              <span class="landmark-distance">1.1 km</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🌿</span>
-              <span class="landmark-name">Bokor Office</span>
-              <span class="landmark-distance">1.2 km</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏪</span>
-              <span class="landmark-name">Rusty Mart</span>
-              <span class="landmark-distance">1.3 km</span>
-            </div>
-            <div class="landmark-item">
-              <span class="landmark-icon">🏛️</span>
-              <span class="landmark-name">Bokor Clinic</span>
-              <span class="landmark-distance">1.3 km</span>
-            </div>
-          </div>
-
-          <a href="#" class="see-nearby-link">See nearby places</a>
         </div>
       </div>
-    </div>
-
-    <!-- Modal Viewer -->
-    <div v-if="modalVisible" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
-        <button class="modal-close" @click="closeModal">
-          <X stroke-width="3" />
-          <X stroke-width="3" />
-        </button>
-        <button
-          class="modal-nav left"
-          @click="prevPhoto"
-          :disabled="currentPhotoIndex === 0"
-        >
-          <ChevronLeft />
-        </button>
-        <img :src="images[currentPhotoIndex]" class="modal-image" />
-        <button
-          class="modal-nav right"
-          @click="nextPhoto"
-          :disabled="currentPhotoIndex === images.length - 1"
-        >
-          <ChevronRight />
-        </button>
+      
+      <!-- Modal Viewer -->
+      <div v-if="modalVisible" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content">
+          <button class="modal-close" @click="closeModal">
+            <X stroke-width="3" />
+          </button>
+          <button
+            class="modal-nav left"
+            @click="prevPhoto"
+            :disabled="currentPhotoIndex === 0"
+          >
+            <ChevronLeft />
+          </button>
+          <!-- FIXED: Use images computed property for modal -->
+          <img :src="images[currentPhotoIndex]" class="modal-image" />
+          <button
+            class="modal-nav right"
+            @click="nextPhoto"
+            :disabled="currentPhotoIndex === images.length - 1"
+          >
+            <ChevronRight />
+          </button>
+        </div>
       </div>
-    </div>
-
-
-    <!-- Comment Section at Bottom -->
-    <div ref="commentsSection" class="comments-bottom-section">
-      <CommentSection />
+      
+      <div ref="commentsSection" class="comments-bottom-section">
+        <CommentSection />
+      </div>
     </div>
   </div>
 
@@ -428,110 +399,31 @@
 </template>
 
 <script setup>
-import RoomTypeCard from "./RoomTypeCard.vue";
-import { ref, computed, onMounted, watch, onUnmounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
 import { useRoomStore } from "@/stores/store";
-import { ChevronLeft, ChevronRight, X } from "lucide-vue-next";
+import { onMounted, ref, computed } from "vue";
+import { useRoute } from "vue-router";
 import CommentSection from "./commentSection.vue";
+import RoomTypeCard from "./RoomTypeCard.vue";
+// ADDED: Import icons if using lucide-vue
+import { X, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
-const roomStore = useRoomStore();
+const hotelStore = useRoomStore();
 const route = useRoute();
-const router = useRouter();
-const roomId = parseInt(route.params.id);
+const hotelId = route.params.id;
+const hotelDetail = ref(null);
+const activeTab = ref('overview');
 
-// Add activeTab state
-const activeTab = ref("overview");
-
-// Add template ref for comments section
-const commentsSection = ref(null);
-
-const checkInDate = ref("");
-const checkOutDate = ref("");
-const bookingFee = ref(20);
-
-const room = computed(() => roomStore.getRoomById(roomId));
-const hotel = computed(() =>
-  room.value ? roomStore.getHotelById(room.value.hotelId) : null
-);
-
-const roomsBelongToHotel = computed(() =>
-  hotel.value ? roomStore.rooms.filter((r) => r.hotelId === hotel.value.id) : []
-);
-const hotelAmenities = computed(() =>
-  roomStore.amenities && hotel.value && hotel.value.amenities
-    ? roomStore.amenities.filter((a) => hotel.value.amenities.includes(a.id))
-    : []
-);
-const images = ref([]);
-watch(room, (newRoom) => {
-  if (newRoom && newRoom.images) {
-    images.value = newRoom.images;
-  }
-});
-
-const currentImageIndex = ref(0);
-const currentImage_thamnals = (index) => {
-  if (index >= 0 && index < images.value.length) {
-    currentImageIndex.value = index;
-  } else {
-    console.warn("Index out of bounds for image thumbnails");
-  }
-};
-const setCurrentImage = (index) => {
-  currentImageIndex.value = index;
-};
-
-const numberOfNights = computed(() => {
-  if (checkInDate.value && checkOutDate.value) {
-    const start = new Date(checkInDate.value);
-    const end = new Date(checkOutDate.value);
-    const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  }
-  return 0;
-});
-
-const pricePerNight = computed(() => room.value?.price || 0);
-const totalRoomPrice = computed(
-  () => pricePerNight.value * numberOfNights.value
-);
-const totalPrice = computed(() => totalRoomPrice.value + bookingFee.value);
-
-const reserveRoom = () => {
-  if (!checkInDate.value || !checkOutDate.value) {
-    alert("Please select check-in and check-out dates.");
-    return;
-  }
-  if (numberOfNights.value <= 0) {
-    alert("Check-out date must be after check-in date.");
-    return;
-  }
-  if (totalPrice.value <= 0) {
-    alert("Total price must be greater than zero.");
-    return;
-  }
-  router.push({
-    name: "checkout",
-    params: { id: roomId },
-    query: {
-      checkin: checkInDate.value,
-      checkout: checkOutDate.value,
-    },
-  });
-};
-
-const getReviewScoreText = (score) => {
-  if (score >= 9) return "Excellent";
-  if (score >= 7) return "Good";
-  if (score >= 5) return "Average";
-  return "Poor";
-};
-
+// ADDED: Missing reactive variables for modal and image navigation
 const modalVisible = ref(false);
+const currentImageIndex = ref(0);
 const currentPhotoIndex = ref(0);
-const isScrolled = ref(false);
 
+// Fixed the computed property for images
+const images = computed(() => {
+  return hotelDetail.value?.photos?.map(photo => `http://localhost:9000/ownerimages/${photo.url}`) || [];
+});
+
+// ADDED: Missing modal and image navigation functions
 const openPhotoModal = (index) => {
   currentPhotoIndex.value = index;
   modalVisible.value = true;
@@ -541,45 +433,40 @@ const closeModal = () => {
   modalVisible.value = false;
 };
 
-const nextPhoto = () => {
-  if (currentPhotoIndex.value < images.value.length - 1) {
-    currentPhotoIndex.value++;
-  }
-};
-
 const prevPhoto = () => {
   if (currentPhotoIndex.value > 0) {
     currentPhotoIndex.value--;
   }
 };
 
-// Handle scroll event for booking bar background change
-const handleScroll = () => {
-  isScrolled.value = window.scrollY > 100;
-};
-
-// Add scroll to comments function
-const scrollToComments = () => {
-  activeTab.value = 'comments';
-  if (commentsSection.value) {
-    commentsSection.value.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
+const nextPhoto = () => {
+  if (currentPhotoIndex.value < images.value.length - 1) {
+    currentPhotoIndex.value++;
   }
 };
 
+const setCurrentImage = (index) => {
+  currentImageIndex.value = index;
+};
+
+const scrollToComments = () => {
+  activeTab.value = 'comments';
+  // Scroll to comments section if needed
+  const commentsSection = document.querySelector('.comments-bottom-section');
+  if (commentsSection) {
+    commentsSection.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+const reserveRoom = (room) => {
+  console.log("Reserving room:", room);
+  // Add your reservation logic here
+};
+
 onMounted(async () => {
-  await roomStore.fetchRooms();
-  await roomStore.fetchHotels();
-
-  // Add scroll event listener
-  window.addEventListener("scroll", handleScroll);
-});
-
-// Cleanup scroll listener
-onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
+  await hotelStore.fetchHotels();
+  hotelDetail.value = hotelStore.getHouseById(hotelId);
+  console.log('Hotel Detail', hotelDetail.value);
 });
 </script>
 <style scoped>
@@ -1856,6 +1743,10 @@ onUnmounted(() => {
 
 /* Comments Bottom Section */
 .comments-bottom-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   margin-top: 48px;
   padding-top: 32px;
   border-top: 2px solid #e7e7e7;

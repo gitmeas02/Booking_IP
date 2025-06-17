@@ -1,7 +1,7 @@
 <template>
   <div
     class="hotel-card"
-    @click="$router.push({ name: 'ProductsDetails', params: { id: room.id } })"
+    @click="$emit('click')"
   >
     <!-- Image -->
     <div class="image">

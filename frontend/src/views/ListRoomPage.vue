@@ -4,18 +4,19 @@
     <div class="rounded-xl bg-[#0A2647] w-full px-14 pt-7 pb-7">
       <div class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
         <input
+          v-model="searchLocation"
           type="text"
           placeholder="Enter Your Destination or Property"
           class="bg-white h-[66px] w-full rounded-lg pl-10"
         />
-        <button class="w-[200px] h-[66px] rounded-lg bg-white font-bold">
+        <button @click="searchHotels" class="w-[200px] h-[66px] rounded-lg bg-white font-bold">
           Search
         </button>
       </div>
 
       <!-- Filters -->
       <div class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
-        <DateRangePicker />
+        <DateRangePicker v-model:startDate="startDate" v-model:endDate="endDate" />
         <SelectRoom />
       </div>
     </div>
@@ -63,9 +64,10 @@
 
       <div class="room-list">
         <RoomCard
-          v-for="(room, index) in hotels"
+          v-for="(room, index) in filteredHotels"
           :key="index"
           :room="room"
+          @click="viewRoomDetails(room.id)"
         />
       </div>
     </div>
@@ -81,23 +83,57 @@ import TwoThumbSlider from "@/components/ListHotel/TwoThumbSlider.vue";
 import { useRoomStore } from "@/stores/store";
 import { Icon } from "@iconify/vue";
 
+import { useRouter, useRoute } from "vue-router";
+const router = useRouter();
+const route = useRoute();
+
+const startDate = ref(route.query.startDate || "");
+const endDate = ref(route.query.endDate || "");
+const roomStore = useRoomStore();
+
+const searchLocation = ref("");
+
 const selected = ref([]);
 const showMore = ref(false);
 const limit = 3;
 const hotels = ref([]);
+const filteredHotels = ref([]);
 const loading = ref(true);
 const error = ref(null);
-
-const roomStore = useRoomStore();
 
 const properties = computed(() => roomStore.properties || []);
 const displayedProperties = computed(() =>
   showMore.value ? properties.value : properties.value.slice(0, limit)
 );
 
+const searchHotels = async () => {
+  try {
+    loading.value = true;
+    const response = await roomStore.fetchHotels({
+      location: searchLocation.value,
+      startDate: startDate.value,
+      endDate: endDate.value,
+    });
+    filteredHotels.value = response;
+  } catch (err) {
+    error.value = "Failed to load hotels";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const viewRoomDetails = (roomId) => {
+  router.push({
+    name: "ProductsDetails",
+    params: { id: roomId },
+    query: { checkin: startDate.value, checkout: endDate.value },
+  });
+};
+
 onMounted(async () => {
   try {
     hotels.value = await roomStore.fetchHotels();
+    filteredHotels.value = hotels.value;
   } catch (err) {
     error.value = "Failed to load hotels";
   } finally {
@@ -105,7 +141,6 @@ onMounted(async () => {
   }
 });
 </script>
-
 <style scoped>
 .container {
   display: flex;

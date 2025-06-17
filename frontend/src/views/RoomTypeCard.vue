@@ -1,83 +1,82 @@
 <template>
-  <div class="room-cards">
-    <div class="room-card">
-      <div class="room-image-section">
-        <img
-          :src="room.images?.[0] || room.image"
-          alt="Room"
-          class="room-image"
-        />
-        <a href="#" class="room-photos-link">Room photos and details</a>
+  <div class="room-card">
+    <div class="room-image-section">
+      <img
+        v-if="room.images && room.images.length"
+        :src="'http://localhost:9000/'+ room.images[0].image_url"
+        alt="Room"
+        class="room-image"
+      />
+      <a href="#" class="room-photos-link">Room photos and details</a>
+    </div>
+
+    <div class="room-details-section">
+      <h4 class="room-type">
+        {{ room.name || "Standard Double with Fan" }}
+      </h4>
+      <div class="room-amenities">
+        <div class="amenity">✅ Free cancellation before June 13, 2025</div>
+        <div class="amenity">✅ Pay nothing until June 17, 2025</div>
+        <div class="amenity">✅ Parking</div>
+        <div class="amenity">✅ Bike rental</div>
+        <div class="amenity">✅ Free WiFi</div>
       </div>
 
-      <div class="room-details-section">
-        <h4 class="room-type">
-          {{ room.title || "Standard Double with Fan" }}
-        </h4>
-        <div class="room-amenities">
-          <div class="amenity">✅ Free cancellation before June 13, 2025</div>
-          <div class="amenity">✅ Pay nothing until June 17, 2025</div>
-          <div class="amenity">✅ Parking</div>
-          <div class="amenity">✅ Bike rental</div>
-          <div class="amenity">✅ Free WiFi</div>
-        </div>
-
-        <div class="room-specs">
-          <div class="spec-item">🛏️ 1 double bed</div>
-          <div class="spec-item">📏 Room size: 25 m²/269 ft²</div>
-          <div class="spec-item">🌿 Garden view</div>
-          <div class="spec-item">🌬️ Balcony/terrace</div>
-          <div class="spec-item">🚭 Non-smoking</div>
-          <div class="spec-item">🛀 Shower and bathtub</div>
-        </div>
-
-        <a href="#" class="see-facilities-link">See all room facilities</a>
+      <div class="room-specs">
+        <div class="spec-item">🛏️ {{ room.capacity }} {{ room.capacity > 1 ? 'guests' : 'guest' }}</div>
+        <div class="spec-item">📏 Room size: 25 m²/269 ft²</div>
+        <div class="spec-item">🌿 Garden view</div>
+        <div class="spec-item">🌬️ Balcony/terrace</div>
+        <div class="spec-item">🚭 Non-smoking</div>
+        <div class="spec-item">🛀 Shower and bathtub</div>
       </div>
 
-      <div class="room-pricing-section">
-        <div class="pricing-info">
-          <div class="price-label">Extremely rare 🔥</div>
-          <div class="availability-notice">
-            Our lowest price in the last 15 months!
-          </div>
-          <div class="guests-info">👥 2 adults 1 room</div>
-          <div class="stay-duration">5 nights • Nov 29, 2024</div>
-          <div class="price-breakdown">
-            <span class="original-price">USD 17 -12%</span>
-            <div class="final-price">USD 15</div>
-          </div>
-          <div class="tax-info">Per night before taxes and fees</div>
-          <div class="payment-info">
-            <div class="no-payment">No payment today</div>
-            <div class="last-rooms">Our last 3 rooms!</div>
-          </div>
-        </div>
+      <a href="#" class="see-facilities-link">See all room facilities</a>
+    </div>
 
-        <div class="room-quantity">
-          <select>
-            <option value="1">1</option>
-            <option value="2">2</option>
-          </select>
+    <div class="room-pricing-section">
+      <div class="pricing-info">
+        <div class="price-label">Extremely rare 🔥</div>
+        <div class="availability-notice">
+          Our lowest price in the last 15 months!
         </div>
-
-        <button class="book-now-btn" @click="reserveRoom">Book now</button>
-        <div class="minutes-info">5 only takes 2 minutes</div>
+        <div class="guests-info">👥 {{ room.capacity }} {{ room.capacity > 1 ? 'guests' : 'guest' }} 1 room</div>
+        <div class="stay-duration">5 nights • Nov 29, 2024</div>
+        <div class="price-breakdown">
+          <span class="original-price">USD {{ room.default_price }} -12%</span>
+          <div class="final-price">USD {{ (parseFloat(room.default_price) * 0.88).toFixed(2) }}</div>
+        </div>
+        <div class="tax-info">Per night before taxes and fees</div>
+        <div class="payment-info">
+          <div class="no-payment">No payment today</div>
+          <div class="last-rooms">Our last 3 rooms!</div>
+        </div>
       </div>
+
+      <div class="room-quantity">
+        <select>
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </div>
+
+      <button class="book-now-btn" @click="reserveRoom">Book now</button>
+      <div class="minutes-info">5 only takes 2 minutes</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from "vue";
-
 // Define props
 const props = defineProps({
   room: {
     type: Object,
+    required: true, // Make it required
     default: () => ({
       images: [],
-      title: "Standard Double with Fan",
-      image: null,
+      name: '',
+      capacity: 1,
+      default_price: '0.00'
     }),
   },
 });
@@ -87,11 +86,10 @@ const emit = defineEmits(["reserve"]);
 
 // Methods
 const reserveRoom = () => {
-  emit("reserve", props.room);
+  emit("reserve", props.room); // Use props.room instead of just room
   console.log("Reserving room:", props.room);
 };
 </script>
-
 <style scoped>
 .room-card {
   border: 1px solid #e7e7e7;

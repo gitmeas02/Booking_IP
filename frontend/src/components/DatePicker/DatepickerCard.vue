@@ -1,41 +1,74 @@
 <script setup>
-    import { ref } from 'vue'
-    import DateRangePicker from './DateRangePicker.vue';
-    import SelectRoom from './selectRoom.vue';
-    
-    const value1 = ref(true)
-   
+import { ref } from 'vue'
+import DateRangePicker from './DateRangePicker.vue';
+import SelectRoom from './selectRoom.vue';
+
+const emit = defineEmits(['search']);
+
+const street = ref('');
+const startDate = ref(null);
+const endDate = ref(null);
+const rooms = ref(1);
+const adults = ref(2);
+const children = ref(0);
+const pets = ref(false);
+
+const handleDateChange = (start, end) => {
+    startDate.value = start;
+    endDate.value = end;
+};
+
+const handleRoomChange = (payload) => {
+    rooms.value = payload.rooms;
+    adults.value = payload.adults;
+    children.value = payload.children;
+};
+
+const handleSearch = () => {
+    emit('search', {
+        street: street.value,
+        startDate: startDate.value ? startDate.value.toISOString().slice(0,10) : '',
+        endDate: endDate.value ? endDate.value.toISOString().slice(0,10) : '',
+        rooms: rooms.value,
+        adults: adults.value,
+        children: children.value,
+        capacity: adults.value + children.value,
+        pets: pets.value,
+    });
+};
 </script>
 <template>
-    <!-- <div class="container"> -->
-        <div class="wrapper">
-            <div id="title" style="text-align: center;">
-                <p>A PLACE TO CALL HOME ON YOUR NEXT ADVENTURE</p>
+    <div class="wrapper">
+        <div id="title" style="text-align: center;">
+            <p>A PLACE TO CALL HOME ON YOUR NEXT ADVENTURE</p>
+        </div>
+        <div class="content">
+            <div id="inputSearch">
+                <div class="input-container">
+                    <input v-model="street" placeholder="Enter Your Destination or Property">
+                    <i id="search" class="pi pi-search"></i>
+                </div>
+                <button @click="handleSearch"> Search</button>
             </div>
-            <div class="content">
-                <div id="inputSearch">
-                    <div class="input-container">
-                        <input type="text" placeholder="Enter Your Destination or Property">
-                        <i id="search" class="pi pi-search"></i>
-                    </div>
-                    <button  class=""> Search</button>
+            <div class="datePickerContainer">
+                <DateRangePicker @change="handleDateChange" />
+            </div>
+            <div class="selectRoom">
+                <div style="margin-top: 20px;">
+                    <SelectRoom
+                        :rooms="rooms"
+                        :adults="adults"
+                        :children="children"
+                        @change="handleRoomChange"
+                    />
                 </div>
-                <div class="datePickerContainer">
-                    <DateRangePicker/> 
-                </div>
-                <div class="selectRoom">
-                    <div style="margin-top: 20px;">
-                        <SelectRoom/>
-                    </div>
-                    <div style="margin-top: 40px; margin-left: 10px;">
-                        Traveling with pet?
-                        <el-switch v-model="value1" />
-                    </div>
-
+                <div style="margin-top: 40px; margin-left: 10px;">
+                    Traveling with pet?
+                    <el-switch v-model="pets" />
                 </div>
             </div>
         </div>
-    <!-- </div> -->
+    </div>
 </template>
 <style scoped>
     /* .container {
