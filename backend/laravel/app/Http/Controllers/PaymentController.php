@@ -61,7 +61,7 @@ class PaymentController extends Controller
             'currency' => 'KHR',
             'merchant_name' => $merchantName,
             'status' => 'pending',
-            'expires_at' => Carbon::now()->addMinutes(5), // 5 minutes expiry
+            'expires_at' => null, // No expiration
             'booking_reference' => $bookingReference,
         ]);
 
@@ -74,7 +74,7 @@ class PaymentController extends Controller
             'qr_string' => $result['qr_string'],
             'md5' => $result['md5'],
             'amount' => $amount,
-            'expires_at' => $transaction->expires_at->toISOString(),
+            'expires_at' => $transaction->expires_at?->toISOString(),
             'message' => 'Payment QR generated successfully'
         ];
 
@@ -155,10 +155,12 @@ class PaymentController extends Controller
 
     /**
      * Check transaction using multiple methods as recommended by Bakong documentation
-     * Priority: Short Hash -> MD5 -> Full Hash
+     * Priority: Short Hash -> MD5 -> Full Hash (but use best result)
      */
     private function checkTransactionWithMultipleMethods(Transactions $transaction): array
     {
+        $results = [];
+
         // Method 1: Short Hash with amount verification (RECOMMENDED by documentation)
         if ($transaction->qr_short_hash && $transaction->amount) {
             Log::info('Checking with short hash method', [
@@ -175,12 +177,14 @@ class PaymentController extends Controller
 
             if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
                 $result['method_used'] = 'short_hash';
-                return $result;
+                $results['short_hash'] = $result;
             }
 
-            Log::info('Short hash method returned no data, trying MD5', [
+            Log::info('Short hash method result', [
                 'transaction_id' => $transaction->transaction_id,
-                'short_hash_result' => $result['message'] ?? 'No message'
+                'success' => $result['success'],
+                'has_data' => isset($result['data']) && !empty($result['data']),
+                'response_code' => $result['data']['responseCode'] ?? 'N/A'
             ]);
         }
 
@@ -195,12 +199,14 @@ class PaymentController extends Controller
 
             if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
                 $result['method_used'] = 'md5';
-                return $result;
+                $results['md5'] = $result;
             }
 
-            Log::info('MD5 method returned no data, trying full hash', [
+            Log::info('MD5 method result', [
                 'transaction_id' => $transaction->transaction_id,
-                'md5_result' => $result['message'] ?? 'No message'
+                'success' => $result['success'],
+                'has_data' => isset($result['data']) && !empty($result['data']),
+                'response_code' => $result['data']['responseCode'] ?? 'N/A'
             ]);
         }
 
@@ -215,16 +221,49 @@ class PaymentController extends Controller
 
             if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
                 $result['method_used'] = 'full_hash';
-                return $result;
+                $results['full_hash'] = $result;
             }
 
-            Log::info('Full hash method returned no data', [
+            Log::info('Full hash method result', [
                 'transaction_id' => $transaction->transaction_id,
-                'full_hash_result' => $result['message'] ?? 'No message'
+                'success' => $result['success'],
+                'has_data' => isset($result['data']) && !empty($result['data']),
+                'response_code' => $result['data']['responseCode'] ?? 'N/A'
             ]);
         }
 
+        // Return the best result (prioritize successful responses)
+        foreach (['short_hash', 'md5', 'full_hash'] as $method) {
+            if (isset($results[$method])) {
+                $data = $results[$method]['data'];
+                // Check if this result indicates success
+                if (isset($data['responseCode']) && $data['responseCode'] === 0) {
+                    Log::info('Using successful result from method', [
+                        'transaction_id' => $transaction->transaction_id,
+                        'method' => $method,
+                        'response_code' => $data['responseCode']
+                    ]);
+                    return $results[$method];
+                }
+            }
+        }
+
+        // If no success found, return the first available result
+        if (!empty($results)) {
+            $firstResult = array_values($results)[0];
+            Log::info('No successful result found, using first available', [
+                'transaction_id' => $transaction->transaction_id,
+                'method_used' => $firstResult['method_used'],
+                'response_code' => $firstResult['data']['responseCode'] ?? 'N/A'
+            ]);
+            return $firstResult;
+        }
+
         // All methods failed
+        Log::info('All methods failed for transaction', [
+            'transaction_id' => $transaction->transaction_id
+        ]);
+
         return [
             'success' => false,
             'message' => 'Transaction not found using any checking method',
@@ -430,10 +469,50 @@ class PaymentController extends Controller
             return 'pending';
         }
 
+        // Check for Bakong API error responses first
+        if (isset($apiData['responseCode'])) {
+            $responseCode = (int)$apiData['responseCode'];
+            
+            // Success codes (transaction found and completed)
+            if ($responseCode === 0 || $responseCode === 200) {
+                return 'success';
+            }
+            
+            // Error codes that indicate transaction not found (still pending)
+            if (in_array($responseCode, [1, 404, 4040])) {
+                return 'pending'; // Transaction not found yet, keep checking
+            }
+            
+            // Other error codes that indicate failure
+            if ($responseCode > 0) {
+                return 'failed';
+            }
+        }
+
+        // Check for error codes in different format
+        if (isset($apiData['errorCode'])) {
+            $errorCode = (int)$apiData['errorCode'];
+            
+            // Success (no error)
+            if ($errorCode === 0) {
+                return 'success';
+            }
+            
+            // Transaction not found (still pending)
+            if (in_array($errorCode, [1, 404, 4040])) {
+                return 'pending';
+            }
+            
+            // Other errors
+            if ($errorCode > 0) {
+                return 'failed';
+            }
+        }
+
         // Check various status fields that Bakong might use
         if (isset($apiData['status'])) {
             $apiStatus = strtolower($apiData['status']);
-            if (in_array($apiStatus, ['completed', 'success', 'paid', 'confirmed'])) {
+            if (in_array($apiStatus, ['completed', 'success', 'paid', 'confirmed', 'successful'])) {
                 return 'success';
             }
             if (in_array($apiStatus, ['failed', 'rejected', 'cancelled', 'error'])) {
@@ -443,7 +522,7 @@ class PaymentController extends Controller
 
         if (isset($apiData['transactionStatus'])) {
             $transactionStatus = strtolower($apiData['transactionStatus']);
-            if (in_array($transactionStatus, ['success', 'completed'])) {
+            if (in_array($transactionStatus, ['success', 'completed', 'successful'])) {
                 return 'success';
             }
             if (in_array($transactionStatus, ['failed', 'error'])) {
@@ -451,9 +530,23 @@ class PaymentController extends Controller
             }
         }
 
-        // If we have substantial transaction data, assume payment was successful
-        if (isset($apiData['amount']) || isset($apiData['transactionId']) || isset($apiData['paymentReference'])) {
-            return 'success';
+        // Check response message for success indicators
+        if (isset($apiData['responseMessage'])) {
+            $message = strtolower($apiData['responseMessage']);
+            if (strpos($message, 'success') !== false || strpos($message, 'completed') !== false) {
+                return 'success';
+            }
+            if (strpos($message, 'not found') !== false || strpos($message, 'could not be found') !== false) {
+                return 'pending'; // Transaction not found yet, keep checking
+            }
+        }
+
+        // If we have substantial transaction data (like amount, references), assume payment was successful
+        if (isset($apiData['amount']) || isset($apiData['transactionId']) || isset($apiData['paymentReference']) || isset($apiData['transactionRef'])) {
+            // But only if there's no error code indicating failure
+            if (!isset($apiData['responseCode']) || (int)$apiData['responseCode'] === 0) {
+                return 'success';
+            }
         }
 
         return 'pending';

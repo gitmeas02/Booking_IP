@@ -4,6 +4,8 @@ import {
   CreditCard,
   QrCode,
   Download,
+  CheckCircle,
+  X,
 } from "lucide-vue-next";
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import EnhancedQRCode from "./EnhancedQRCode.vue";
@@ -25,21 +27,29 @@ const pets = ref(false);
 const currentQRData = ref(null);
 const qrImageUrl = ref("");
 const isGeneratingQR = ref(false);
-const countdown = ref(120); // 2 minutes in seconds
-const countdownInterval = ref(null);
 const qrRefreshInterval = ref(null);
 const transactionId = ref("");
+const statusCheckInterval = ref(null);
 
-// Computed properties
-const countdownDisplay = computed(() => {
-  const minutes = Math.floor(countdown.value / 60);
-  const seconds = countdown.value % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-});
+// Payment success modal variables
+const showSuccessModal = ref(false);
+const paymentDetails = ref(null);
 
 const merchantName = "Khun Hotel";
 const currency = "KHR";
-const amount = ref(200); // Default amount, you can make this dynamic
+const amount = ref(100); // Default amount, you can make this dynamic
+
+// Function to format Bakong hash (first 8 digits)
+const formatBakongHash = (hash) => {
+  if (!hash) return "N/A";
+  return hash.substring(0, 8);
+};
+
+// Function to format date
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleString();
+};
 
 // QR Code generation function
 const generateQRCode = async () => {
@@ -48,6 +58,8 @@ const generateQRCode = async () => {
   isGeneratingQR.value = true;
 
   try {
+    console.log("🔄 Generating QR code...");
+
     const response = await fetch("http://localhost:8100/api/payments", {
       method: "POST",
       headers: {
@@ -61,7 +73,15 @@ const generateQRCode = async () => {
       }),
     });
 
+    if (!response.ok) {
+      console.error(`HTTP Error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("Error response:", errorText);
+      return;
+    }
+
     const data = await response.json();
+    console.log("QR Generation response:", data);
 
     if (data.success) {
       currentQRData.value = data;
@@ -71,9 +91,7 @@ const generateQRCode = async () => {
       const qrData = encodeURIComponent(data.qr_string);
       qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&format=png&margin=10`;
 
-      // Reset countdown
-      countdown.value = 120;
-      startCountdown();
+      console.log("✅ QR code generated successfully!");
     } else {
       console.error("Failed to generate QR code:", data.message);
     }
@@ -82,20 +100,6 @@ const generateQRCode = async () => {
   } finally {
     isGeneratingQR.value = false;
   }
-};
-
-// Countdown timer
-const startCountdown = () => {
-  if (countdownInterval.value) {
-    clearInterval(countdownInterval.value);
-  }
-
-  countdownInterval.value = setInterval(() => {
-    countdown.value--;
-    if (countdown.value <= 0) {
-      generateQRCode(); // Auto-regenerate when countdown reaches 0
-    }
-  }, 1000);
 };
 
 // Auto-refresh QR code every 2 minutes
@@ -124,11 +128,15 @@ const downloadQRCode = () => {
   document.body.removeChild(link);
 };
 
-// Payment status checker
+// Payment status checker with enhanced logging and better error handling
 const checkPaymentStatus = async () => {
   if (!transactionId.value) return;
 
   try {
+    console.log(
+      `Checking payment status for transaction: ${transactionId.value}`
+    );
+
     const response = await fetch(
       `http://localhost:8100/api/payments/${transactionId.value}/status`,
       {
@@ -139,46 +147,144 @@ const checkPaymentStatus = async () => {
       }
     );
 
-    const data = await response.json();
+    if (!response.ok) {
+      console.error(`HTTP Error: ${response.status} ${response.statusText}`);
+      return;
+    }
 
-    if (data.success && data.status === "success") {
-      // Payment completed - you can emit an event or update parent component
-      console.log("Payment completed successfully!");
-      // Stop auto-refresh when payment is completed
-      if (qrRefreshInterval.value) {
-        clearInterval(qrRefreshInterval.value);
+    const data = await response.json();
+    console.log("Payment status response:", data); // Debug log
+
+    if (data.success) {
+      if (data.status === "success") {
+        // Payment completed successfully
+        console.log("🎉 Payment completed successfully!");
+
+        // Prepare payment details for the success modal
+        const transaction = data.transaction;
+        const apiResponse = data.api_response;
+        const methodUsed = data.method_used || "unknown";
+
+        paymentDetails.value = {
+          transactionId: transaction?.transaction_id || transactionId.value,
+          bakongHash: formatBakongHash(transaction?.qr_md5),
+          bank: "Bakong (NBC)",
+          fromAccount:
+            apiResponse?.fromAccount ||
+            apiResponse?.senderAccount ||
+            apiResponse?.payerName ||
+            "Customer Account",
+          amount: `${transaction?.amount || amount.value} ${
+            transaction?.currency || currency
+          }`,
+          seller: transaction?.merchant_name || merchantName,
+          transactionDate: formatDate(
+            transaction?.updated_at || new Date().toISOString()
+          ),
+          paymentMethod: `KHQR Payment (${methodUsed})`,
+          methodUsed: methodUsed,
+        };
+
+        // Show success modal
+        showSuccessModal.value = true;
+
+        // Stop all intervals when payment is completed
+        stopAllIntervals();
+
+        // Log successful payment detection
+        console.log(`✅ Payment detected using ${methodUsed} method`);
+      } else if (data.status === "failed") {
+        // Payment failed
+        console.log("❌ Payment failed");
+        // You can show an error modal here if needed
+        stopAllIntervals();
+      } else if (data.status === "expired") {
+        // Payment expired
+        console.log("⏰ Payment expired");
+        stopAllIntervals();
+      } else {
+        // Still pending
+        console.log(`⏳ Payment status: ${data.status}`);
       }
-      if (countdownInterval.value) {
-        clearInterval(countdownInterval.value);
-      }
+    } else {
+      console.warn(
+        "Payment status check returned success: false",
+        data.message
+      );
     }
   } catch (error) {
     console.error("Error checking payment status:", error);
+    // Don't stop intervals on network errors, keep trying
   }
 };
 
-// Initialize QR generation when QR payment is selected
+// Helper function to stop all intervals
+const stopAllIntervals = () => {
+  if (qrRefreshInterval.value) {
+    clearInterval(qrRefreshInterval.value);
+    qrRefreshInterval.value = null;
+  }
+  if (statusCheckInterval.value) {
+    clearInterval(statusCheckInterval.value);
+    statusCheckInterval.value = null;
+  }
+  console.log("🛑 All payment checking intervals stopped");
+};
+
+// Close success modal
+const closeSuccessModal = () => {
+  showSuccessModal.value = false;
+  paymentDetails.value = null;
+};
+
+// Function to handle "View Order History" button
+const viewOrderHistory = () => {
+  closeSuccessModal();
+  // You can emit an event or navigate to order history page
+  console.log("Navigate to order history");
+};
+
+// Test function to manually trigger success modal (for debugging)
+const testSuccessModal = () => {
+  // Create mock payment details
+  paymentDetails.value = {
+    transactionId: transactionId.value || "TXN_TEST123456",
+    bakongHash: "fe958f31", // First 8 digits
+    bank: "Bakong (NBC)",
+    fromAccount: "ABA Bank Account",
+    amount: `${amount.value} ${currency}`,
+    seller: merchantName,
+    transactionDate: formatDate(new Date().toISOString()),
+    paymentMethod: "KHQR Payment",
+  };
+
+  // Show success modal
+  showSuccessModal.value = true;
+
+  console.log("Test success modal triggered");
+};
+
+// Initialize QR generation when QR payment is selected - removed auto-refresh
 const handlePaymentMethodChange = () => {
   if (selectedPayment.value === "qr") {
     generateQRCode();
-    startAutoRefresh();
+    // Removed startAutoRefresh() - no more automatic QR regeneration
 
-    // Check payment status every 10 seconds
-    const statusCheckInterval = setInterval(() => {
+    // Check payment status every 5 seconds (more frequent)
+    if (statusCheckInterval.value) {
+      clearInterval(statusCheckInterval.value);
+    }
+
+    statusCheckInterval.value = setInterval(() => {
       checkPaymentStatus();
-    }, 10000);
-
-    // Store interval for cleanup
-    onUnmounted(() => {
-      clearInterval(statusCheckInterval);
-    });
+    }, 5000); // Check every 5 seconds instead of 10
   } else {
     // Clean up intervals when switching away from QR
     if (qrRefreshInterval.value) {
       clearInterval(qrRefreshInterval.value);
     }
-    if (countdownInterval.value) {
-      clearInterval(countdownInterval.value);
+    if (statusCheckInterval.value) {
+      clearInterval(statusCheckInterval.value);
     }
   }
 };
@@ -194,8 +300,8 @@ onUnmounted(() => {
   if (qrRefreshInterval.value) {
     clearInterval(qrRefreshInterval.value);
   }
-  if (countdownInterval.value) {
-    clearInterval(countdownInterval.value);
+  if (statusCheckInterval.value) {
+    clearInterval(statusCheckInterval.value);
   }
 });
 
@@ -216,6 +322,98 @@ defineExpose({
 
 <template>
   <div class="p-6 border border-gray-300 rounded-lg bg-white min-w-[300px]">
+    <!-- Payment Success Modal -->
+    <div
+      v-if="showSuccessModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop-blur-sm"
+      @click.self="closeSuccessModal"
+    >
+      <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 relative">
+        <!-- Close button -->
+        <button
+          @click="closeSuccessModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <X class="h-6 w-6" />
+        </button>
+
+        <!-- Success icon -->
+        <div class="text-center mb-6">
+          <div
+            class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4"
+          >
+            <CheckCircle class="h-10 w-10 text-green-600" />
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">
+            Payment Successful
+          </h2>
+          <p class="text-gray-600">Thank you for Booking at Ptes Khmer.</p>
+          <p class="text-gray-600">Your Booking is being processed!</p>
+        </div>
+
+        <!-- Payment details -->
+        <div v-if="paymentDetails" class="space-y-4">
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600">Amount Paid:</span>
+            <span class="font-semibold text-green-600">{{
+              paymentDetails.amount
+            }}</span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600">Payment Method:</span>
+            <span class="font-medium">{{ paymentDetails.paymentMethod }}</span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600">Transaction ID:</span>
+            <span class="font-medium font-mono text-sm">{{
+              paymentDetails.transactionId
+            }}</span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600">Bakong Hash #:</span>
+            <span class="font-medium font-mono text-sm">{{
+              paymentDetails.bakongHash
+            }}</span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600">Bank:</span>
+            <span class="font-medium">{{ paymentDetails.bank }}</span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600">From Account:</span>
+            <span class="font-medium">{{ paymentDetails.fromAccount }}</span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600">Seller:</span>
+            <span class="font-medium">{{ paymentDetails.seller }}</span>
+          </div>
+
+          <div class="flex justify-between py-2">
+            <span class="text-gray-600">Date & Time:</span>
+            <span class="font-medium">{{
+              paymentDetails.transactionDate
+            }}</span>
+          </div>
+        </div>
+
+        <!-- Action button -->
+        <div class="mt-8">
+          <button
+            @click="viewOrderHistory"
+            class="w-full bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          >
+            View Order History
+          </button>
+        </div>
+      </div>
+    </div>
+
     <h2 class="text-2xl font-semibold mb-6">Guest Information</h2>
 
     <div class="space-y-6">
@@ -380,15 +578,6 @@ defineExpose({
           v-if="selectedPayment === 'qr'"
           class="flex flex-col items-center space-y-4"
         >
-          <!-- Countdown Timer -->
-          <div v-if="currentQRData" class="text-center">
-            <div
-              class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold"
-            >
-              Next QR refresh in: {{ countdownDisplay }}
-            </div>
-          </div>
-
           <!-- QR Code Container -->
           <div
             class="relative bg-white p-6 border-2 border-gray-300 rounded-lg shadow-lg"
@@ -465,10 +654,6 @@ defineExpose({
             class="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded-lg"
           >
             <p><strong>Transaction ID:</strong> {{ transactionId }}</p>
-            <p>
-              <strong>Expires:</strong>
-              {{ new Date(currentQRData.expires_at).toLocaleString() }}
-            </p>
           </div>
 
           <!-- Instructions -->
@@ -478,7 +663,7 @@ defineExpose({
               complete the payment.
             </p>
             <p class="mt-2 font-medium">
-              The QR code will refresh automatically every 2 minutes.
+              This QR code remains valid until payment is completed.
             </p>
           </div>
         </div>

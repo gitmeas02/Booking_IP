@@ -291,7 +291,10 @@ class TestKHQRPayment extends Command
         $this->info('🔍 Checking pending transactions...');
         
         $pendingTransactions = Transactions::where('status', 'pending')
-            ->where('expires_at', '>', now())
+            ->where(function($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -307,18 +310,25 @@ class TestKHQRPayment extends Command
             $this->line("🔄 Checking {$transaction->transaction_id}...");
             
             try {
-                $result = $this->khqrService->checkTransactionByMD5($transaction->qr_md5);
+                // Use enhanced multi-method checking like the other components
+                $result = $this->checkTransactionWithMultipleMethods($transaction);
                 
                 if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
-                    $transaction->update([
-                        'status' => 'success',
-                        'response_data' => $result['data'],
-                        'updated_at' => now()
-                    ]);
+                    $newStatus = $this->determineStatusFromApiResponse($result['data']);
                     
-                    $this->info("  ✅ Payment completed! Updated to success.");
+                    if ($newStatus !== 'pending') {
+                        $transaction->update([
+                            'status' => $newStatus,
+                            'response_data' => $result['data'],
+                            'updated_at' => now()
+                        ]);
+                        
+                        $this->info("  ✅ Payment completed! Updated to {$newStatus} (Method: {$result['method_used']}).");
+                    } else {
+                        $this->line("  ⏳ Still pending...");
+                    }
                 } else {
-                    $this->line("  ⏳ Still pending...");
+                    $this->line("  ⏳ Still pending (no payment data found)...");
                 }
             } catch (\Exception $e) {
                 $this->error("  ❌ Error checking: " . $e->getMessage());
@@ -326,6 +336,165 @@ class TestKHQRPayment extends Command
         }
 
         return 0;
+    }
+
+    /**
+     * Check transaction using multiple methods as recommended by Bakong documentation
+     * Priority: Short Hash -> MD5 -> Full Hash (but use best result)
+     */
+    private function checkTransactionWithMultipleMethods(Transactions $transaction): array
+    {
+        $results = [];
+
+        // Method 1: Short Hash with amount verification (RECOMMENDED by documentation)
+        if ($transaction->qr_short_hash && $transaction->amount) {
+            $result = $this->khqrService->checkTransactionByShortHash(
+                $transaction->qr_short_hash, 
+                (float)$transaction->amount, 
+                $transaction->currency ?? 'KHR'
+            );
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'short_hash';
+                $results['short_hash'] = $result;
+            }
+        }
+
+        // Method 2: MD5 Hash (traditional method)
+        if ($transaction->qr_md5) {
+            $result = $this->khqrService->checkTransactionByMD5($transaction->qr_md5);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'md5';
+                $results['md5'] = $result;
+            }
+        }
+
+        // Method 3: Full Hash (SHA256)
+        if ($transaction->qr_full_hash) {
+            $result = $this->khqrService->checkTransactionByFullHash($transaction->qr_full_hash);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                $result['method_used'] = 'full_hash';
+                $results['full_hash'] = $result;
+            }
+        }
+
+        // Return the best result (prioritize success responses)
+        foreach (['short_hash', 'md5', 'full_hash'] as $method) {
+            if (isset($results[$method])) {
+                $data = $results[$method]['data'];
+                // Check if this result indicates success
+                if (isset($data['responseCode']) && $data['responseCode'] === 0) {
+                    return $results[$method];
+                }
+            }
+        }
+
+        // If no success found, return the first available result
+        if (!empty($results)) {
+            return array_values($results)[0];
+        }
+
+        // All methods failed
+        return [
+            'success' => false,
+            'message' => 'Transaction not found using any checking method',
+            'method_used' => 'all_failed',
+            'data' => null
+        ];
+    }
+
+    /**
+     * Determine transaction status from API response
+     */
+    private function determineStatusFromApiResponse($apiData): string
+    {
+        if (empty($apiData)) {
+            return 'pending';
+        }
+
+        // Check for Bakong API error responses first
+        if (isset($apiData['responseCode'])) {
+            $responseCode = (int)$apiData['responseCode'];
+            
+            // Success codes (transaction found and completed)
+            if ($responseCode === 0 || $responseCode === 200) {
+                return 'success';
+            }
+            
+            // Error codes that indicate transaction not found (still pending)
+            if (in_array($responseCode, [1, 404, 4040])) {
+                return 'pending'; // Transaction not found yet, keep checking
+            }
+            
+            // Other error codes that indicate failure
+            if ($responseCode > 0) {
+                return 'failed';
+            }
+        }
+
+        // Check for error codes in different format
+        if (isset($apiData['errorCode'])) {
+            $errorCode = (int)$apiData['errorCode'];
+            
+            // Success (no error)
+            if ($errorCode === 0) {
+                return 'success';
+            }
+            
+            // Transaction not found (still pending)
+            if (in_array($errorCode, [1, 404, 4040])) {
+                return 'pending';
+            }
+            
+            // Other errors
+            if ($errorCode > 0) {
+                return 'failed';
+            }
+        }
+
+        // Check various status fields that Bakong might use
+        if (isset($apiData['status'])) {
+            $apiStatus = strtolower($apiData['status']);
+            if (in_array($apiStatus, ['completed', 'success', 'paid', 'confirmed', 'successful'])) {
+                return 'success';
+            }
+            if (in_array($apiStatus, ['failed', 'rejected', 'cancelled', 'error'])) {
+                return 'failed';
+            }
+        }
+
+        if (isset($apiData['transactionStatus'])) {
+            $transactionStatus = strtolower($apiData['transactionStatus']);
+            if (in_array($transactionStatus, ['success', 'completed', 'successful'])) {
+                return 'success';
+            }
+            if (in_array($transactionStatus, ['failed', 'error'])) {
+                return 'failed';
+            }
+        }
+
+        // Check response message for success indicators
+        if (isset($apiData['responseMessage'])) {
+            $message = strtolower($apiData['responseMessage']);
+            if (strpos($message, 'success') !== false || strpos($message, 'completed') !== false) {
+                return 'success';
+            }
+            if (strpos($message, 'not found') !== false || strpos($message, 'could not be found') !== false) {
+                return 'pending'; // Transaction not found yet, keep checking
+            }
+        }
+
+        // If we have substantial transaction data (like amount, references), assume payment was successful
+        if (isset($apiData['amount']) || isset($apiData['transactionId']) || isset($apiData['paymentReference']) || isset($apiData['transactionRef'])) {
+            // But only if there's no error code indicating failure
+            if (!isset($apiData['responseCode']) || (int)$apiData['responseCode'] === 0) {
+                return 'success';
+            }
+        }
+
+        return 'pending';
     }
 
     /**

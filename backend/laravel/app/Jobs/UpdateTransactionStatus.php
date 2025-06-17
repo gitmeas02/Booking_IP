@@ -56,7 +56,7 @@ class UpdateTransactionStatus implements ShouldQueue
                 return;
             }
 
-            // Check if transaction has expired
+            // Check if transaction has expired (only if expires_at is set)
             if ($transaction->expires_at && $transaction->expires_at->isPast()) {
                 $transaction->update(['status' => 'expired']);
                 Log::info('Transaction marked as expired', [
@@ -229,10 +229,50 @@ class UpdateTransactionStatus implements ShouldQueue
             return 'pending';
         }
 
+        // Check for Bakong API error responses first
+        if (isset($apiData['responseCode'])) {
+            $responseCode = (int)$apiData['responseCode'];
+            
+            // Success codes (transaction found and completed)
+            if ($responseCode === 0 || $responseCode === 200) {
+                return 'success';
+            }
+            
+            // Error codes that indicate transaction not found (still pending)
+            if (in_array($responseCode, [1, 404, 4040])) {
+                return 'pending'; // Transaction not found yet, keep checking
+            }
+            
+            // Other error codes that indicate failure
+            if ($responseCode > 0) {
+                return 'failed';
+            }
+        }
+
+        // Check for error codes in different format
+        if (isset($apiData['errorCode'])) {
+            $errorCode = (int)$apiData['errorCode'];
+            
+            // Success (no error)
+            if ($errorCode === 0) {
+                return 'success';
+            }
+            
+            // Transaction not found (still pending)
+            if (in_array($errorCode, [1, 404, 4040])) {
+                return 'pending';
+            }
+            
+            // Other errors
+            if ($errorCode > 0) {
+                return 'failed';
+            }
+        }
+
         // Check various status fields that Bakong might use
         if (isset($apiData['status'])) {
             $apiStatus = strtolower($apiData['status']);
-            if (in_array($apiStatus, ['completed', 'success', 'paid', 'confirmed'])) {
+            if (in_array($apiStatus, ['completed', 'success', 'paid', 'confirmed', 'successful'])) {
                 return 'success';
             }
             if (in_array($apiStatus, ['failed', 'rejected', 'cancelled', 'error'])) {
@@ -242,7 +282,7 @@ class UpdateTransactionStatus implements ShouldQueue
 
         if (isset($apiData['transactionStatus'])) {
             $transactionStatus = strtolower($apiData['transactionStatus']);
-            if (in_array($transactionStatus, ['success', 'completed'])) {
+            if (in_array($transactionStatus, ['success', 'completed', 'successful'])) {
                 return 'success';
             }
             if (in_array($transactionStatus, ['failed', 'error'])) {
@@ -250,9 +290,23 @@ class UpdateTransactionStatus implements ShouldQueue
             }
         }
 
-        // If we have substantial transaction data, assume payment was successful
-        if (isset($apiData['amount']) || isset($apiData['transactionId']) || isset($apiData['paymentReference'])) {
-            return 'success';
+        // Check response message for success indicators
+        if (isset($apiData['responseMessage'])) {
+            $message = strtolower($apiData['responseMessage']);
+            if (strpos($message, 'success') !== false || strpos($message, 'completed') !== false) {
+                return 'success';
+            }
+            if (strpos($message, 'not found') !== false || strpos($message, 'could not be found') !== false) {
+                return 'pending'; // Transaction not found yet, keep checking
+            }
+        }
+
+        // If we have substantial transaction data (like amount, references), assume payment was successful
+        if (isset($apiData['amount']) || isset($apiData['transactionId']) || isset($apiData['paymentReference']) || isset($apiData['transactionRef'])) {
+            // But only if there's no error code indicating failure
+            if (!isset($apiData['responseCode']) || (int)$apiData['responseCode'] === 0) {
+                return 'success';
+            }
         }
 
         return 'pending';
