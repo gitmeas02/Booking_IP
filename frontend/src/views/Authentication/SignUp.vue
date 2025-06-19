@@ -53,11 +53,13 @@
 </template>
 
 <script>
+import axios from 'axios'
 import { Icon } from '@iconify/vue'
+
 export default {
     name: 'SignUp',
     components: {
-        Icon,
+        Icon
     },
     data() {
         return {
@@ -67,46 +69,37 @@ export default {
         }
     },
     methods: {
-         async handleSignUp() {
+        async handleSignUp() {
             try {
-        const response = await axios.post('/login', {
-          email: this.email,
-          password: this.password
-        })
+                const res = await axios.post('http://localhost:8100/api/register', {
+                    name: this.name,
+                    email: this.email,
+                    password: this.password
+                })
 
-        const token = response.data.access_token
-        const user = response.data.user
+                const user = res.data.user
+                alert('Registration successful!')
 
-        // Save token and user info
-        localStorage.setItem('token', token)
-        localStorage.setItem('user', JSON.stringify(user))
+                // Optional: save user data
+                localStorage.setItem('user', JSON.stringify(user))
 
-        // ✅ Set default Axios auth header
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-        // 🔁 Redirect user based on role or to dashboard
-        if (user.role === 'owner') {
-          this.$router.push('/owner')
-        } else {
-          this.$router.push('/')
-        }
-
-      } catch (error) {
-        alert(error.response?.data?.message || 'Sign up failed.')
-        console.error(error)
-      }
+                // Switch to sign in
+                this.$emit('switch', 'signIn')
+            } catch (error) {
+                console.error('Registration error:', error)
+                alert(error.response?.data?.message || 'Sign up failed.')
+            }
         }
     }
 }
 </script>
-<!-- 
+
 <style scoped>
 .container {
     display: flex;
     height: 100vh;
     font-family: 'Arial', sans-serif;
     flex-wrap: wrap;
-    /* Allow wrapping of content on smaller screens */
 }
 
 .image-section,
@@ -226,7 +219,6 @@ h2 {
     .image-section,
     .form-section {
         width: 100%;
-        /* Stack the sections on small screens */
         padding: 2rem 1.5rem;
     }
 
@@ -282,4 +274,4 @@ h2 {
         font-size: 14px;
     }
 }
-</style> -->
+</style>
