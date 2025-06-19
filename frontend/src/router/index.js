@@ -19,6 +19,10 @@ import index2 from "./index2";
 
 import { createRouter, createWebHistory } from "vue-router";
 import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
+import OwnerBookingList from "@/views/OwnerBookingList.vue";
+import OwnerDashboard from "@/views/OwnerDashboard.vue";
+import AdminBookingList from "@/views/AdminBookingList.vue";
+
 import axios from "axios";
 
 const routes = [
@@ -56,6 +60,21 @@ const routes = [
     name: "ProductsDetails",
     props: true,
     component: ProductDetailPage,
+  },
+  {
+    path: "/ownerbookinglist",
+    name: "ownerBookingList",
+    component: OwnerBookingList,
+  },
+  {
+    path: "/ownerdashboard",
+    name: "ownerdashboard",
+    component: OwnerDashboard,
+  },
+  {
+    path: "/adminbookinglist",
+    name: "adminbookinglist",
+    component: AdminBookingList,
   },
   {
     path: "/chat",

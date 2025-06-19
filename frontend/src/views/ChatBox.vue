@@ -1,9 +1,9 @@
 <template>
-    <div class="chat-container">
+    <div class="chat-container ">
         <!-- Left sidebar with search and contacts -->
         <div class="sidebar">
             <div class="search-bar">
-                <button class="back-button">
+                <button class="back-button" @click="goBack">
                     <Icon icon="ep:arrow-left-bold"></Icon>
                     <p>Back</p>
                 </button>
@@ -208,6 +208,9 @@ export default {
         formatMessage(text) {
             // Convert newline characters to <br> tags for display
             return text.replace(/\n/g, '<br>');
+        },
+        goBack(){
+            this.$router.back();
         }
     },
     mounted() {
