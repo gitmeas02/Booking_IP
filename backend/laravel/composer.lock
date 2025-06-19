@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09f507183807c437f8029294d5ab32e1",
+    "content-hash": "76ab2ae9ffbf9f43384896eea8929386",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -660,6 +660,65 @@
                 }
             ],
             "time": "2025-03-06T22:45:56+00:00"
+        },
+        {
+            "name": "fidele007/bakong-khqr-php",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fidele007/bakong-khqr-php.git",
+                "reference": "274ba40d9cea86a83055285839dafd6c1edea337"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fidele007/bakong-khqr-php/zipball/274ba40d9cea86a83055285839dafd6c1edea337",
+                "reference": "274ba40d9cea86a83055285839dafd6c1edea337",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.21",
+                "phpstan/phpstan": "^2.1.8",
+                "phpunit/phpunit": "^9.6",
+                "rector/rector": "^2.0.10",
+                "roave/security-advisories": "dev-latest"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "KHQR\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Force Fidele KIEN",
+                    "email": "forcefidele@gmail.com",
+                    "homepage": "https://fidele007.github.io",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A pure PHP implementation of the Bakong KHQR SDK",
+            "keywords": [
+                "bakong",
+                "khqr"
+            ],
+            "support": {
+                "issues": "https://github.com/fidele007/bakong-khqr-php/issues",
+                "source": "https://github.com/fidele007/bakong-khqr-php/tree/v1.2.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.github.com/sponsors/fidele007",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-05-09T14:30:10+00:00"
         },
         {
             "name": "fruitcake/php-cors",

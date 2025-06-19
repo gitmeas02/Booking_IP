@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "intervention/image": "^2",
+        "fidele007/bakong-khqr-php": "^1.2",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",

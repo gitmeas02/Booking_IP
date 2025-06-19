@@ -7,6 +7,7 @@ use App\Http\Controllers\Houses\HouseListingController;
 use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PaymentController;
 // use App\Models\OwnerApplication;
 use App\Http\Controllers\Room\RoomTypeController;
 use App\Models\RoomType;
@@ -20,6 +21,11 @@ Route::get('/user', function (Request $request) {
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Payment routes
+Route::post('/payments', [PaymentController::class, 'create']);
+Route::get('/payments/{transactionId}/status', [PaymentController::class, 'checkStatus']);
+Route::get('/payments', [PaymentController::class, 'getTransactions'])->middleware('auth:sanctum');
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
