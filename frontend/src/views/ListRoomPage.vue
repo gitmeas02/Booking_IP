@@ -24,9 +24,9 @@
       </div>
 
       <!-- Show selected date range -->
-      <div v-if="searchStore.startDate && searchStore.endDate" class="text-white text-sm mt-2">
+      <!-- <div v-if="searchStore.startDate && searchStore.endDate" class="text-white text-sm mt-2">
         Selected: {{ formattedDateRange }}
-      </div>
+      </div> -->
     </div>
 
     <!-- Property Filter + Room List -->
@@ -112,11 +112,11 @@ const displayedProperties = computed(() =>
 );
 
 // Format the selected date range for display
-const formattedDateRange = computed(() => {
-  const start = searchStore.startDate ? new Date(searchStore.startDate).toLocaleDateString() : '';
-  const end = searchStore.endDate ? new Date(searchStore.endDate).toLocaleDateString() : '';
-  return `${start} - ${end}`;
-});
+// const formattedDateRange = computed(() => {
+//   const start = searchStore.startDate ? new Date(searchStore.startDate).toLocaleDateString() : '';
+//   const end = searchStore.endDate ? new Date(searchStore.endDate).toLocaleDateString() : '';
+//   return `${start} - ${end}`;
+// });
 
 const searchHotels = async () => {
   try {
