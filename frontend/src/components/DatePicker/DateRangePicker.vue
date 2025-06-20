@@ -106,6 +106,14 @@ const formatDate = (date) => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+// New helper: format date to YYYY-MM-DD in local time (fixes off-by-one issues)
+const formatDateOnly = (date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const handleDateSelect = (date) => {
     if (selectingStartDate.value) {
         startDate.value = date;
@@ -201,9 +209,15 @@ onUnmounted(() => {
 watch([startDate, endDate], () => {
     emit('change', startDate.value, endDate.value);
 
-    // Store ISO string (or change to Date if preferred)
     searchStore.startDate = startDate.value ? startDate.value.toISOString() : '';
     searchStore.endDate = endDate.value ? endDate.value.toISOString() : '';
+
+    if (startDate.value && endDate.value) {
+        console.log('Selected date range:', {
+            from: formatDateOnly(startDate.value),
+            to: formatDateOnly(endDate.value),
+        });
+    }
 });
 </script>
 
@@ -218,7 +232,6 @@ watch([startDate, endDate], () => {
 .date-inputs {
     display: flex;
     gap: 8px;
-    /* margin-bottom: 4px; */
 }
 
 .date-input-container {
@@ -381,27 +394,4 @@ watch([startDate, endDate], () => {
     background-color: #0078d7;
     color: white;
 }
-
-/* Responsive adjustments */
-/* @media (max-width: 640px) {
-    .date-inputs {
-        flex-direction: column;
-    }
-    
-    .calendar-day {
-        height: 28px;
-        width: 28px;
-        font-size: 12px;
-    }
-    
-    .month-year-selectors {
-        flex-direction: column;
-        gap: 4px;
-    }
-    
-    .month-select, .year-select {
-        font-size: 14px;
-        padding: 2px 20px 2px 6px;
-    }
-} */
 </style>
