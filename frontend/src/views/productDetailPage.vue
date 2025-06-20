@@ -10,16 +10,17 @@
         </div>
         <div class="review-score">
           <div class="score">8</div>
-          <div class="score-text">
-            0 reviews
-          </div>
+          <div class="score-text">0 reviews</div>
         </div>
       </div>
 
       <div class="main-image-container">
         <img
           v-if="hotelDetail.photos && hotelDetail.photos.length"
-          :src="'http://localhost:9000/ownerimages/' + hotelDetail.photos[currentImageIndex].url"
+          :src="
+            'http://localhost:9000/ownerimages/' +
+            hotelDetail.photos[currentImageIndex].url
+          "
           alt="Hotel main image"
           class="main-image"
           @click="openPhotoModal(currentImageIndex)"
@@ -36,7 +37,7 @@
           ></span>
         </div>
       </div>
-      
+
       <div class="thumbnail-gallery">
         <div
           v-for="(image, index) in hotelDetail.photos"
@@ -45,13 +46,16 @@
           @click="openPhotoModal(index)"
         >
           <!-- FIXED: Use proper image URL construction -->
-          <img 
-            :src="'http://localhost:9000/ownerimages/' + image.url" 
-            alt="Room thumbnail" 
-            class="thumbnail" 
+          <img
+            :src="'http://localhost:9000/ownerimages/' + image.url"
+            alt="Room thumbnail"
+            class="thumbnail"
           />
           <!-- FIXED: Use hotelDetail.photos.length instead of images.length -->
-          <div v-if="index === hotelDetail.photos.length - 1" class="photo-count">
+          <div
+            v-if="index === hotelDetail.photos.length - 1"
+            class="photo-count"
+          >
             <span>{{ hotelDetail.photos.length }} photos</span>
           </div>
         </div>
@@ -68,7 +72,8 @@
           <div class="hotel-meta">
             <div class="rating-stars">⭐⭐⭐⭐</div>
             <span class="location-text"
-              >{{ hotelDetail.location?.street }}, {{ hotelDetail.location?.city }}</span
+              >{{ hotelDetail.location?.street }},
+              {{ hotelDetail.location?.city }}</span
             >
             <a href="#map" class="see-map-link">SEE MAP</a>
           </div>
@@ -168,9 +173,10 @@
               </div>
               <div class="room-cards">
                 <RoomTypeCard
-                  v-for="room in hotelDetail.room_types"
+                  v-for="room in uniqueRoomTypesWithCount"
                   :key="room.id"
                   :room="room"
+                  :roomCount="room.count"
                   @reserve="reserveRoom"
                 />
               </div>
@@ -181,9 +187,10 @@
             <h3>Available Rooms</h3>
             <div class="room-cards">
               <RoomTypeCard
-                v-for="room in hotelDetail.room_types"
+                v-for="room in uniqueRoomTypesWithCount"
                 :key="room.id"
                 :room="room"
+                :roomCount="room.count"
                 @reserve="reserveRoom"
               />
             </div>
@@ -191,7 +198,10 @@
 
           <div v-if="activeTab === 'location'" class="location-tab-content">
             <h3>Location & Nearby</h3>
-            <p>{{ hotelDetail.location?.address }}, {{ hotelDetail.location?.city }}</p>
+            <p>
+              {{ hotelDetail.location?.address }},
+              {{ hotelDetail.location?.city }}
+            </p>
           </div>
 
           <div v-if="activeTab === 'policies'" class="policies-tab-content">
@@ -221,11 +231,14 @@
             <div class="comments-room-section">
               <div class="section-header">
                 <h3 class="section-title">Available Rooms</h3>
-                <p class="section-subtitle">Book one of these rooms while browsing reviews</p>
+                <p class="section-subtitle">
+                  Book one of these rooms while browsing reviews
+                </p>
               </div>
-              <div class="room-cards-grid">
+
+              <div class="room-cards">
                 <RoomTypeCard
-                  v-for="room in hotelDetail.room_types"
+                  v-for="room in uniqueRoomTypes"
                   :key="room.id"
                   :room="room"
                   @reserve="reserveRoom"
@@ -243,9 +256,7 @@
                 <div class="review-status">
                   <span class="review-status-text">Very good</span>
                 </div>
-                <div class="review-count-text">
-                  100 reviews
-                </div>
+                <div class="review-count-text">100 reviews</div>
               </div>
             </div>
 
@@ -361,7 +372,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Modal Viewer -->
       <div v-if="modalVisible" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
@@ -386,7 +397,7 @@
           </button>
         </div>
       </div>
-      
+
       <div ref="commentsSection" class="comments-bottom-section">
         <CommentSection />
       </div>
@@ -411,16 +422,36 @@ const hotelStore = useRoomStore();
 const route = useRoute();
 const hotelId = route.params.id;
 const hotelDetail = ref(null);
-const activeTab = ref('overview');
+const activeTab = ref("overview");
 
 // ADDED: Missing reactive variables for modal and image navigation
 const modalVisible = ref(false);
 const currentImageIndex = ref(0);
 const currentPhotoIndex = ref(0);
 
+const uniqueRoomTypesWithCount = computed(() => {
+  if (!hotelDetail.value?.room_types) return [];
+  const seen = new Map();
+
+  hotelDetail.value.room_types.forEach((room) => {
+    const key = `${room.name}-${room.default_price}`;
+    if (seen.has(key)) {
+      seen.get(key).count++;
+    } else {
+      seen.set(key, { ...room, count: 1 });
+    }
+  });
+
+  return Array.from(seen.values());
+});
+
 // Fixed the computed property for images
 const images = computed(() => {
-  return hotelDetail.value?.photos?.map(photo => `http://localhost:9000/ownerimages/${photo.url}`) || [];
+  return (
+    hotelDetail.value?.photos?.map(
+      (photo) => `http://localhost:9000/ownerimages/${photo.url}`
+    ) || []
+  );
 });
 
 // ADDED: Missing modal and image navigation functions
@@ -450,11 +481,11 @@ const setCurrentImage = (index) => {
 };
 
 const scrollToComments = () => {
-  activeTab.value = 'comments';
+  activeTab.value = "comments";
   // Scroll to comments section if needed
-  const commentsSection = document.querySelector('.comments-bottom-section');
+  const commentsSection = document.querySelector(".comments-bottom-section");
   if (commentsSection) {
-    commentsSection.scrollIntoView({ behavior: 'smooth' });
+    commentsSection.scrollIntoView({ behavior: "smooth" });
   }
 };
 
@@ -466,9 +497,10 @@ const reserveRoom = (room) => {
 onMounted(async () => {
   await hotelStore.fetchHotels();
   hotelDetail.value = hotelStore.getHouseById(hotelId);
-  console.log('Hotel Detail', hotelDetail.value);
+  console.log("Hotel Detail", hotelDetail.value);
 });
 </script>
+
 <style scoped>
 .booking-container {
   max-width: 1200px;

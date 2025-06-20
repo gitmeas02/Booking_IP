@@ -3,7 +3,7 @@
     <div class="room-image-section">
       <img
         v-if="room.images && room.images.length"
-        :src="'http://localhost:9000/'+ room.images[0].image_url"
+        :src="'http://localhost:9000/' + room.images[0].image_url"
         alt="Room"
         class="room-image"
       />
@@ -15,20 +15,20 @@
         {{ room.name || "Standard Double with Fan" }}
       </h4>
       <div class="room-amenities">
-        <div class="amenity">✅ Free cancellation before June 13, 2025</div>
-        <div class="amenity">✅ Pay nothing until June 17, 2025</div>
-        <div class="amenity">✅ Parking</div>
-        <div class="amenity">✅ Bike rental</div>
-        <div class="amenity">✅ Free WiFi</div>
+        <div class="amenity" v-for="(amenity, index) in room.amenities">
+          {{ amenity.amenity_name }}
+        </div>
       </div>
 
       <div class="room-specs">
-        <div class="spec-item">🛏️ {{ room.capacity }} {{ room.capacity > 1 ? 'guests' : 'guest' }}</div>
-        <div class="spec-item">📏 Room size: 25 m²/269 ft²</div>
+        <div class="spec-item">
+          🛏️ {{ room.capacity }} {{ room.capacity > 1 ? "guests" : "guest" }}
+        </div>
+        <!-- <div class="spec-item">📏 Room size: 25 m²/269 ft²</div>
         <div class="spec-item">🌿 Garden view</div>
         <div class="spec-item">🌬️ Balcony/terrace</div>
         <div class="spec-item">🚭 Non-smoking</div>
-        <div class="spec-item">🛀 Shower and bathtub</div>
+        <div class="spec-item">🛀 Shower and bathtub</div> -->
       </div>
 
       <a href="#" class="see-facilities-link">See all room facilities</a>
@@ -36,28 +36,33 @@
 
     <div class="room-pricing-section">
       <div class="pricing-info">
-        <div class="price-label">Extremely rare 🔥</div>
+        <!-- <div class="price-label">Extremely rare 🔥</div>
         <div class="availability-notice">
           Our lowest price in the last 15 months!
+        </div> -->
+        <div class="guests-info">
+          👥 {{ room.capacity }} {{ room.capacity > 1 ? "guests" : "guest" }} 1
+          room
         </div>
-        <div class="guests-info">👥 {{ room.capacity }} {{ room.capacity > 1 ? 'guests' : 'guest' }} 1 room</div>
         <div class="stay-duration">5 nights • Nov 29, 2024</div>
         <div class="price-breakdown">
           <span class="original-price">USD {{ room.default_price }} -12%</span>
-          <div class="final-price">USD {{ (parseFloat(room.default_price) * 0.88).toFixed(2) }}</div>
+          <div class="final-price">
+            USD {{ (parseFloat(room.default_price) * 0.88).toFixed(2) }}
+          </div>
         </div>
         <div class="tax-info">Per night before taxes and fees</div>
         <div class="payment-info">
           <div class="no-payment">No payment today</div>
-          <div class="last-rooms">Our last 3 rooms!</div>
+          Our last {{ room.room_types?.length || 0 }}
+          {{ (room.room_types?.length || 0) > 1 ? "room types" : "room type" }}!
         </div>
       </div>
 
       <div class="room-quantity">
-        <select>
-          <option value="1">1</option>
-          <option value="2">2</option>
-        </select>
+         <select>
+    <option v-for="n in props.roomCount" :key="n" :value="n">{{ n }}</option>
+  </select>
       </div>
 
       <button class="book-now-btn" @click="reserveRoom">Book now</button>
@@ -67,28 +72,43 @@
 </template>
 
 <script setup>
-// Define props
+import { computed } from "vue";
+
 const props = defineProps({
   room: {
     type: Object,
-    required: true, // Make it required
+    required: true,
     default: () => ({
       images: [],
-      name: '',
+      name: "",
       capacity: 1,
-      default_price: '0.00'
+      default_price: "0.00",
+      room_types: [],
+      amenities: [],
     }),
+  },
+  roomCount: {
+    type: Number,
+    default: 1,
   },
 });
 
-// Define emits
 const emit = defineEmits(["reserve"]);
 
-// Methods
+// Compute count of rooms with same name & price inside room.room_types
+const sameRoomCount = computed(() => {
+  if (!props.room.room_types || !Array.isArray(props.room.room_types)) return 1;
+
+  return props.room.room_types.filter(r =>
+    r.name === props.room.name && r.default_price === props.room.default_price
+  ).length || 1;
+});
+
 const reserveRoom = () => {
-  emit("reserve", props.room); // Use props.room instead of just room
+  emit("reserve", props.room);
   console.log("Reserving room:", props.room);
 };
+
 </script>
 <style scoped>
 .room-card {
