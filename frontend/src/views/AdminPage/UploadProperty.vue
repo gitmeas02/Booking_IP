@@ -266,7 +266,7 @@ export default {
     const photos = ref([]);
     const maxPhotos = 10;
     const maxFileSize = 5 * 1024 * 1024; // 5MB
-    const appId = 2;
+    const appId = 1;
     const URL = import.meta.env.VITE_API_BASE_URL;
     console.log("API Base URL:", URL);
 

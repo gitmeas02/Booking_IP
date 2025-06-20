@@ -22,7 +22,7 @@ services:
     image: mysql:8.0
     container_name: mysql_db_hotel
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: laravel

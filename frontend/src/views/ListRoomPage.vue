@@ -4,7 +4,7 @@
     <div class="rounded-xl bg-[#0A2647] w-full px-14 pt-7 pb-7">
       <div class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
         <input
-          v-model="searchLocation"
+          v-model="searchStore.street"
           type="text"
           placeholder="Enter Your Destination or Property"
           class="bg-white h-[66px] w-full rounded-lg pl-10"
@@ -16,8 +16,16 @@
 
       <!-- Filters -->
       <div class="flex items-center justify-center flex-row pt-2 gap-2 w-full">
-        <DateRangePicker v-model:startDate="startDate" v-model:endDate="endDate" />
+        <DateRangePicker
+          v-model:startDate="searchStore.startDate"
+          v-model:endDate="searchStore.endDate"
+        />
         <SelectRoom />
+      </div>
+
+      <!-- Show selected date range -->
+      <div v-if="searchStore.startDate && searchStore.endDate" class="text-white text-sm mt-2">
+        Selected: {{ formattedDateRange }}
       </div>
     </div>
 
@@ -52,8 +60,6 @@
             class="see-more"
           >
             {{ showMore ? "See Less" : "See More" }}
-            <Icon icon="iconamoon:arrow-down-2" v-if="!showMore" />
-            <Icon icon="iconamoon:arrow-up-2" v-else />
           </button>
         </div>
 
@@ -76,26 +82,25 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useRoomStore } from "@/stores/store";
+import { useSearchStore } from "@/stores/useSearchStore";
+
 import DateRangePicker from "@/components/DatePicker/DateRangePicker.vue";
 import SelectRoom from "@/components/DatePicker/selectRoom.vue";
 import RoomCard from "@/components/ListHotel/RoomCard.vue";
 import TwoThumbSlider from "@/components/ListHotel/TwoThumbSlider.vue";
-import { useRoomStore } from "@/stores/store";
-import { Icon } from "@iconify/vue";
 
-import { useRouter, useRoute } from "vue-router";
-const router = useRouter();
 const route = useRoute();
-
-const startDate = ref(route.query.startDate || "");
-const endDate = ref(route.query.endDate || "");
+const router = useRouter();
 const roomStore = useRoomStore();
+const searchStore = useSearchStore();
 
-const searchLocation = ref("");
-
+// Property filters
 const selected = ref([]);
 const showMore = ref(false);
 const limit = 3;
+
 const hotels = ref([]);
 const filteredHotels = ref([]);
 const loading = ref(true);
@@ -106,13 +111,20 @@ const displayedProperties = computed(() =>
   showMore.value ? properties.value : properties.value.slice(0, limit)
 );
 
+// Format the selected date range for display
+const formattedDateRange = computed(() => {
+  const start = searchStore.startDate ? new Date(searchStore.startDate).toLocaleDateString() : '';
+  const end = searchStore.endDate ? new Date(searchStore.endDate).toLocaleDateString() : '';
+  return `${start} - ${end}`;
+});
+
 const searchHotels = async () => {
   try {
     loading.value = true;
     const response = await roomStore.fetchHotels({
-      location: searchLocation.value,
-      startDate: startDate.value,
-      endDate: endDate.value,
+      location: searchStore.street,
+      startDate: searchStore.startDate,
+      endDate: searchStore.endDate,
     });
     filteredHotels.value = response;
   } catch (err) {
@@ -126,11 +138,24 @@ const viewRoomDetails = (roomId) => {
   router.push({
     name: "ProductsDetails",
     params: { id: roomId },
-    query: { checkin: startDate.value, checkout: endDate.value },
+    query: {
+      checkin: searchStore.startDate,
+      checkout: searchStore.endDate,
+    },
   });
 };
 
+// Restore query to store on initial mount
 onMounted(async () => {
+  // Restore search data from query string if available
+  if (route.query.street) searchStore.street = route.query.street;
+  if (route.query.startDate) searchStore.startDate = new Date(route.query.startDate);
+  if (route.query.endDate) searchStore.endDate = new Date(route.query.endDate);
+  if (route.query.rooms) searchStore.rooms = parseInt(route.query.rooms);
+  if (route.query.adults) searchStore.adults = parseInt(route.query.adults);
+  if (route.query.children) searchStore.children = parseInt(route.query.children);
+  if (route.query.pets) searchStore.pets = route.query.pets === 'true';
+
   try {
     hotels.value = await roomStore.fetchHotels();
     filteredHotels.value = hotels.value;
@@ -141,6 +166,7 @@ onMounted(async () => {
   }
 });
 </script>
+
 <style scoped>
 .container {
   display: flex;
@@ -227,107 +253,3 @@ onMounted(async () => {
   background-color: #fff;
 }
 </style>
-<!-- 
-<style scoped>
-.container {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: center;
-  /* background-color: #fcfcfc; */
-  gap: 25px;
-  padding-top: 15px;
-  padding-bottom: 15px;
-}
-
-.filter-section {
-  display: flex;
-  justify-content: center; /* horizontal center */
-  align-items: center; /* vertical top */
-  flex-direction: column;
-  width: 230px;
-  padding: 10px;
-  margin: 0;
-}
-.filter-box {
-  width: 100%;
-}
-
-.filter-title {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-.filter-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 25px;
-  height: 25px;
-}
-
-.property-info {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 16px;
-}
-
-.property-count {
-  font-size: 14px;
-  color: #666;
-}
-
-.icon {
-  font-size: 18px;
-}
-
-.see-more {
-  background: none;
-  border: none;
-  color: #007bff;
-  cursor: pointer;
-  margin-top: 8px;
-  font-size: 14px;
-}
-
-.see-more:hover {
-  text-decoration: underline;
-}
-
-.filter-price {
-  width: 100%;
-  max-width: 400px;
-  margin: auto;
-}
-
-.room-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  background-color: rgb(255, 255, 255);
-  width: fit-content;
-  gap: 12px;
-  margin: 0px;
-}
-
-.box-detail {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: fit-content;
-}
-</style> -->
