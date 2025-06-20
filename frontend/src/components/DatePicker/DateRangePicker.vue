@@ -16,6 +16,7 @@
                 </div>
             </div>
         </div>
+
         <div v-if="isCalendarOpen" ref="calendarRef" class="calendar-popup">
             <div class="calendar-navigation">
                 <button @click="prevMonth" class="nav-button" aria-label="Previous month">
@@ -23,7 +24,7 @@
                 </button>
                 <div class="month-year-selectors">
                     <div class="select-container">
-                        <select v-model="currentMonthIndex" class="month-select" @change="handleMonthChange">
+                        <select v-model="currentMonthIndex" class="month-select">
                             <option v-for="(month, index) in monthNames" :key="index" :value="index">
                                 {{ month }}
                             </option>
@@ -31,7 +32,7 @@
                         <i class="pi pi-angle-down select-icon"></i>
                     </div>
                     <div class="select-container">
-                        <select v-model="currentYearValue" class="year-select" @change="handleYearChange">
+                        <select v-model="currentYearValue" class="year-select">
                             <option v-for="year in availableYears" :key="year" :value="year">
                                 {{ year }}
                             </option>
@@ -43,25 +44,17 @@
                     <i class="pi pi-arrow-right nav-icon"></i>
                 </button>
             </div>
+
             <div class="calendar-grid">
-                <div
-                    v-for="day in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']"
-                    :key="day"
-                    class="day-header"
-                >
+                <div v-for="day in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="day" class="day-header">
                     {{ day }}
                 </div>
-                <button
-                    v-for="(date, index) in calendarDays"
-                    :key="index"
-                    @click="handleDateSelect(date)"
-                    :class="[
-                        'calendar-day',
-                        isCurrentMonth(date) ? 'current-month' : 'other-month',
-                        isInRange(date) ? 'in-range' : '',
-                        isStartOrEndDate(date) ? 'selected-day' : ''
-                    ]"
-                >
+                <button v-for="(date, index) in calendarDays" :key="index" @click="handleDateSelect(date)" :class="[
+                    'calendar-day',
+                    isCurrentMonth(date) ? 'current-month' : 'other-month',
+                    isInRange(date) ? 'in-range' : '',
+                    isStartOrEndDate(date) ? 'selected-day' : ''
+                ]">
                     {{ date.getDate() }}
                 </button>
             </div>
@@ -71,63 +64,54 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-const props = defineProps({
-    initialStartDate: { type: Date, default: null },
-    initialEndDate: { type: Date, default: null },
-    yearRange: { type: Number, default: 10 }
-});
-const emit = defineEmits(['change']);
+import { useSearchStore } from '@/stores/useSearchStore';
 
-const startDate = ref(props.initialStartDate);
-const endDate = ref(props.initialEndDate);
-const currentMonth = ref(props.initialStartDate || new Date());
+const emit = defineEmits(['change']);
+const searchStore = useSearchStore();
+
+const startDate = ref(searchStore.startDate ? new Date(searchStore.startDate) : null);
+const endDate = ref(searchStore.endDate ? new Date(searchStore.endDate) : null);
+const currentMonth = ref(startDate.value || new Date());
 const isCalendarOpen = ref(false);
 const selectingStartDate = ref(true);
 const calendarRef = ref(null);
 
 const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June', 
+    'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
 const currentMonthIndex = computed({
     get: () => currentMonth.value.getMonth(),
     set: (value) => {
-        currentMonth.value = new Date(
-            currentMonth.value.getFullYear(),
-            value,
-            1
-        );
+        currentMonth.value = new Date(currentMonth.value.getFullYear(), value, 1);
     }
 });
 
 const currentYearValue = computed({
     get: () => currentMonth.value.getFullYear(),
     set: (value) => {
-        currentMonth.value = new Date(
-            value,
-            currentMonth.value.getMonth(),
-            1
-        );
+        currentMonth.value = new Date(value, currentMonth.value.getMonth(), 1);
     }
 });
 
 const availableYears = computed(() => {
+    const range = 10;
     const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let i = currentYear - props.yearRange; i <= currentYear + props.yearRange; i++) {
-        years.push(i);
-    }
-    return years;
+    return Array.from({ length: 2 * range + 1 }, (_, i) => currentYear - range + i);
 });
 
-const handleMonthChange = () => {};
-const handleYearChange = () => {};
-
 const formatDate = (date) => {
-    if (!date) return "";
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return date.toLocaleDateString("en-US", options);
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+// New helper: format date to YYYY-MM-DD in local time (fixes off-by-one issues)
+const formatDateOnly = (date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 const handleDateSelect = (date) => {
@@ -148,83 +132,60 @@ const handleDateSelect = (date) => {
 };
 
 const prevMonth = () => {
-    currentMonth.value = new Date(
-        currentMonth.value.getFullYear(),
-        currentMonth.value.getMonth() - 1,
-        1
-    );
+    currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() - 1, 1);
 };
 
 const nextMonth = () => {
-    currentMonth.value = new Date(
-        currentMonth.value.getFullYear(),
-        currentMonth.value.getMonth() + 1,
-        1
-    );
+    currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, 1);
 };
 
 const openCalendarForStart = () => {
     isCalendarOpen.value = true;
     selectingStartDate.value = true;
-    if (startDate.value) {
-        currentMonth.value = new Date(startDate.value);
-    }
+    if (startDate.value) currentMonth.value = new Date(startDate.value);
 };
 
 const openCalendarForEnd = () => {
     isCalendarOpen.value = true;
     selectingStartDate.value = false;
-    if (endDate.value) {
-        currentMonth.value = new Date(endDate.value);
-    } else if (startDate.value) {
-        currentMonth.value = new Date(startDate.value);
-    }
+    currentMonth.value = endDate.value ? new Date(endDate.value) : (startDate.value ? new Date(startDate.value) : new Date());
 };
 
 const calendarDays = computed(() => {
     const year = currentMonth.value.getFullYear();
     const month = currentMonth.value.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-    let firstDayIndex = firstDayOfMonth.getDay() - 1;
-    if (firstDayIndex < 0) firstDayIndex = 6;
-    const daysInMonth = lastDayOfMonth.getDate();
-    const prevMonthDays = [];
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    let startIndex = firstDay.getDay() - 1;
+    if (startIndex < 0) startIndex = 6;
+
     const prevMonth = new Date(year, month, 0);
-    const prevMonthDaysCount = prevMonth.getDate();
-    for (let i = firstDayIndex - 1; i >= 0; i--) {
-        prevMonthDays.push(new Date(year, month - 1, prevMonthDaysCount - i));
-    }
-    const currentMonthDays = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-        currentMonthDays.push(new Date(year, month, i));
-    }
-    const nextMonthDays = [];
-    const totalDaysDisplayed = 42;
-    const remainingDays = totalDaysDisplayed - prevMonthDays.length - currentMonthDays.length;
-    for (let i = 1; i <= remainingDays; i++) {
-        nextMonthDays.push(new Date(year, month + 1, i));
-    }
-    return [...prevMonthDays, ...currentMonthDays, ...nextMonthDays];
+    const prevDays = Array.from({ length: startIndex }, (_, i) =>
+        new Date(year, month - 1, prevMonth.getDate() - startIndex + i + 1)
+    );
+
+    const currentDays = Array.from({ length: lastDay.getDate() }, (_, i) => new Date(year, month, i + 1));
+
+    const totalCells = 42;
+    const nextDays = Array.from({ length: totalCells - prevDays.length - currentDays.length }, (_, i) =>
+        new Date(year, month + 1, i + 1)
+    );
+
+    return [...prevDays, ...currentDays, ...nextDays];
 });
 
 const isInRange = (date) => {
-    if (!startDate.value || !endDate.value) return false;
-    return date > startDate.value && date < endDate.value;
+    return startDate.value && endDate.value && date > startDate.value && date < endDate.value;
 };
 
 const isStartOrEndDate = (date) => {
-    if (!startDate.value && !endDate.value) return false;
-    return (
-        (startDate.value &&
-            date.getDate() === startDate.value.getDate() &&
-            date.getMonth() === startDate.value.getMonth() &&
-            date.getFullYear() === startDate.value.getFullYear()) ||
-        (endDate.value &&
-            date.getDate() === endDate.value.getDate() &&
-            date.getMonth() === endDate.value.getMonth() &&
-            date.getFullYear() === endDate.value.getFullYear())
-    );
+    const isSameDay = (a, b) =>
+        a && b &&
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate();
+
+    return isSameDay(date, startDate.value) || isSameDay(date, endDate.value);
 };
 
 const isCurrentMonth = (date) => {
@@ -238,17 +199,28 @@ const handleClickOutside = (event) => {
 };
 
 onMounted(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 });
-
 onUnmounted(() => {
-    document.removeEventListener("mousedown", handleClickOutside);
+    document.removeEventListener('mousedown', handleClickOutside);
 });
 
+// Sync to store whenever dates change
 watch([startDate, endDate], () => {
     emit('change', startDate.value, endDate.value);
+
+    searchStore.startDate = startDate.value ? startDate.value.toISOString() : '';
+    searchStore.endDate = endDate.value ? endDate.value.toISOString() : '';
+
+    if (startDate.value && endDate.value) {
+        console.log('Selected date range:', {
+            from: formatDateOnly(startDate.value),
+            to: formatDateOnly(endDate.value),
+        });
+    }
 });
 </script>
+
 <style scoped>
 .date-range-picker {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -260,7 +232,6 @@ watch([startDate, endDate], () => {
 .date-inputs {
     display: flex;
     gap: 8px;
-    /* margin-bottom: 4px; */
 }
 
 .date-input-container {
@@ -322,7 +293,8 @@ watch([startDate, endDate], () => {
     position: relative;
 }
 
-.month-select, .year-select {
+.month-select,
+.year-select {
     appearance: none;
     background: transparent;
     border: none;
@@ -334,11 +306,13 @@ watch([startDate, endDate], () => {
     border-radius: 4px;
 }
 
-.month-select:hover, .year-select:hover {
+.month-select:hover,
+.year-select:hover {
     background-color: #f3f4f6;
 }
 
-.month-select:focus, .year-select:focus {
+.month-select:focus,
+.year-select:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.2);
 }
@@ -420,27 +394,4 @@ watch([startDate, endDate], () => {
     background-color: #0078d7;
     color: white;
 }
-
-/* Responsive adjustments */
-/* @media (max-width: 640px) {
-    .date-inputs {
-        flex-direction: column;
-    }
-    
-    .calendar-day {
-        height: 28px;
-        width: 28px;
-        font-size: 12px;
-    }
-    
-    .month-year-selectors {
-        flex-direction: column;
-        gap: 4px;
-    }
-    
-    .month-select, .year-select {
-        font-size: 14px;
-        padding: 2px 20px 2px 6px;
-    }
-} */
 </style>
