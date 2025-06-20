@@ -41,7 +41,8 @@ class BlockRoomController extends Controller
     }
 
     $roomType->blockDates()->create($validated);
-
+    $roomType->is_available = false;
+    $roomType->save();
     return response()->json(['message' => 'Room blocked successfully']);
 }
 // unblock
@@ -104,6 +105,11 @@ public function unblock(Request $request, $roomTypeId)
 
             continue;
         }
+    }
+    $roomType = RoomType::findOrFail($roomTypeId);
+    if (!$roomType->blockDates()->exists()) {
+        $roomType->is_available = true;
+        $roomType->save();
     }
 
     return response()->json(['message' => 'Room unblock processed successfully']);

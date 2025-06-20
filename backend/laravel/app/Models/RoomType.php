@@ -27,7 +27,7 @@ class RoomType extends Model
         return $this->belongsToMany(Amenity::class,'amenities_room_type', 'room_id', 'amenity_id');
     }
     public function blockDates(){
-        return $this->hasMany(BlockedRoom::class);
+        return $this->hasMany(BlockedRoom::class,'room_type_id');
     }
 
     public function prices()

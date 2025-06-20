@@ -1,26 +1,33 @@
-// stores/store.js
 import { defineStore } from "pinia";
 import axios from "axios";
 
 export const useRoomStore = defineStore("room", {
   state: () => ({
-    hotels: [],
     properties: [],
-    rooms:[]
+    hotels: [],
+    currentHotel: null,
   }),
 
   getters: {
-    getHouseById: (state) => {
-      return (id) => state.hotels.find(h => h.id === Number(id));
+    getHotelById: (state) => {
+      return (id) => state.hotels.find((h) => h.id === Number(id));
     },
-    getRoomThrowHoteslId:(state)=>{
-      return (id)=>state.hotels.find(h=> h.id === Number(id)).rooms; // get rooms by hotel id
+    getRoomsByHotelId: (state) => {
+      return (id) => {
+        const hotel = state.hotels.find((h) => h.id === Number(id));
+        return hotel ? hotel.rooms || [] : [];
+      };
     },
-    getRoomById:(state)=>{
-      return (id)=>state.rooms.find(r=> r.id=== Number(id)); // get room by id
-    }
+    getRoomById: (state) => {
+      return (id) => {
+        if (state.currentHotel && state.currentHotel.room_types) {
+          return state.currentHotel.room_types.find((r) => r.id === Number(id));
+        }
+        return null;
+      };
+    },
+    getCurrentHotel: (state) => state.currentHotel,
   },
-
 
   actions: {
     async fetchHotels() {
@@ -41,5 +48,15 @@ export const useRoomStore = defineStore("room", {
         throw error;
       }
     },
-  }
+    async fetchHotelById(id) {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/house/${id}`);
+        this.currentHotel = response.data; // Store the fetched hotel in currentHotel
+        return response.data;
+      } catch (error) {
+        console.error(`Error fetching hotel ${id}:`, error);
+        throw error;
+      }
+    },
+  },
 });

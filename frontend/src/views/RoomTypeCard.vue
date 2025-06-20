@@ -15,7 +15,7 @@
         {{ room.name || "Standard Double with Fan" }}
       </h4>
       <div class="room-amenities">
-        <div class="amenity" v-for="(amenity, index) in room.amenities">
+        <div class="amenity" v-for="(amenity, index) in room.amenities" :key="index">
           {{ amenity.amenity_name }}
         </div>
       </div>
@@ -24,11 +24,6 @@
         <div class="spec-item">
           🛏️ {{ room.capacity }} {{ room.capacity > 1 ? "guests" : "guest" }}
         </div>
-        <!-- <div class="spec-item">📏 Room size: 25 m²/269 ft²</div>
-        <div class="spec-item">🌿 Garden view</div>
-        <div class="spec-item">🌬️ Balcony/terrace</div>
-        <div class="spec-item">🚭 Non-smoking</div>
-        <div class="spec-item">🛀 Shower and bathtub</div> -->
       </div>
 
       <a href="#" class="see-facilities-link">See all room facilities</a>
@@ -36,10 +31,6 @@
 
     <div class="room-pricing-section">
       <div class="pricing-info">
-        <!-- <div class="price-label">Extremely rare 🔥</div>
-        <div class="availability-notice">
-          Our lowest price in the last 15 months!
-        </div> -->
         <div class="guests-info">
           👥 {{ room.capacity }} {{ room.capacity > 1 ? "guests" : "guest" }} 1
           room
@@ -54,25 +45,26 @@
         <div class="tax-info">Per night before taxes and fees</div>
         <div class="payment-info">
           <div class="no-payment">No payment today</div>
-          Our last {{ room.room_types?.length || 0 }}
-          {{ (room.room_types?.length || 0) > 1 ? "room types" : "room type" }}!
+          <div class="availability-info">
+            Our last {{ sameRoomCount }} {{ sameRoomCount > 1 ? "rooms" : "room" }}!
+          </div>
         </div>
       </div>
 
       <div class="room-quantity">
-         <select>
-    <option v-for="n in props.roomCount" :key="n" :value="n">{{ n }}</option>
-  </select>
+        <select v-model="selectedRoomCount">
+          <option v-for="n in sameRoomCount" :key="n" :value="n">{{ n }}</option>
+        </select>
       </div>
 
       <button class="book-now-btn" @click="reserveRoom">Book now</button>
-      <div class="minutes-info">5 only takes 2 minutes</div>
+      <div class="minutes-info">Booking only takes 2 minutes</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 const props = defineProps({
   room: {
@@ -83,7 +75,6 @@ const props = defineProps({
       name: "",
       capacity: 1,
       default_price: "0.00",
-      room_types: [],
       amenities: [],
     }),
   },
@@ -95,20 +86,15 @@ const props = defineProps({
 
 const emit = defineEmits(["reserve"]);
 
-// Compute count of rooms with same name & price inside room.room_types
-const sameRoomCount = computed(() => {
-  if (!props.room.room_types || !Array.isArray(props.room.room_types)) return 1;
+const selectedRoomCount = ref(1);
 
-  return props.room.room_types.filter(r =>
-    r.name === props.room.name && r.default_price === props.room.default_price
-  ).length || 1;
-});
+// Use the passed roomCount prop directly
+const sameRoomCount = computed(() => props.roomCount);
 
 const reserveRoom = () => {
-  emit("reserve", props.room);
-  console.log("Reserving room:", props.room);
+  emit("reserve", { ...props.room, quantity: selectedRoomCount.value });
+  console.log("Reserving room:", props.room, "Quantity:", selectedRoomCount.value);
 };
-
 </script>
 <style scoped>
 .room-card {

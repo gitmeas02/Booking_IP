@@ -62,7 +62,8 @@ Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
 });
 // amenity
 Route::get('/amenities', [AmenityController::class, 'index']);
-Route::get('/rooms', [RoomTypeController::class, 'getRooms']);
+Route::get('/rooms/available', [RoomTypeController::class, 'getRoomsIsAvailable']);
+Route::get('/rooms', [RoomTypeController::class, 'getAllRooms']);
 
 //Images
 
@@ -73,6 +74,7 @@ Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'updateMe'
 //Get all Applications
 Route::get('/allhouse',[HouseListingController::class,'getAllHouses']);
 Route::get('/rooms/blocked-today', [BlockRoomController::class, 'getTodayBlockedRooms']);
+Route::get('/house/{id}', [HouseListingController::class, 'getHouseById']);
 
 // api.php
 //block room

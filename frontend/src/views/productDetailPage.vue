@@ -75,7 +75,15 @@
               >{{ hotelDetail.location?.street }},
               {{ hotelDetail.location?.city }}</span
             >
-            <a href="#map" class="see-map-link">SEE MAP</a>
+            <a
+              :href="
+                'https://www.google.com/maps?q=' +
+                encodeURIComponent(hotelDetail.location?.street)
+              "
+              target="_blank"
+              class="see-map-link"
+              >SEE MAP</a
+            >
           </div>
         </div>
         <div class="hotel-review-section">
@@ -173,7 +181,7 @@
               </div>
               <div class="room-cards">
                 <RoomTypeCard
-                  v-for="room in uniqueRoomTypesWithCount"
+                  v-for="room in uniqueRoomTypesWithCountAndAvailableRoomType"
                   :key="room.id"
                   :room="room"
                   :roomCount="room.count"
@@ -187,7 +195,7 @@
             <h3>Available Rooms</h3>
             <div class="room-cards">
               <RoomTypeCard
-                v-for="room in uniqueRoomTypesWithCount"
+                v-for="room in uniqueRoomTypesWithCountAndAvailableRoomType"
                 :key="room.id"
                 :room="room"
                 :roomCount="room.count"
@@ -238,7 +246,7 @@
 
               <div class="room-cards">
                 <RoomTypeCard
-                  v-for="room in uniqueRoomTypes"
+                  v-for="room in uniqueRoomTypesWithCountAndAvailableRoomType"
                   :key="room.id"
                   :room="room"
                   @reserve="reserveRoom"
@@ -286,24 +294,35 @@
 
           <div class="map-card">
             <div class="map-container">
-              <img
-                src="https://plus.unsplash.com/premium_photo-1682310071124-33632135b2ee?w=500"
-                alt="Map"
-                class="map-image"
-              />
+              <iframe
+                :src="`https://www.google.com/maps?q=${encodeURIComponent(
+                  hotelDetail.location.street
+                )},${encodeURIComponent(
+                  hotelDetail.location.city
+                )}&output=embed`"
+                width="100%"
+                height="300"
+                style="border: 0"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                class="map-iframe"
+              ></iframe>
               <div class="map-marker">📍</div>
-              <button class="see-map-btn">SEE MAP</button>
+              <a
+                :href="`https://www.google.com/maps?q=${encodeURIComponent(
+                  hotelDetail.location.street
+                )},${encodeURIComponent(hotelDetail.location.city)}`"
+                target="_blank"
+                class="see-map-btn"
+                >SEE MAP</a
+              >
             </div>
 
             <div class="location-score">
               <span class="score">8.4</span>
               <span class="label">Excellent</span>
               <span class="subtext">1 location rating score</span>
-            </div>
-
-            <div class="location-badge">
-              <span class="location-icon">📍</span>
-              <span>Excellent location</span>
             </div>
 
             <div class="parking-info">
@@ -415,37 +434,53 @@ import { onMounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import CommentSection from "./commentSection.vue";
 import RoomTypeCard from "./RoomTypeCard.vue";
-// ADDED: Import icons if using lucide-vue
 import { X, ChevronLeft, ChevronRight } from "lucide-vue-next";
+import dayjs from "dayjs";
 
 const hotelStore = useRoomStore();
 const route = useRoute();
 const hotelId = route.params.id;
 const hotelDetail = ref(null);
 const activeTab = ref("overview");
-
-// ADDED: Missing reactive variables for modal and image navigation
 const modalVisible = ref(false);
 const currentImageIndex = ref(0);
 const currentPhotoIndex = ref(0);
+const selectedStartDate = ref("2025-06-20");
+const selectedEndDate = ref("2025-06-22");
 
-const uniqueRoomTypesWithCount = computed(() => {
+const uniqueRoomTypesWithCountAndAvailableRoomType = computed(() => {
   if (!hotelDetail.value?.room_types) return [];
+
   const seen = new Map();
 
   hotelDetail.value.room_types.forEach((room) => {
-    const key = `${room.name}-${room.default_price}`;
-    if (seen.has(key)) {
-      seen.get(key).count++;
-    } else {
-      seen.set(key, { ...room, count: 1 });
+    const isBlocked =
+      room.block_dates?.some((block) => {
+        const blockStart = dayjs(block.start_date);
+        const blockEnd = dayjs(block.end_date);
+        const selectStart = dayjs(selectedStartDate.value);
+        const selectEnd = dayjs(selectedEndDate.value);
+
+        return blockStart.isBefore(selectEnd) && blockEnd.isAfter(selectStart);
+      }) ?? false;
+
+    if (!isBlocked) {
+      const key = `${room.name}-${room.default_price}`;
+      if (seen.has(key)) {
+        const existing = seen.get(key);
+        existing.count++;
+      } else {
+        seen.set(key, {
+          ...room,
+          count: 1,
+        });
+      }
     }
   });
 
   return Array.from(seen.values());
 });
 
-// Fixed the computed property for images
 const images = computed(() => {
   return (
     hotelDetail.value?.photos?.map(
@@ -454,7 +489,6 @@ const images = computed(() => {
   );
 });
 
-// ADDED: Missing modal and image navigation functions
 const openPhotoModal = (index) => {
   currentPhotoIndex.value = index;
   modalVisible.value = true;
@@ -482,7 +516,6 @@ const setCurrentImage = (index) => {
 
 const scrollToComments = () => {
   activeTab.value = "comments";
-  // Scroll to comments section if needed
   const commentsSection = document.querySelector(".comments-bottom-section");
   if (commentsSection) {
     commentsSection.scrollIntoView({ behavior: "smooth" });
@@ -495,12 +528,14 @@ const reserveRoom = (room) => {
 };
 
 onMounted(async () => {
-  await hotelStore.fetchHotels();
-  hotelDetail.value = hotelStore.getHouseById(hotelId);
-  console.log("Hotel Detail", hotelDetail.value);
+  try {
+    hotelDetail.value = await hotelStore.fetchHotelById(hotelId);
+    console.log("Hotel Detail", hotelDetail.value);
+  } catch (error) {
+    console.error("Failed to load hotel details:", error);
+  }
 });
 </script>
-
 <style scoped>
 .booking-container {
   max-width: 1200px;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Room;
 
+use App\Models\Booking;
 use App\Models\RoomImage;
 use App\Models\RoomPrice;
 use App\Models\RoomType;
@@ -108,9 +109,127 @@ public function getRoomByIdAndOwnerApplication(Request $request, $roomId){
 public function updateRoomByIdAndOwnerApplication(Request $request, $roomId){
     
 }
-public function getRooms(){
-    $data= RoomType::all();
-    return response()->json($data);
+public function getAllRooms(){
+    $rooms = RoomType::with('blockDates')->get();
+    return response()->json($rooms);
+}
+
+//{
+//     "name": "King Bed",
+//     "default_price": 21.00,
+//     "start_date": "2025-06-22",
+//     "end_date": "2025-06-24",
+//     "quantity": 2
+// }->
+
+public function getAvailableRoomIds(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string',
+        'default_price' => 'required',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after:start_date',
+        'quantity' => 'required|integer|min:1',
+    ]);
+
+    $rooms = RoomType::with('blockDates')
+        ->where('name', $request->name)
+        ->where('default_price', $request->default_price)
+        ->get();
+
+    $availableRooms = [];
+
+    foreach ($rooms as $room) {
+        $isBlocked = false;
+
+        // Check block dates
+        foreach ($room->blockDates as $block) {
+            if (
+                $block->start_date < $request->end_date &&
+                $block->end_date > $request->start_date
+            ) {
+                $isBlocked = true;
+                break;
+            }
+        }
+
+        // Check bookings
+        if (!$isBlocked) {
+            $hasBooking = Booking::where('room_id', $room->id)
+                ->where('status', '!=', 'cancelled')
+                ->where('status', '!=', 'completed')
+                ->where(function ($query) use ($request) {
+                    $query->where('check_in_date', '<', $request->end_date)
+                          ->where('check_out_date', '>', $request->start_date);
+                })
+                ->exists();
+
+            if (!$hasBooking) {
+                $availableRooms[] = $room->id;
+            }
+        }
+    }
+
+    // Return only as many as requested
+    $selectedRooms = array_slice($availableRooms, 0, $request->quantity);
+
+    return response()->json([
+        'room_ids' => $selectedRooms,
+        'count' => count($selectedRooms),
+    ]);
+}
+
+public function getRoomsIsAvailable(Request $request)
+{
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
+
+    if (!$startDate || !$endDate) {
+        return response()->json(['error' => 'start_date and end_date are required'], 422);
+    }
+
+    $roomTypes = RoomType::with('blockDates')->get();
+
+    $seen = [];
+
+    foreach ($roomTypes as $room) {
+        $isBlocked = false;
+
+        // Check block dates
+        foreach ($room->blockDates as $block) {
+            if (
+                $block->start_date < $endDate &&
+                $block->end_date > $startDate
+            ) {
+                $isBlocked = true;
+                break;
+            }
+        }
+
+        // Check bookings
+        if (!$isBlocked) {
+            $hasBooking = Booking::where('room_id', $room->id)
+                ->where('status', '!=', 'cancelled')
+                ->where('status', '!=', 'completed')
+                ->where(function ($query) use ($startDate, $endDate) {
+                    $query->where('check_in_date', '<', $endDate)
+                          ->where('check_out_date', '>', $startDate);
+                })
+                ->exists();
+
+            if (!$hasBooking) {
+                $key = $room->name . '-' . $room->default_price;
+                if (isset($seen[$key])) {
+                    $seen[$key]['count']++;
+                } else {
+                    $seen[$key] = $room->toArray();
+                    $seen[$key]['count'] = 1;
+                }
+            }
+        }
+    }
+
+    return response()->json(array_values($seen));
 }
 
  // update price 
