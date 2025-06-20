@@ -79,104 +79,185 @@
   >
     <div class="min-w-[300px] w-full">
       <BookingSummary 
-      :hotelName="bookingDetails.hotelName" 
-                      :location="bookingDetails.location"
-                      :near="bookingDetails.near"
-                      :checkin="bookingDetails.checkin"
-                      :checkout="bookingDetails.checkout"
-                      :roomType="bookingDetails.roomType"
-                      :guest="bookingDetails.guest"
-                      :nights="bookingDetails.nights"
-                      :roomRate="bookingDetails.roomRate"
-                      :taxes="bookingDetails.taxes"
-                      :cancellation="bookingDetails.cancellation"
+        :hotelName="bookingDetails.hotelName" 
+        :location="bookingDetails.location"
+        :near="bookingDetails.near"
+        :checkin="bookingDetails.checkin"
+        :checkout="bookingDetails.checkout"
+        :roomType="bookingDetails.roomType"
+        :guest="bookingDetails.guest"
+        :nights="bookingDetails.nights"
+        :roomRate="bookingDetails.roomRate"
+        :taxes="bookingDetails.taxes"
+        :cancellation="bookingDetails.cancellation"
       />
     </div>
     <div class="md:col-span-2">
-      <FormInfo  ref="formInfoRef"/>
+      <FormInfo ref="formInfoRef" />
       <div class="mr-16 ml-16 mt-8">
-    <button 
-    type="button" 
-    @click="submitForm"  class="w-full btn bg-blue-950 p-2 text-white ">Complete Booking</button>
-   </div>
+        <button 
+          type="button" 
+          @click="submitForm"  
+          class="w-full btn bg-blue-950 p-2 text-white "
+        >Complete Booking</button>
+      </div>
     </div>
-    
   </div>
-  
 </template>
+
 <script setup>
+import axios from "axios";
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import FormInfo from "@/components/CheckoutComponents/FormInfo.vue";
 import BookingSummary from "@/components/CheckoutComponents/BookingSummary.vue";
 import { MapPin, Shield, Bed } from "lucide-vue-next";
-import { ref } from "vue";
- import { useRoute } from 'vue-router';
 import { useRoomStore } from "@/stores/store";
+import dayjs from "dayjs";
 
 const route = useRoute();
+const router = useRouter();
+const roomStore = useRoomStore();
+const formInfoRef = ref(null);
+const isLoading = ref(false);
+const errorMessage = ref('');
 
-// Accessing route data
-const id = route.params.id;
+// Get params from route query
+const roomId = route.params.id;
+const roomIds = route.query.roomIds?.split(",").map(id => Number(id)) || [];
+const hotelId = Number(route.query.hotelId);
 const checkin = route.query.checkin;
 const checkout = route.query.checkout;
-const roomStore=useRoomStore();
-const getRoomInfoById = (id) => {
-  return roomStore.rooms.find(room => room.id === Number(id));
-};
-const selectedRoom = getRoomInfoById(id);
-const hotel = selectedRoom
-  ? roomStore.hotels.find(h => h.id === selectedRoom.hotelId)
-  : null;  const formInfoRef = ref(null);
-  const bookingDetails = {
-  hotelName: hotel?.name || "Khun Hoth Hotel",
-  location: "Siem Reap, Cambodia",
-  near: "Luxury boutique hotel near Angkor Wat",
-  checkin: new Date(checkin),
-checkout: new Date(checkout),
-  roomType: "Deluxe Double",
-  guest: 2,
-  nights: 3,
-  roomRate: 100,
-  taxes: 45,
-  cancellation: new Date("2025-04-07"),
-};
-  const submitForm=()=>{
-    const bookingSummaryData = {
-    hotelName: bookingDetails.hotelName,
-    location: bookingDetails.location,
-    near: bookingDetails.near,
-    checkin: bookingDetails.checkin,
-    checkout: bookingDetails.checkout,
-    roomType: bookingDetails.roomType,
-    guest: bookingDetails.guest,
-    nights: bookingDetails.nights,
-    roomRate: bookingDetails.roomRate,
-    taxes: bookingDetails.taxes,
-    cancellation: bookingDetails.cancellation,
-  };
-  const formInfoData = {
-    firstName: formInfoRef.value.firstName,
-    lastName: formInfoRef.value.lastName,
-    email: formInfoRef.value.email,
-    phoneNumber: formInfoRef.value.phoneNumber,
-    specialRequests: formInfoRef.value.specialRequests,
-    selectedPayment: formInfoRef.value.selectedPayment,
-    cardNumber: formInfoRef.value.cardNumber,
-    expiryDate: formInfoRef.value.expiryDate,
-    cvv: formInfoRef.value.cvv,
-    agreeToTerms: formInfoRef.value.agreeToTerms,
-  };
-  if (formInfoData.agreeToTerms) {
-    // Combine both form data and booking summary data
-    const completeData = {
-      ...bookingSummaryData,
-      ...formInfoData,
-    };
-    console.log("✅ All Booking + Form Data:",completeData)
-  } else {
-    console.log("User did not agree to the terms.");
-  }
-}
-  
+const quantity = Number(route.query.quantity) || 1;
+const roomName = route.query.roomName;
+const roomPrice = Number(route.query.roomPrice);
+const capacity = Number(route.query.capacity) || 2;
 
+console.log("Checkout page received:", {
+  roomId,
+  roomIds,
+  hotelId,
+  checkin,
+  checkout,
+  quantity,
+  roomName,
+  roomPrice,
+  capacity
+});
+const getFormData = () => {
+  return {
+    firstName: firstName.value,
+    lastName: lastName.value,
+    email: email.value,
+    phoneNumber: phoneNumber.value,
+    specialRequests: specialRequests.value,
+    selectedPayment: selectedPayment.value,
+    cardNumber: cardNumber.value,
+    expiryDate: expiryDate.value,
+    cvv: cvv.value,
+    agreeToTerms: agreeToTerms.value,
+    guestCount: guestCount.value || 1,
+  };
+};
+
+defineExpose({
+  getFormData,
+});
+// Calculate nights
+const nights = checkin && checkout ? 
+  dayjs(checkout).diff(dayjs(checkin), 'day') : 1;
+
+// Calculate prices
+const roomRate = roomPrice * quantity * nights;
+const taxes = Math.round(roomRate * 0.1); // 10% tax
+const totalPrice = roomRate + taxes;
+
+// Setup booking details
+const bookingDetails = ref({
+  hotelName: "Loading...",
+  location: "Loading...",
+  near: "Loading...",
+  checkin: checkin ? dayjs(checkin).toDate() : null,
+  checkout: checkout ? dayjs(checkout).toDate() : null,
+  roomType: roomName || "Standard Room",
+  guest: capacity * quantity,
+  nights: nights,
+  roomRate: roomRate,
+  taxes: taxes,
+  total: totalPrice,
+  cancellation: dayjs().add(7, 'day').toDate(),
+});
+
+// Load hotel details
+onMounted(async () => {
+  try {
+    if (hotelId) {
+      const hotel = await roomStore.fetchHotelById(hotelId);
+      if (hotel) {
+        bookingDetails.value = {
+          ...bookingDetails.value,
+          hotelName: hotel.property_name,
+          location: hotel.location?.city + ", " + hotel.location?.country,
+          near: hotel.location?.landmarks || "City center",
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Error loading hotel details:", error);
+  }
+});
+
+// Create the booking when form is submitted
+const createBooking = async (formData) => {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
+    
+    const bookingData = {
+      user_id: 1, // Should be the logged-in user's ID
+      room_ids: roomIds,
+      hotel_id: hotelId,
+      check_in_date: checkin,
+      check_out_date: checkout,
+      number_of_guests: Number(formData.guestCount || capacity),
+      total_price: totalPrice,
+      special_request: formData.specialRequests || '',
+      payment_method: formData.selectedPayment,
+    };
+
+    console.log("Sending booking data:", bookingData);
+    
+    const response = await axios.post('http://localhost:8100/api/bookings', bookingData);
+    
+    if (response.data && response.data.booking_id) {
+      alert("Booking successful! Your booking ID is: " + response.data.booking_id);
+      router.push('/current-past-booked');
+    } else {
+      throw new Error('Invalid booking response');
+    }
+  } catch (error) {
+    console.error('Booking creation error:', error);
+    errorMessage.value = 'Failed to create booking: ' + error.message;
+    alert('Failed to create booking. Please try again.');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Handle form submission
+const submitForm = () => {
+  if (formInfoRef.value) {
+    const formData = formInfoRef.value.getFormData();
+    
+    if (!formData.agreeToTerms) {
+      alert('Please agree to the terms and conditions to continue.');
+      return;
+    }
+    
+    createBooking(formData);
+  } else {
+    alert('Form information is not available. Please try again.');
+  }
+};
 </script>
 <style scoped></style>

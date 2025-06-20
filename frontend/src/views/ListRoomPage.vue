@@ -125,6 +125,12 @@ const searchHotels = async () => {
       location: searchStore.street,
       startDate: searchStore.startDate,
       endDate: searchStore.endDate,
+      capacity: searchStore.capacity,
+      rooms: searchStore.rooms,
+      adults: searchStore.adults,
+      children: searchStore.children,
+      pets: searchStore.pets,
+
     });
     filteredHotels.value = response;
   } catch (err) {
@@ -139,8 +145,14 @@ const viewRoomDetails = (roomId) => {
     name: "ProductsDetails",
     params: { id: roomId },
     query: {
-      checkin: searchStore.startDate,
-      checkout: searchStore.endDate,
+      street: searchStore.street,
+      startDate: searchStore.startDate ? searchStore.startDate.toString() : null,
+      endDate: searchStore.endDate ? searchStore.endDate.toString() : null,
+      rooms: searchStore.rooms,
+      adults: searchStore.adults,
+      children: searchStore.children,
+      pets: searchStore.pets ? 'true' : 'false',
+      capacity: searchStore.capacity,
     },
   });
 };

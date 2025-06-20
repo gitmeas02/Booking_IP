@@ -3,6 +3,7 @@
 use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlockRoom\BlockRoomController;
+use App\Http\Controllers\Bookings\BookingController;
 use App\Http\Controllers\Houses\HouseListingController;
 use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\OwnerController;
@@ -62,10 +63,11 @@ Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
 });
 // amenity
 Route::get('/amenities', [AmenityController::class, 'index']);
-Route::get('/rooms/available', [RoomTypeController::class, 'getRoomsIsAvailable']);
+Route::get('/rooms/available', [RoomTypeController::class, 'getRoomsIsAvailableIds']);
 Route::get('/rooms', [RoomTypeController::class, 'getAllRooms']);
 
-//Images
+//Bookings
+Route::post('/bookings', [BookingController::class, 'store']);
 
 
 // Update Route

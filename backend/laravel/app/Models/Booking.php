@@ -9,7 +9,7 @@ class Booking extends Model
    protected $fillable = [
         'user_id',
         'room_id',
-        'application_id',
+        'owner_application_id',
         'user_commission',
         'hotel_commission',
         'check_in_date',
@@ -17,8 +17,12 @@ class Booking extends Model
         'number_of_guests',
         'total_price',
         'special_request',
-        'booking_at',
-        'status',
+        'status'
+    ];
+
+    protected $casts = [
+        'check_in_date' => 'date',
+        'check_out_date' => 'date',
     ];
 
     public function user()
@@ -26,7 +30,7 @@ class Booking extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function roomType()
+    public function room()
     {
         return $this->belongsTo(RoomType::class, 'room_id');
     }

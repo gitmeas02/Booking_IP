@@ -45,13 +45,11 @@
           class="thumbnail-container"
           @click="openPhotoModal(index)"
         >
-          <!-- FIXED: Use proper image URL construction -->
           <img
             :src="'http://localhost:9000/ownerimages/' + image.url"
             alt="Room thumbnail"
             class="thumbnail"
           />
-          <!-- FIXED: Use hotelDetail.photos.length instead of images.length -->
           <div
             v-if="index === hotelDetail.photos.length - 1"
             class="photo-count"
@@ -185,6 +183,8 @@
                   :key="room.id"
                   :room="room"
                   :roomCount="room.count"
+                  :selectedStartDate="selectedStartDate"
+                  :selectedEndDate="selectedEndDate"
                   @reserve="reserveRoom"
                 />
               </div>
@@ -199,6 +199,8 @@
                 :key="room.id"
                 :room="room"
                 :roomCount="room.count"
+                :selectedStartDate="selectedStartDate"
+                :selectedEndDate="selectedEndDate"
                 @reserve="reserveRoom"
               />
             </div>
@@ -249,6 +251,8 @@
                   v-for="room in uniqueRoomTypesWithCountAndAvailableRoomType"
                   :key="room.id"
                   :room="room"
+                  :selectedStartDate="selectedStartDate"
+                  :selectedEndDate="selectedEndDate"
                   @reserve="reserveRoom"
                 />
               </div>
@@ -405,7 +409,6 @@
           >
             <ChevronLeft />
           </button>
-          <!-- FIXED: Use images computed property for modal -->
           <img :src="images[currentPhotoIndex]" class="modal-image" />
           <button
             class="modal-nav right"
@@ -430,14 +433,17 @@
 
 <script setup>
 import { useRoomStore } from "@/stores/store";
+import { useSearchStore } from "@/stores/useSearchStore";
 import { onMounted, ref, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import CommentSection from "./commentSection.vue";
 import RoomTypeCard from "./RoomTypeCard.vue";
 import { X, ChevronLeft, ChevronRight } from "lucide-vue-next";
 import dayjs from "dayjs";
 
+const router = useRouter();
 const hotelStore = useRoomStore();
+const searchStore = useSearchStore();
 const route = useRoute();
 const hotelId = route.params.id;
 const hotelDetail = ref(null);
@@ -445,8 +451,10 @@ const activeTab = ref("overview");
 const modalVisible = ref(false);
 const currentImageIndex = ref(0);
 const currentPhotoIndex = ref(0);
-const selectedStartDate = ref("2025-06-20");
-const selectedEndDate = ref("2025-06-22");
+
+// Use search store for dates - fallback to defaults if not set
+const selectedStartDate = computed(() => searchStore.startDate || dayjs().format('YYYY-MM-DD'));
+const selectedEndDate = computed(() => searchStore.endDate || dayjs().add(1, 'day').format('YYYY-MM-DD'));
 
 const uniqueRoomTypesWithCountAndAvailableRoomType = computed(() => {
   if (!hotelDetail.value?.room_types) return [];
@@ -522,9 +530,50 @@ const scrollToComments = () => {
   }
 };
 
-const reserveRoom = (room) => {
-  console.log("Reserving room:", room);
-  // Add your reservation logic here
+const reserveRoom = async (room) => { // select rooms this mean we get roons [4,2,.eg.]
+  try {
+    // Fetch available room IDs from backend
+    const res = await fetch("http://localhost:8100/api/rooms/available", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: room.name,
+        default_price: room.default_price,
+        start_date: selectedStartDate.value,
+        end_date: selectedEndDate.value,
+        quantity: room.count || 1,
+      }),
+    });
+    console.log("Datahhhhhhhhh",res.data)
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    
+    if (!data.room_ids || data.room_ids.length === 0) {
+      alert("No available rooms for your selection.");
+      return;
+    }
+    
+    // Go to checkout with roomIds and booking info
+    router.push({
+      name: "checkout",
+      query: {
+        roomIds: data.room_ids.join(","),
+        hotelId: hotelDetail.value.id,
+        checkin: selectedStartDate.value,
+        checkout: selectedEndDate.value,
+        quantity: room.count || 1,
+        roomName: room.name,
+        roomPrice: room.default_price,
+        capacity: room.capacity,
+      },
+    });
+  } catch (err) {
+    console.error("Reservation error:", err);
+    alert("Failed to reserve room. Please try again.");
+  }
 };
 
 onMounted(async () => {

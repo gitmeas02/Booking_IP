@@ -2,40 +2,39 @@
   <div class="room-card">
     <div class="room-image-section">
       <img
-        v-if="room.images && room.images.length"
+        v-if="room?.images?.length"
         :src="'http://localhost:9000/' + room.images[0].image_url"
         alt="Room"
         class="room-image"
       />
       <a href="#" class="room-photos-link">Room photos and details</a>
     </div>
-
     <div class="room-details-section">
       <h4 class="room-type">
         {{ room.name || "Standard Double with Fan" }}
       </h4>
       <div class="room-amenities">
-        <div class="amenity" v-for="(amenity, index) in room.amenities" :key="index">
+        <div
+          class="amenity"
+          v-for="(amenity, index) in room?.amenities || []"
+          :key="amenity.id || index"
+        >
           {{ amenity.amenity_name }}
         </div>
       </div>
-
       <div class="room-specs">
         <div class="spec-item">
           🛏️ {{ room.capacity }} {{ room.capacity > 1 ? "guests" : "guest" }}
         </div>
       </div>
-
       <a href="#" class="see-facilities-link">See all room facilities</a>
     </div>
-
     <div class="room-pricing-section">
       <div class="pricing-info">
         <div class="guests-info">
-          👥 {{ room.capacity }} {{ room.capacity > 1 ? "guests" : "guest" }} 1
-          room
+          👥 {{ room.capacity }} {{ room.capacity > 1 ? "guests" : "guest" }} 1 room
         </div>
-        <div class="stay-duration">5 nights • Nov 29, 2024</div>
+        <div class="stay-duration">{{ stayDuration }} • {{ formatDate(selectedStartDate) }}</div>
         <div class="price-breakdown">
           <span class="original-price">USD {{ room.default_price }} -12%</span>
           <div class="final-price">
@@ -50,52 +49,106 @@
           </div>
         </div>
       </div>
-
       <div class="room-quantity">
         <select v-model="selectedRoomCount">
           <option v-for="n in sameRoomCount" :key="n" :value="n">{{ n }}</option>
         </select>
       </div>
-
       <button class="book-now-btn" @click="reserveRoom">Book now</button>
       <div class="minutes-info">Booking only takes 2 minutes</div>
     </div>
   </div>
 </template>
-
 <script setup>
+import axios from "axios";
 import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import dayjs from "dayjs";
 
 const props = defineProps({
-  room: {
-    type: Object,
-    required: true,
-    default: () => ({
-      images: [],
-      name: "",
-      capacity: 1,
-      default_price: "0.00",
-      amenities: [],
-    }),
-  },
-  roomCount: {
-    type: Number,
-    default: 1,
-  },
+  room: { type: Object, required: true },
+  roomCount: { type: Number, default: 1 },
+  selectedStartDate: { type: [String, Object], required: true },
+  selectedEndDate: { type: [String, Object], required: true },
 });
 
-const emit = defineEmits(["reserve"]);
-
+const router = useRouter();
 const selectedRoomCount = ref(1);
-
-// Use the passed roomCount prop directly
 const sameRoomCount = computed(() => props.roomCount);
 
-const reserveRoom = () => {
-  emit("reserve", { ...props.room, quantity: selectedRoomCount.value });
-  console.log("Reserving room:", props.room, "Quantity:", selectedRoomCount.value);
+// Helper to normalize the date (accepts string, object, or a value with property)
+const getDateValue = (date) => {
+  if (!date) return "";
+  return typeof date === "string" ? date : (date.value || date);
+};
+
+const stayDuration = computed(() => {
+  const start = dayjs(getDateValue(props.selectedStartDate));
+  const end = dayjs(getDateValue(props.selectedEndDate));
+  const nights = end.diff(start, "day");
+  return `${nights} ${nights === 1 ? "night" : "nights"}`;
+});
+
+const formatDate = (date) => {
+  return dayjs(getDateValue(date)).format("MMM DD, YYYY");
+};
+
+const reserveRoom = async () => {
+  try {
+    const startDate = dayjs(getDateValue(props.selectedStartDate)).format('YYYY-MM-DD');
+    const endDate = dayjs(getDateValue(props.selectedEndDate)).format('YYYY-MM-DD');
+
+    console.log("Checking room availability:", {
+      name: props.room.name,
+      default_price: props.room.default_price,
+      start_date: startDate,
+      end_date: endDate,
+      quantity: selectedRoomCount.value,
+    });
+    
+    // Use URLSearchParams for GET request
+    const params = new URLSearchParams({
+      name: props.room.name,
+      default_price: props.room.default_price.toString(),
+      start_date: startDate,
+      end_date: endDate,
+      quantity: selectedRoomCount.value.toString(),
+    });
+
+    const res = await axios.get(`http://localhost:8100/api/rooms/available?${params}`);
+    console.log("API Response:", res.data);
+    
+    if (!res.data || !res.data.room_ids) {
+      throw new Error('Invalid response format');
+    }
+    
+    if (res.data.room_ids.length === 0) {
+      alert("No available rooms for your selection.");
+      return;
+    }
+
+    // Navigate to checkout with room IDs and metadata
+    router.push({
+      name: "checkout",
+      params: { id: props.room.id }, // This is crucial for the :id in route
+      query: {
+        roomIds: res.data.room_ids.join(","),
+        hotelId: props.room.hotel_id || props.room.application_id || 2,
+        checkin: startDate,
+        checkout: endDate,
+        quantity: selectedRoomCount.value,
+        roomName: props.room.name,
+        roomPrice: props.room.default_price,
+        capacity: props.room.capacity,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to reserve room:", err);
+    alert("Failed to reserve room. Please try again: " + err.message);
+  }
 };
 </script>
+
 <style scoped>
 .room-card {
   border: 1px solid #e7e7e7;
