@@ -341,7 +341,7 @@ const getModalImageSrc = () => {
   if (modalType.value === 'hotel') {
     return `http://localhost:9000/ownerimages/${image.url}`;
   } else {
-    return `http://localhost:9000/${image.image_url}`;
+    return `http://localhost:9000/${image.image_url}`; //image.
   }
 };
 
@@ -349,7 +349,7 @@ const getThumbnailSrc = (image) => {
   if (modalType.value === 'hotel') {
     return `http://localhost:9000/ownerimages/${image.url}`;
   } else {
-    return `http://localhost:9000/${image.image_url}`;
+    return `http://localhost:9000/${image.image_url}`;// image_url
   }
 };
 
@@ -407,7 +407,8 @@ onMounted(async () => {
         hotelData.photos && hotelData.photos.length > 0
           ? hotelData.photos
           : (firstRoom?.images || []).map((img) => ({
-              url: img.thumbnail_url,
+              url: img.thumbnail_url, // Assuming thumbnail_url is available
+              // image_url: img.image_url, // Full image URL
             }));
       console.log("Hotel photos:", hotelPhotos);
 
