@@ -30,17 +30,17 @@ export const useRoomStore = defineStore("room", {
   },
 
   actions: {
-    async fetchHotels() {
-      this.properties = [
-        { name: "Hotel", count: 123 },
-        { name: "Apartment", count: 123 },
-        { name: "Guest House", count: 123 },
-        { name: "Villa", count: 85 },
-        { name: "Resort", count: 45 },
-        { name: "Hostel", count: 12 },
-      ];
+    async fetchHotels(filters = {}) {
+      // filters is an object containing search params
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/allhouse`);
+        const params = {
+          street: filters.street || '',
+          startDate: filters.startDate || '',
+          endDate: filters.endDate || '',
+          capacity: filters.capacity || '',
+          pets: filters.pets || false,
+        };
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/allhouse`, { params });
         this.hotels = response.data;
         return response.data;
       } catch (error) {
@@ -48,6 +48,7 @@ export const useRoomStore = defineStore("room", {
         throw error;
       }
     },
+
     async fetchHotelById(id) {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/house/${id}`);
