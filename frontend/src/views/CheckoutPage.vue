@@ -86,9 +86,11 @@
         :checkout="bookingDetails.checkout"
         :roomType="bookingDetails.roomType"
         :guest="bookingDetails.guest"
+        :roomPrice="roomPrice"
         :nights="bookingDetails.nights"
         :roomRate="bookingDetails.roomRate"
         :taxes="bookingDetails.taxes"
+        :quantity="quantity"
         :cancellation="bookingDetails.cancellation"
       />
     </div>
@@ -166,7 +168,15 @@ defineExpose({
 // Calculate nights
 const nights = checkin && checkout ? 
   dayjs(checkout).diff(dayjs(checkin), 'day') : 1;
-
+console.log("Calculated nights:", nights);
+console.log("Room IDs:", roomIds);
+console.log("Hotel ID:", hotelId);
+console.log("Check-in date:", checkin);
+console.log("Check-out date:", checkout);
+console.log("Quantity:", quantity);
+console.log("Room Name:", roomName);
+console.log("Room Price:", roomPrice);
+console.log("Capacity:", capacity);
 // Calculate prices
 const roomRate = roomPrice * quantity * nights;
 const taxes = Math.round(roomRate * 0.1); // 10% tax
