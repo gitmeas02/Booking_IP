@@ -1,4 +1,4 @@
-<!-- src/pages/Home.vue or HeroSection.vue -->
+<!-- src/pages/Hero.vue or Home.vue -->
 <template>
   <div class="relative w-screen h-[70vh] flex items-center justify-center">
     <img src="../../assets/h-bg.jpg" alt="Hero Background" class="absolute w-screen h-full object-cover" />
@@ -9,27 +9,27 @@
 <script setup>
 import DatepickerCard from '@/components/DatePicker/DatepickerCard.vue';
 import { useRouter } from 'vue-router';
-import { useSearchStore } from '@/stores/useSearchStore'; // Import your Pinia store
+import { useSearchStore } from '@/stores/useSearchStore';
 
 const router = useRouter();
-const searchStore = useSearchStore(); // Use the store
+const searchStore = useSearchStore();
 
 const handleSearch = (searchParams) => {
-  // 1. Save to Pinia store
+  // Save to Pinia store
   searchStore.setSearchParams(searchParams);
 
-  // 2. Navigate with query params
+  // Navigate to listroom with query params
   router.push({
     path: '/listroom',
     query: {
-      street: searchParams.street,
-      startDate: searchParams.startDate,
-      endDate: searchParams.endDate,
-      capacity: searchParams.capacity,
-      rooms: searchParams.rooms,
-      adults: searchParams.adults,
-      children: searchParams.children,
-      pets: searchParams.pets,
+      street: searchParams.street || '',
+      startDate: searchParams.startDate || '',
+      endDate: searchParams.endDate || '',
+      capacity: searchParams.capacity || 2,
+      rooms: searchParams.rooms || 1,
+      adults: searchParams.adults || 1,
+      children: searchParams.children || 0,
+      pets: searchParams.pets ? 'true' : 'false',
     },
   });
 };
