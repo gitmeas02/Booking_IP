@@ -22,6 +22,8 @@ import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
 import OwnerBookingList from "@/views/OwnerBookingList.vue";
 import OwnerDashboard from "@/views/OwnerDashboard.vue";
 import AdminBookingList from "@/views/AdminBookingList.vue";
+import EditProperty from "@/views/AdminPage/EditProperty.vue";
+
 
 import axios from "axios";
 
@@ -89,6 +91,15 @@ const routes = [
   path: "/upload-property",
   name: "uploadProperty",
   component: UploadProperty,
+  meta: {
+    requiresAuth: true,
+    roles: ['owner']
+  }
+},
+{
+  path: "/edit-property",
+  name: "editProperty",
+  component: EditProperty,
   meta: {
     requiresAuth: true,
     roles: ['owner']

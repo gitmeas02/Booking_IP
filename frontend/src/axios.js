@@ -32,7 +32,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized access (e.g., token expired or invalid)
       console.warn('Unauthorized request. Redirecting to login...');
-      localStorage.removeItem('authToken'); // Clear invalid token
+      localStorage.removeItem('token'); // Clear invalid token
       // Redirect to login page (adjust route as needed)
       window.location.href = '/login';
     }

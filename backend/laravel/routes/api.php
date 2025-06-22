@@ -39,7 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user-roles/{user}', [RoleController::class, 'getUserRoles']);
     // Role switching
     Route::post('/switch-role', [RoleController::class, 'switchRole']);
-    
+
     // Role management (admin only - add middleware as needed)
     Route::post('/assign-role', [RoleController::class, 'assignRole']);
     Route::post('/remove-role', [RoleController::class, 'removeRole']);
@@ -52,14 +52,16 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 // company
 // Route::middleware('auth:sanctum')->prefix('company')->group(function () {
-Route::post(  '/approve-owner/{id}', [OwnerController::class, 'approve']);
+Route::post('/approve-owner/{id}', [OwnerController::class, 'approve']);
 // });
 //owner
 Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
     Route::post('/property/{id}/room', [RoomTypeController::class, 'storeMultiple']);
+    Route::get('/property', [RoomTypeController::class, 'getRoomsByProperty']);
     Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
     Route::get('/application/{id}/images', [ImageController::class, 'getUserApplicationImages']);
-   //http://localhost:8100/api/owner/application/7/images
+    //http://localhost:8100/api/owner/application/7/images
+    Route::patch('/edit/house/{houseId}/room/{id}', [RoomTypeController::class, 'editRoom']);
 });
 // amenity
 Route::get('/amenities', [AmenityController::class, 'index']);
@@ -74,7 +76,7 @@ Route::post('/bookings', [BookingController::class, 'store']);
 Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'updateMe']);
 
 //Get all Applications
-Route::get('/allhouse',[HouseListingController::class,'getAllHouses']);
+Route::get('/allhouse', [HouseListingController::class, 'getAllHouses']);
 Route::get('/rooms/blocked-today', [BlockRoomController::class, 'getTodayBlockedRooms']);
 Route::get('/house/{id}', [HouseListingController::class, 'getHouseById']);
 
