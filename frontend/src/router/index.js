@@ -24,6 +24,7 @@ import OwnerDashboard from "@/views/OwnerDashboard.vue";
 import AdminBookingList from "@/views/AdminBookingList.vue";
 
 import axios from "axios";
+import EditRooms from "@/views/AdminPage/EditRooms.vue";
 
 const routes = [
   ...index2,
@@ -85,10 +86,11 @@ const routes = [
       roles: ['user', 'owner'] 
     }
   },
-{
-  path: "/upload-property",
-  name: "uploadProperty",
-  component: UploadProperty,
+
+  {
+  path: "/edit-property",
+  name: "editProperty",
+  component: EditRooms,
   meta: {
     requiresAuth: true,
     roles: ['owner']

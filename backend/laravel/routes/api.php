@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\RoomsController;
 use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlockRoom\BlockRoomController;
@@ -88,3 +89,12 @@ Route::post('/block-room/{roomId}', [BlockRoomController::class, 'blockRoom'])
 Route::post('/unblock-room/{roomId}', [BlockRoomController::class, 'unblock'])
     ->middleware('auth:sanctum');
 Route::get('/block-room/{roomid}', [HouseListingController::class, 'getBlockedDates'])->middleware('auth:sanctum');
+// Get houses owned by the authenticated user
+Route::middleware('auth:sanctum')->get('/houses/owner', [RoomsController::class, 'getHousesOwner'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->get('/houses/owner/{id}', [RoomsController::class, 'getOwnerHouseById'])->middleware('auth:sanctum');
+// Get all room types
+Route::middleware('auth:sanctum')->get('/houses/{houseId}/rooms', [RoomsController::class, 'getRoomsBelogingToHouse'])->middleware('auth:sanctum');
+// Get a specific room type by ID
+Route::middleware('auth:sanctum')->get('/houses/{houseId}/rooms/{roomId}', [RoomsController::class, 'getRoomByIdBelongtoHouseId'])->middleware('auth:sanctum');
+// Update a specific room type by ID
+Route::middleware('auth:sanctum')->put('/houses/{houseId}/rooms/{roomId}', [RoomsController::class, 'updateRoombyIdBelongtoHouseId'])->middleware('auth:sanctum');
