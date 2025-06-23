@@ -96,6 +96,16 @@ const routes = [
     roles: ['owner']
   }
 },
+
+  {
+  path: "/update-property",
+  name: "updateProperty",
+  component: UploadProperty,
+  meta: {
+    requiresAuth: true,
+    roles: ['owner']
+  }
+},
   {
     path: "/setting",
     name: "SettingUser",
