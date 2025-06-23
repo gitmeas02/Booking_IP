@@ -85,25 +85,32 @@
         <div v-if="currentImages.length > 0" class="current-images mb-6">
           <h3 class="text-lg font-semibold mb-2">Current Images</h3>
           <div class="images-grid grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div
-              v-for="(image, index) in currentImages"
-              :key="image.id"
-              class="relative image-item"
-            >
-              <img
-                :src="getImageUrl(image.image_url)"
-                :alt="`Room image ${index + 1}`"
-                class="w-full h-24 object-cover rounded cursor-pointer"
-                @click="openImageModal(getImageUrl(image.image_url))"
-              />
-              <button
-                @click="markImageForDeletion(image.id)"
-                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                :class="{ 'bg-red-700': imagesToDelete.includes(image.id) }"
-              >
-                ×
-              </button>
-            </div>
+<div
+  v-for="(image, index) in currentImages"
+  :key="image.id"
+  class="relative image-item"
+>
+  <img
+    :src="getImageUrl(image.image_url)"
+    :alt="`Room image ${index + 1}`"
+    class="w-full h-24 object-cover rounded cursor-pointer"
+    :class="{ 'opacity-40 grayscale': imagesToDelete.includes(image.id) }"
+    @click="openImageModal(getImageUrl(image.image_url))"
+  />
+  <div 
+    v-if="imagesToDelete.includes(image.id)"
+    class="absolute inset-0 flex items-center justify-center"
+  >
+    <span class="bg-red-600 text-white px-2 py-1 rounded text-sm">Marked for deletion</span>
+  </div>
+  <button
+    @click="markImageForDeletion(image.id)"
+    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+    :class="{ 'bg-red-700': imagesToDelete.includes(image.id) }"
+  >
+    ×
+  </button>
+</div>
           </div>
         </div>
 
