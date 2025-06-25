@@ -32,20 +32,20 @@ const categoryList = [
         image: "https://i.pinimg.com/736x/38/e5/c7/38e5c784036d0d789c37a50e3e634432.jpg",
         label: "Resort"
     },
-    // {
-    //     image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
-    //     label: "Cabin"
-    // },
-    // {
-    //     image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
-    //     label: "Vocation Home"
-    // },
-    // {
-    //     image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
-    //     label: "Hostel"
-    // },
     {
         image: "https://i.pinimg.com/736x/b9/f1/12/b9f1122e8cf847f4d1066b95e6ec88e2.jpg",
+        label: "Cabin"
+    },
+    {
+        image: "https://i.pinimg.com/736x/8a/86/14/8a8614955d0bffbde8fdad3701ff8be2.jpg",
+        label: "Vocation Home"
+    },
+    {
+        image: "https://i.pinimg.com/736x/c3/a4/7d/c3a47d77d16f26ec68e29c25d4158e82.jpg",
+        label: "Hostel"
+    },
+    {
+        image: "https://i.pinimg.com/736x/4d/28/0e/4d280ec85ec88d30a524196a0026a8a6.jpg",
         label: "Homestay"
     },
     
