@@ -91,7 +91,12 @@ export default {
                     "time": "1:00 PM",
                     "unread": "1"
                 },
-                
+                {
+                    "name": "Khun",
+                    "status": "I'm gay",
+                    "time": "1:00 PM",
+                    "unread": "1"
+                },
                 {
                     "name": "Meas",
                     "status": "I'm gay",
