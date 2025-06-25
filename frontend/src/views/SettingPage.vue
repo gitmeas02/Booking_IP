@@ -111,12 +111,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dashboard {
-  padding: 40px;
-  background-color: #f4f4f4;
-  font-family: sans-serif;
-  min-height: 100vh;
-}
 
 .profile {
   display: flex;
