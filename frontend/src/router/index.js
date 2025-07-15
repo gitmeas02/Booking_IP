@@ -5,6 +5,8 @@ import SettingDetailPage from "@/views/SettingDetailPage.vue";
 import SettingPage from "@/views/SettingPage.vue";
 import CheckoutPage from "@/views/CheckoutPage.vue";
 import ProductDetailPage from "@/views/productDetailPage.vue";
+import ProductCatalog from "@/views/ProductCatalog.vue";
+import EnhancedCheckout from "@/views/EnhancedCheckout.vue";
 
 import ForgotPassword from "@/views/Authentication/ForgotPassword.vue";
 import SignIn from "@/views/Authentication/SignIn.vue";
@@ -32,6 +34,16 @@ const routes = [
     path: "/",
     name: "Homepage",
     component: Homepage,
+  },
+  {
+    path: "/products",
+    name: "ProductCatalog",
+    component: ProductCatalog,
+  },
+  {
+    path: "/enhanced-checkout",
+    name: "EnhancedCheckout",
+    component: EnhancedCheckout,
   },
   {
     path: "/current-past-booked",

@@ -37,7 +37,14 @@ const paymentDetails = ref(null);
 
 const merchantName = "Khun Hotel";
 const currency = "KHR";
-const amount = ref(100); // Default amount, you can make this dynamic
+const props = defineProps({
+  initialAmount: {
+    type: Number,
+    default: 100
+  }
+})
+
+const amount = ref(props.initialAmount || 100);
 
 // Function to format Bakong hash (first 8 digits)
 const formatBakongHash = (hash) => {
@@ -305,18 +312,30 @@ onUnmounted(() => {
   }
 });
 
+// Watch for amount changes from parent component
+watch(() => props.initialAmount, (newAmount) => {
+  amount.value = newAmount
+}, { immediate: true })
+
+// Define capacity for guest count
+const capacity = ref(2)
+
 // Expose form data for parent component
 defineExpose({
-  firstName,
-  lastName,
-  email,
-  phoneNumber,
-  specialRequests,
-  selectedPayment,
-  cardNumber,
-  expiryDate,
-  cvv,
-  agreeToTerms,
+  getFormData: () => ({
+    firstName: firstName.value,
+    lastName: lastName.value,
+    email: email.value,
+    phoneNumber: phoneNumber.value,
+    specialRequests: specialRequests.value,
+    selectedPayment: selectedPayment.value,
+    cardNumber: cardNumber.value,
+    expiryDate: expiryDate.value,
+    cvv: cvv.value,
+    agreeToTerms: agreeToTerms.value,
+    guestCount: capacity.value,
+    pets: pets.value
+  })
 });
 </script>
 
