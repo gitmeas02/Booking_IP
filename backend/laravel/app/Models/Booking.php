@@ -17,6 +17,8 @@ class Booking extends Model
         'number_of_guests',
         'total_price',
         'special_request',
+        'payment_transaction_id',
+        'payment_method',
         'status'
     ];
 
@@ -43,5 +45,10 @@ class Booking extends Model
     public function payment()
     {
         return $this->hasOne(Payment::class);
+    }
+
+    public function transaction()
+    {
+        return $this->belongsTo(Transactions::class, 'payment_transaction_id', 'transaction_id');
     }
 }

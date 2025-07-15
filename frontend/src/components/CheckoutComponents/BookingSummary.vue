@@ -38,31 +38,27 @@
         </div>
 
         <div class="border-t pt-4">
-          
           <div class="flex justify-between py-1">
-            <span>Room Rate</span>
-            <span
-              >${{ roomPrice }} × {{ quantity }} rooms ×
-              {{ nights }} nights</span
-            >
-          </div>
-          <div class="flex justify-between py-1">
-            <span>Subtotal</span>
-            <span>${{ roomRate }}</span>
+            <span>Room Rate ({{ quantity }} room{{ quantity > 1 ? 's' : '' }} × {{ nights }} night{{ nights > 1 ? 's' : '' }})</span>
+            <span class="font-medium">${{ roomRate.toFixed(2) }}</span>
           </div>
           <div class="flex justify-between py-1">
             <span>Taxes & Fees</span>
-            <span>${{ taxes }}</span>
+            <span class="font-medium">${{ taxes.toFixed(2) }}</span>
+          </div>
+          <div class="flex justify-between py-1">
+            <span>Service Fee</span>
+            <span class="font-medium">$0.00</span>
           </div>
         </div>
 
         <div class="border-t pt-4">
           <div class="flex justify-between font-bold text-lg">
             <span>Total</span>
-            <span>${{ total }}</span>
+            <span class="text-green-600">${{ total.toFixed(2) }}</span>
           </div>
           <p class="text-sm text-muted-foreground mt-2">
-            Includes all taxes and fees
+            Includes taxes and fees
           </p>
         </div>
       </div>
@@ -79,7 +75,7 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
+import { computed } from "vue";
 
 export default {
   props: {

@@ -1,14 +1,21 @@
 <script setup>
 import {
-  CircleDollarSign,
-  CreditCard,
-  QrCode,
-  Download,
-  CheckCircle,
-  X,
+    CheckCircle,
+    CircleDollarSign,
+    CreditCard,
+    Download,
+    QrCode,
+    X,
 } from "lucide-vue-next";
-import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import EnhancedQRCode from "./EnhancedQRCode.vue";
+import { computed, onUnmounted, ref, watch } from "vue";
+
+// Define props
+const props = defineProps({
+  amount: {
+    type: Number,
+    default: 100
+  }
+});
 
 // Define reactive variables for form inputs
 const firstName = ref("");
@@ -37,7 +44,7 @@ const paymentDetails = ref(null);
 
 const merchantName = "Khun Hotel";
 const currency = "KHR";
-const amount = ref(100); // Default amount, you can make this dynamic
+const amount = computed(() => props.amount); // Use computed to get reactive amount from props
 
 // Function to format Bakong hash (first 8 digits)
 const formatBakongHash = (hash) => {
@@ -51,55 +58,9 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString();
 };
 
-// QR Code generation function
 const generateQRCode = async () => {
-  if (isGeneratingQR.value) return;
-
-  isGeneratingQR.value = true;
-
-  try {
-    console.log("🔄 Generating QR code...");
-
-    const response = await fetch("http://localhost:8100/api/payments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        amount: amount.value,
-        booking_reference: `HOTEL_${Date.now()}`,
-        merchant_name: merchantName,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error(`HTTP Error: ${response.status} ${response.statusText}`);
-      const errorText = await response.text();
-      console.error("Error response:", errorText);
-      return;
-    }
-
-    const data = await response.json();
-    console.log("QR Generation response:", data);
-
-    if (data.success) {
-      currentQRData.value = data;
-      transactionId.value = data.transaction_id;
-
-      // Generate QR image URL with enhanced visuals
-      const qrData = encodeURIComponent(data.qr_string);
-      qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&format=png&margin=10`;
-
-      console.log("✅ QR code generated successfully!");
-    } else {
-      console.error("Failed to generate QR code:", data.message);
-    }
-  } catch (error) {
-    console.error("Error generating QR code:", error);
-  } finally {
-    isGeneratingQR.value = false;
-  }
+  // This will be called by parent component after payment is created
+  console.log("QR code generation handled by parent component");
 };
 
 // Auto-refresh QR code every 2 minutes
@@ -128,6 +89,34 @@ const downloadQRCode = () => {
   document.body.removeChild(link);
 };
 
+// Handle payment creation from parent component
+const handlePaymentCreated = (paymentData) => {
+  currentQRData.value = paymentData;
+  transactionId.value = paymentData.transaction_id;
+
+  // Generate QR image URL
+  const qrData = encodeURIComponent(paymentData.qr_string);
+  qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&format=png&margin=10`;
+
+  console.log("✅ Payment created with booking data:", paymentData);
+
+  // Start checking payment status
+  startPaymentStatusChecking();
+};
+
+// Start payment status checking
+const startPaymentStatusChecking = () => {
+  if (statusCheckInterval.value) {
+    clearInterval(statusCheckInterval.value);
+  }
+
+  // Check immediately and then every 3 seconds
+  checkPaymentStatus();
+  statusCheckInterval.value = setInterval(() => {
+    checkPaymentStatus();
+  }, 3000);
+};
+
 // Payment status checker with enhanced logging and better error handling
 const checkPaymentStatus = async () => {
   if (!transactionId.value) return;
@@ -138,7 +127,7 @@ const checkPaymentStatus = async () => {
     );
 
     const response = await fetch(
-      `http://localhost:8100/api/payments/${transactionId.value}/status`,
+      `http://localhost:8100/api/payments/${transactionId.value}/status-with-booking`,
       {
         method: "GET",
         headers: {
@@ -153,12 +142,12 @@ const checkPaymentStatus = async () => {
     }
 
     const data = await response.json();
-    console.log("Payment status response:", data); // Debug log
+    console.log("Payment status response:", data);
 
     if (data.success) {
-      if (data.status === "success") {
-        // Payment completed successfully
-        console.log("🎉 Payment completed successfully!");
+      if (data.status === "success" && data.booking_created) {
+        // Payment completed successfully and booking created
+        console.log("🎉 Payment completed successfully and booking created!");
 
         // Prepare payment details for the success modal
         const transaction = data.transaction;
@@ -183,6 +172,7 @@ const checkPaymentStatus = async () => {
           ),
           paymentMethod: `KHQR Payment (${methodUsed})`,
           methodUsed: methodUsed,
+          bookingReference: transaction?.booking_reference || "N/A",
         };
 
         // Show success modal
@@ -192,7 +182,7 @@ const checkPaymentStatus = async () => {
         stopAllIntervals();
 
         // Log successful payment detection
-        console.log(`✅ Payment detected using ${methodUsed} method`);
+        console.log(`✅ Payment and booking completed using ${methodUsed} method`);
       } else if (data.status === "failed") {
         // Payment failed
         console.log("❌ Payment failed");
@@ -204,29 +194,25 @@ const checkPaymentStatus = async () => {
         stopAllIntervals();
       } else {
         // Still pending
-        console.log(`⏳ Payment status: ${data.status}`);
+        console.log("⏳ Payment still pending...");
       }
     } else {
-      console.warn(
-        "Payment status check returned success: false",
-        data.message
-      );
+      console.log("Payment status check failed:", data.message);
     }
   } catch (error) {
     console.error("Error checking payment status:", error);
-    // Don't stop intervals on network errors, keep trying
   }
 };
 
 // Helper function to stop all intervals
 const stopAllIntervals = () => {
-  if (qrRefreshInterval.value) {
-    clearInterval(qrRefreshInterval.value);
-    qrRefreshInterval.value = null;
-  }
   if (statusCheckInterval.value) {
     clearInterval(statusCheckInterval.value);
     statusCheckInterval.value = null;
+  }
+  if (qrRefreshInterval.value) {
+    clearInterval(qrRefreshInterval.value);
+    qrRefreshInterval.value = null;
   }
   console.log("🛑 All payment checking intervals stopped");
 };
@@ -237,86 +223,58 @@ const closeSuccessModal = () => {
   paymentDetails.value = null;
 };
 
-// Function to handle "View Order History" button
-const viewOrderHistory = () => {
-  closeSuccessModal();
-  // You can emit an event or navigate to order history page
-  console.log("Navigate to order history");
-};
-
 // Test function to manually trigger success modal (for debugging)
 const testSuccessModal = () => {
-  // Create mock payment details
   paymentDetails.value = {
-    transactionId: transactionId.value || "TXN_TEST123456",
-    bakongHash: "fe958f31", // First 8 digits
+    transactionId: "TXN_TEST123",
+    bakongHash: "ABC12345",
     bank: "Bakong (NBC)",
-    fromAccount: "ABA Bank Account",
-    amount: `${amount.value} ${currency}`,
-    seller: merchantName,
+    fromAccount: "Test Account",
+    amount: "100 KHR",
+    seller: "Khun Hotel",
     transactionDate: formatDate(new Date().toISOString()),
     paymentMethod: "KHQR Payment",
+    methodUsed: "test",
+    bookingReference: "BOOKING_123",
   };
-
-  // Show success modal
   showSuccessModal.value = true;
-
-  console.log("Test success modal triggered");
 };
 
 // Initialize QR generation when QR payment is selected - removed auto-refresh
 const handlePaymentMethodChange = () => {
   if (selectedPayment.value === "qr") {
-    generateQRCode();
-    // Removed startAutoRefresh() - no more automatic QR regeneration
-
-    // Check payment status every 5 seconds (more frequent)
-    if (statusCheckInterval.value) {
-      clearInterval(statusCheckInterval.value);
-    }
-
-    statusCheckInterval.value = setInterval(() => {
-      checkPaymentStatus();
-    }, 5000); // Check every 5 seconds instead of 10
-  } else {
-    // Clean up intervals when switching away from QR
-    if (qrRefreshInterval.value) {
-      clearInterval(qrRefreshInterval.value);
-    }
-    if (statusCheckInterval.value) {
-      clearInterval(statusCheckInterval.value);
-    }
+    // QR generation will be handled by parent component
+    console.log("QR payment method selected");
   }
 };
 
 // Watch for payment method changes
 watch(selectedPayment, (newMethod, oldMethod) => {
-  console.log(`Payment method changed from ${oldMethod} to ${newMethod}`);
   handlePaymentMethodChange();
 });
 
 // Cleanup on component unmount
 onUnmounted(() => {
-  if (qrRefreshInterval.value) {
-    clearInterval(qrRefreshInterval.value);
-  }
-  if (statusCheckInterval.value) {
-    clearInterval(statusCheckInterval.value);
-  }
+  stopAllIntervals();
 });
 
 // Expose form data for parent component
 defineExpose({
-  firstName,
-  lastName,
-  email,
-  phoneNumber,
-  specialRequests,
-  selectedPayment,
-  cardNumber,
-  expiryDate,
-  cvv,
   agreeToTerms,
+  handlePaymentCreated,
+  getFormData: () => ({
+    firstName: firstName.value,
+    lastName: lastName.value,
+    email: email.value,
+    phoneNumber: phoneNumber.value,
+    specialRequests: specialRequests.value,
+    selectedPayment: selectedPayment.value,
+    cardNumber: cardNumber.value,
+    expiryDate: expiryDate.value,
+    cvv: cvv.value,
+    agreeToTerms: agreeToTerms.value,
+    pets: pets.value,
+  }),
 });
 </script>
 
@@ -402,13 +360,19 @@ defineExpose({
           </div>
         </div>
 
-        <!-- Action button -->
-        <div class="mt-8">
+        <!-- Action buttons -->
+        <div class="mt-8 space-y-3">
           <button
             @click="viewOrderHistory"
             class="w-full bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors font-medium"
           >
             View Order History
+          </button>
+          <button
+            @click="redirectToHome"
+            class="w-full bg-white text-gray-900 py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium"
+          >
+            Back to Home
           </button>
         </div>
       </div>

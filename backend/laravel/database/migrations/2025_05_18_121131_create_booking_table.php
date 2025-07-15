@@ -23,6 +23,8 @@ return new class extends Migration
             $table->integer('number_of_guests')->default(1);
             $table->decimal('total_price', 10, 2);   
             $table->text('special_request')->nullable(); 
+            $table->string('payment_transaction_id')->nullable(); // Link to payment transaction
+            $table->string('payment_method')->default('khqr'); // Payment method used
             $table->timestamp('booking_at')->useCurrent();
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
             $table->timestamps();

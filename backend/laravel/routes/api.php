@@ -26,7 +26,10 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // Payment routes
 Route::post('/payments', [PaymentController::class, 'create']);
+Route::post('/payments/with-booking', [PaymentController::class, 'createPaymentWithBooking']);
+Route::post('/payments/create-booking', [PaymentController::class, 'createBookingAfterPayment']);
 Route::get('/payments/{transactionId}/status', [PaymentController::class, 'checkStatus']);
+Route::get('/payments/{transactionId}/status-with-booking', [PaymentController::class, 'checkStatusAndCreateBooking']);
 Route::get('/payments', [PaymentController::class, 'getTransactions'])->middleware('auth:sanctum');
 
 // Protected routes

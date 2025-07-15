@@ -120,7 +120,7 @@
       />
     </div>
     <div class="md:col-span-2">
-      <FormInfo ref="formInfoRef" />
+      <FormInfo ref="formInfoRef" :amount="totalPrice" />
       <div class="mr-16 ml-16 mt-8">
         <button
           type="button"
@@ -213,14 +213,14 @@
 </template>
 
 <script setup>
-import axios from "axios";
-import { ref, onMounted, onUnmounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import FormInfo from "@/components/CheckoutComponents/FormInfo.vue";
 import BookingSummary from "@/components/CheckoutComponents/BookingSummary.vue";
-import { MapPin, Shield, Bed } from "lucide-vue-next";
+import FormInfo from "@/components/CheckoutComponents/FormInfo.vue";
 import { useRoomStore } from "@/stores/store";
+import axios from "axios";
 import dayjs from "dayjs";
+import { Bed, MapPin, Shield } from "lucide-vue-next";
+import { onMounted, onUnmounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
@@ -451,6 +451,8 @@ const createBooking = async (formData) => {
     errorMessage.value = "";
 
     const bookingData = {
+      amount: totalPrice,
+      merchant_name: "Khun Hotel - Room Booking",
       user_id: 1,
       room_ids: roomIds,
       hotel_id: hotelId,
@@ -459,26 +461,31 @@ const createBooking = async (formData) => {
       number_of_guests: Number(formData.guestCount || capacity),
       total_price: totalPrice,
       special_request: formData.specialRequests || "",
-      payment_method: formData.selectedPayment,
+      payment_method: formData.selectedPayment || "khqr",
     };
 
-    console.log("Sending booking data:", bookingData);
+    console.log("Creating payment with booking data:", bookingData);
 
+    // Use the new payment with booking endpoint
     const response = await axios.post(
-      "http://localhost:8100/api/bookings",
+      "http://localhost:8100/api/payments/with-booking",
       bookingData
     );
 
-    if (response.data && response.data.booking_id) {
-      alert("Booking successful! Your booking ID is: " + response.data.booking_id);
-      router.push("/current-past-booked");
+    if (response.data && response.data.success) {
+      // Pass the transaction data to the form component for QR display
+      if (formInfoRef.value) {
+        formInfoRef.value.handlePaymentCreated(response.data);
+      }
+      
+      console.log("Payment created successfully:", response.data);
     } else {
-      throw new Error("Invalid booking response");
+      throw new Error("Invalid payment response");
     }
   } catch (error) {
-    console.error("Booking creation error:", error);
-    errorMessage.value = "Failed to create booking: " + error.message;
-    alert("Failed to create booking. Please try again.");
+    console.error("Payment creation error:", error);
+    errorMessage.value = "Failed to create payment: " + error.message;
+    alert("Failed to create payment. Please try again.");
   } finally {
     isLoading.value = false;
   }

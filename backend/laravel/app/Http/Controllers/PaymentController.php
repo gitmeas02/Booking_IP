@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transactions;
+use App\Models\Booking;
 use App\Services\KHQRService;
 use App\Jobs\UpdateTransactionStatus;
 use Illuminate\Http\Request;
@@ -9,6 +10,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -550,5 +552,314 @@ class PaymentController extends Controller
         }
 
         return 'pending';
+    }
+
+    /**
+     * Create a booking after successful payment
+     */
+    public function createBookingAfterPayment(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'transaction_id' => 'required|string',
+                'user_id' => 'required|integer',
+                'room_ids' => 'required|array',
+                'room_ids.*' => 'required|integer|exists:room_types,id',
+                'hotel_id' => 'required|integer',
+                'check_in_date' => 'required|date',
+                'check_out_date' => 'required|date|after:check_in_date',
+                'number_of_guests' => 'required|integer|min:1',
+                'total_price' => 'required|numeric|min:0',
+                'special_request' => 'nullable|string',
+                'payment_method' => 'nullable|string',
+            ]);
+
+            // Verify transaction exists and is successful
+            $transaction = Transactions::where('transaction_id', $validated['transaction_id'])->first();
+            
+            if (!$transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction not found'
+                ], 404);
+            }
+
+            if ($transaction->status !== 'success') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment not completed yet'
+                ], 400);
+            }
+
+            // Calculate commissions
+            $userCommission = $validated['total_price'] * 0.10;
+            $hotelCommission = $validated['total_price'] * 0.15;
+
+            // Create bookings for each room
+            $bookingIds = [];
+            foreach ($validated['room_ids'] as $roomId) {
+                $booking = Booking::create([
+                    'user_id' => $validated['user_id'],
+                    'room_id' => $roomId,
+                    'owner_application_id' => $validated['hotel_id'],
+                    'user_commission' => $userCommission,
+                    'hotel_commission' => $hotelCommission,
+                    'check_in_date' => $validated['check_in_date'],
+                    'check_out_date' => $validated['check_out_date'],
+                    'number_of_guests' => $validated['number_of_guests'],
+                    'total_price' => $validated['total_price'],
+                    'special_request' => $validated['special_request'] ?? null,
+                    'payment_transaction_id' => $validated['transaction_id'],
+                    'payment_method' => $validated['payment_method'] ?? 'khqr',
+                    'status' => 'confirmed'
+                ]);
+
+                $bookingIds[] = $booking->id;
+            }
+
+            // Update transaction with booking reference
+            $transaction->update([
+                'booking_reference' => 'BOOKING_' . $bookingIds[0]
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'booking_id' => $bookingIds[0],
+                'booking_ids' => $bookingIds,
+                'transaction_id' => $validated['transaction_id'],
+                'message' => 'Booking created successfully after payment!'
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Booking creation after payment error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create booking: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Combined payment and booking creation
+     */
+    public function createPaymentWithBooking(Request $request)
+    {
+        try {
+            // Validate both payment and booking data
+            $validated = $request->validate([
+                'amount' => 'required|numeric|min:0',
+                'merchant_name' => 'nullable|string|max:255',
+                'user_id' => 'required|integer',
+                'room_ids' => 'required|array',
+                'room_ids.*' => 'required|integer|exists:room_types,id',
+                'hotel_id' => 'required|integer',
+                'check_in_date' => 'required|date',
+                'check_out_date' => 'required|date|after:check_in_date',
+                'number_of_guests' => 'required|integer|min:1',
+                'total_price' => 'required|numeric|min:0',
+                'special_request' => 'nullable|string',
+                'payment_method' => 'nullable|string',
+            ]);
+
+            $amount = $validated['amount'];
+            $merchantName = $validated['merchant_name'] ?? 'Hotel Booking Payment';
+            $bookingReference = 'HOTEL_' . time() . '_' . $validated['user_id'];
+
+            // Generate KHQR using the service
+            $result = $this->khqrService->generateIndividual($amount, $merchantName);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 400);
+            }
+
+            // Create transaction record with booking data
+            $transaction = Transactions::create([
+                'transaction_id' => 'TXN_' . Str::upper(Str::random(12)),
+                'bakong_account_id' => $result['data']['bakong_account_id'] ?? null,
+                'qr_string' => $result['data']['qr_string'],
+                'qr_md5' => $result['data']['qr_md5'],
+                'qr_full_hash' => $result['data']['qr_full_hash'],
+                'qr_short_hash' => $result['data']['qr_short_hash'],
+                'amount' => $amount,
+                'currency' => $result['data']['currency'] ?? 'KHR',
+                'merchant_name' => $merchantName,
+                'booking_reference' => $bookingReference,
+                'status' => 'pending',
+                'expires_at' => Carbon::now()->addMinutes(10),
+                'response_data' => $result['data']
+            ]);
+
+            // Store booking data in session or cache for later use
+            cache()->put('booking_data_' . $transaction->transaction_id, $validated, now()->addMinutes(15));
+
+            // Dispatch background jobs for automatic status checking
+            $this->scheduleStatusUpdates($transaction->transaction_id);
+
+            $responseData = [
+                'success' => true,
+                'transaction_id' => $transaction->transaction_id,
+                'qr_string' => $result['data']['qr_string'],
+                'qr_md5' => $result['data']['qr_md5'],
+                'amount' => $amount,
+                'currency' => $result['data']['currency'] ?? 'KHR',
+                'merchant_name' => $merchantName,
+                'expires_at' => $transaction->expires_at,
+                'booking_reference' => $bookingReference,
+                'booking_data' => $validated
+            ];
+
+            return response()->json($responseData);
+
+        } catch (\Exception $e) {
+            Log::error('Payment with booking creation error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create payment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Enhanced payment status check that creates booking on success
+     */
+    public function checkStatusAndCreateBooking($transactionId)
+    {
+        try {
+            $transaction = Transactions::where('transaction_id', $transactionId)->first();
+
+            if (!$transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction not found'
+                ], 404);
+            }
+
+            // Check if expired and update status
+            $transaction->checkAndMarkExpired();
+
+            // If already completed, return status
+            if (in_array($transaction->status, ['success', 'failed', 'expired'])) {
+                // If payment is successful and booking hasn't been created yet
+                if ($transaction->status === 'success') {
+                    // Check if booking already exists
+                    $existingBooking = Booking::where('payment_transaction_id', $transactionId)->first();
+                    
+                    if (!$existingBooking) {
+                        // Get booking data from cache
+                        $bookingData = cache()->get('booking_data_' . $transactionId);
+                        
+                        if ($bookingData) {
+                            // Create booking automatically
+                            $this->createBookingFromCachedData($transaction, $bookingData);
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'status' => $transaction->status,
+                    'transaction' => $transaction,
+                    'booking_created' => $transaction->status === 'success',
+                    'message' => $transaction->status === 'success' ? 'Payment completed and booking created!' : 'Payment ' . $transaction->status
+                ]);
+            }
+
+            // For pending transactions, check status
+            $result = $this->checkTransactionWithMultipleMethods($transaction);
+
+            if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
+                // Update transaction status
+                $transaction->update([
+                    'status' => 'success',
+                    'response_data' => $result['data'],
+                    'updated_at' => now()
+                ]);
+
+                // Create booking automatically
+                $bookingData = cache()->get('booking_data_' . $transactionId);
+                if ($bookingData) {
+                    $this->createBookingFromCachedData($transaction, $bookingData);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'status' => 'success',
+                    'transaction' => $transaction,
+                    'booking_created' => true,
+                    'api_response' => $result['data'],
+                    'method_used' => $result['method_used'] ?? 'unknown',
+                    'message' => 'Payment completed and booking created!'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'status' => 'pending',
+                'message' => $result['message'] ?? 'Payment still pending'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Status check and booking creation error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking payment status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create booking from cached data
+     */
+    private function createBookingFromCachedData($transaction, $bookingData)
+    {
+        try {
+            // Calculate commissions
+            $userCommission = $bookingData['total_price'] * 0.10;
+            $hotelCommission = $bookingData['total_price'] * 0.15;
+
+            // Create bookings for each room
+            $bookingIds = [];
+            foreach ($bookingData['room_ids'] as $roomId) {
+                $booking = Booking::create([
+                    'user_id' => $bookingData['user_id'],
+                    'room_id' => $roomId,
+                    'owner_application_id' => $bookingData['hotel_id'],
+                    'user_commission' => $userCommission,
+                    'hotel_commission' => $hotelCommission,
+                    'check_in_date' => $bookingData['check_in_date'],
+                    'check_out_date' => $bookingData['check_out_date'],
+                    'number_of_guests' => $bookingData['number_of_guests'],
+                    'total_price' => $bookingData['total_price'],
+                    'special_request' => $bookingData['special_request'] ?? null,
+                    'payment_transaction_id' => $transaction->transaction_id,
+                    'payment_method' => $bookingData['payment_method'] ?? 'khqr',
+                    'status' => 'confirmed'
+                ]);
+
+                $bookingIds[] = $booking->id;
+            }
+
+            // Update transaction with booking reference
+            $transaction->update([
+                'booking_reference' => 'BOOKING_' . $bookingIds[0]
+            ]);
+
+            // Clear cached data
+            cache()->forget('booking_data_' . $transaction->transaction_id);
+
+            Log::info('Booking created automatically after payment', [
+                'transaction_id' => $transaction->transaction_id,
+                'booking_ids' => $bookingIds
+            ]);
+
+            return $bookingIds;
+
+        } catch (\Exception $e) {
+            Log::error('Error creating booking from cached data: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }
