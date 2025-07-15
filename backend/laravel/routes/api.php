@@ -10,6 +10,7 @@ use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProductPaymentController;
 // use App\Models\OwnerApplication;
 use App\Http\Controllers\Room\RoomTypeController;
 use App\Models\RoomType;
@@ -28,6 +29,12 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/payments', [PaymentController::class, 'create']);
 Route::get('/payments/{transactionId}/status', [PaymentController::class, 'checkStatus']);
 Route::get('/payments', [PaymentController::class, 'getTransactions'])->middleware('auth:sanctum');
+
+// Product payment routes
+Route::post('/product-payments', [ProductPaymentController::class, 'createProductPayment']);
+Route::get('/orders/{orderId}', [ProductPaymentController::class, 'getOrder']);
+Route::get('/orders', [ProductPaymentController::class, 'getOrderHistory'])->middleware('auth:sanctum');
+Route::patch('/orders/{orderId}/status', [ProductPaymentController::class, 'updateOrderStatus'])->middleware('auth:sanctum');
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
