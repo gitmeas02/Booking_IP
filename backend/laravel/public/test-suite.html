@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KHQR Payment System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button { 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            margin: 5px; 
+            border-radius: 3px; 
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .qr-display { text-align: center; margin: 20px 0; }
+        .qr-display img { border: 2px solid #ddd; padding: 10px; border-radius: 10px; }
+        .log { background-color: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+        .log pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+        code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 KHQR Payment System Test Suite</h1>
+    
+    <div class="test-section">
+        <h2>🔧 Server Connection Test</h2>
+        <button onclick="testServerConnection()">Test Server Connection</button>
+        <div id="server-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📄 QR Code Generation Test</h2>
+        <button onclick="testQRGeneration()">Generate QR Code</button>
+        <button onclick="refreshQRCode()" id="refresh-btn" disabled>Refresh QR Code</button>
+        <div id="qr-status"></div>
+        <div id="qr-display"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Payment Status Test</h2>
+        <button onclick="testPaymentStatus()" id="status-btn" disabled>Check Payment Status</button>
+        <button onclick="toggleAutoCheck()" id="auto-check-btn" disabled>Start Auto-Check</button>
+        <div id="status-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏨 Booking Integration Test</h2>
+        <button onclick="testBookingIntegration()" id="booking-btn" disabled>Test Booking Creation</button>
+        <div id="booking-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Test Log</h2>
+        <button onclick="clearLog()">Clear Log</button>
+        <div id="log" class="log">
+            <pre id="log-content">Test log will appear here...</pre>
+        </div>
+    </div>
+    
+    <script>
+        let currentTransaction = null;
+        let autoCheckInterval = null;
+        let isAutoChecking = false;
+        
+        function log(message) {
+            const logContent = document.getElementById('log-content');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.textContent += `[${timestamp}] ${message}\n`;
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log-content').textContent = '';
+            log('Log cleared');
+        }
+        
+        async function testServerConnection() {
+            log('Testing server connection...');
+            const statusDiv = document.getElementById('server-status');
+            statusDiv.innerHTML = '<div class="info">🔄 Testing server connection...</div>';
+            
+            try {
+                const response = await fetch('/api/payments', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = '<div class="success">✅ Server connection successful!</div>';
+                    log('Server connection: SUCCESS');
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Server responded with error: ' + response.status + '</div>';
+                    log('Server connection: FAILED - Status ' + response.status);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Cannot connect to server: ' + error.message + '</div>';
+                log('Server connection: ERROR - ' + error.message);
+            }
+        }
+        
+        async function testQRGeneration() {
+            log('Testing QR code generation...');
+            const statusDiv = document.getElementById('qr-status');
+            statusDiv.innerHTML = '<div class="info">🔄 Generating QR code...</div>';
+            
+            try {
+                const response = await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: 1000,
+                        merchant_name: 'Test Hotel Booking',
+                        booking_reference: 'TEST_' + Date.now()
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentTransaction = result.transaction_id;
+                    statusDiv.innerHTML = '<div class="success">✅ QR code generated successfully!</div>';
+                    log('QR Generation: SUCCESS - Transaction ID: ' + result.transaction_id);
+                    
+                    displayQRCode(result);
+                    enableButtons();
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Failed to generate QR code: ' + result.message + '</div>';
+                    log('QR Generation: FAILED - ' + result.message);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+                log('QR Generation: ERROR - ' + error.message);
+            }
+        }
+        
+        function displayQRCode(result) {
+            const qrDisplay = document.getElementById('qr-display');
+            const timestamp = Date.now();
+            
+            qrDisplay.innerHTML = `
+                <div class="qr-display">
+                    <h3>Scan with Bakong App:</h3>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(result.qr_string)}&_t=${timestamp}" alt="QR Code">
+                    <p><strong>Amount:</strong> ${result.amount} KHR</p>
+                    <p><strong>Merchant:</strong> ${result.merchant_name}</p>
+                    <p><strong>Account:</strong> ${result.account_id}</p>
+                    <p><strong>Transaction:</strong> ${result.transaction_id}</p>
+                </div>
+            `;
+        }
+        
+        function enableButtons() {
+            document.getElementById('refresh-btn').disabled = false;
+            document.getElementById('status-btn').disabled = false;
+            document.getElementById('auto-check-btn').disabled = false;
+            document.getElementById('booking-btn').disabled = false;
+        }
+        
+        async function refreshQRCode() {
+            if (!currentTransaction) return;
+            
+            log('Refreshing QR code...');
+            const statusDiv = document.getElementById('qr-status');
+            statusDiv.innerHTML = '<div class="info">🔄 Refreshing QR code...</div>';
+            
+            try {
+                const response = await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: 1000,
+                        merchant_name: 'Test Hotel Booking',
+                        booking_reference: 'REFRESH_' + Date.now()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentTransaction = result.transaction_id;
+                    displayQRCode(result);
+                    statusDiv.innerHTML = '<div class="success">✅ QR code refreshed!</div>';
+                    log('QR Refresh: SUCCESS - New Transaction ID: ' + result.transaction_id);
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Failed to refresh: ' + result.message + '</div>';
+                    log('QR Refresh: FAILED - ' + result.message);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Refresh error: ' + error.message + '</div>';
+                log('QR Refresh: ERROR - ' + error.message);
+            }
+        }
+        
+        async function testPaymentStatus() {
+            if (!currentTransaction) return;
+            
+            log('Checking payment status...');
+            const statusDiv = document.getElementById('status-result');
+            statusDiv.innerHTML = '<div class="info">🔄 Checking payment status...</div>';
+            
+            try {
+                const response = await fetch(`/api/payments/${currentTransaction}/status`);
+                const result = await response.json();
+                
+                statusDiv.innerHTML = `
+                    <div class="info">
+                        <h4>Payment Status:</h4>
+                        <p><strong>Status:</strong> ${result.status || 'Unknown'}</p>
+                        <p><strong>Message:</strong> ${result.message || 'No message'}</p>
+                        <p><strong>Checked:</strong> ${new Date().toLocaleTimeString()}</p>
+                    </div>
+                `;
+                
+                log('Status Check: ' + (result.status || 'Unknown').toUpperCase());
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Status check error: ' + error.message + '</div>';
+                log('Status Check: ERROR - ' + error.message);
+            }
+        }
+        
+        function toggleAutoCheck() {
+            const btn = document.getElementById('auto-check-btn');
+            
+            if (isAutoChecking) {
+                clearInterval(autoCheckInterval);
+                btn.textContent = 'Start Auto-Check';
+                isAutoChecking = false;
+                log('Auto-check: STOPPED');
+            } else {
+                autoCheckInterval = setInterval(() => {
+                    testPaymentStatus();
+                }, 5000);
+                btn.textContent = 'Stop Auto-Check';
+                isAutoChecking = true;
+                log('Auto-check: STARTED (every 5 seconds)');
+            }
+        }
+        
+        async function testBookingIntegration() {
+            if (!currentTransaction) return;
+            
+            log('Testing booking integration...');
+            const statusDiv = document.getElementById('booking-result');
+            statusDiv.innerHTML = '<div class="info">🔄 Testing booking integration...</div>';
+            
+            try {
+                const response = await fetch(`/api/payments/${currentTransaction}/status-with-booking`);
+                const result = await response.json();
+                
+                statusDiv.innerHTML = `
+                    <div class="info">
+                        <h4>Booking Integration Test:</h4>
+                        <p><strong>Status:</strong> ${result.status || 'Unknown'}</p>
+                        <p><strong>Booking Created:</strong> ${result.booking_created ? 'Yes' : 'No'}</p>
+                        <p><strong>Message:</strong> ${result.message || 'No message'}</p>
+                        <p><strong>Method Used:</strong> ${result.method_used || 'Unknown'}</p>
+                    </div>
+                `;
+                
+                log('Booking Integration: ' + (result.booking_created ? 'SUCCESS' : 'PENDING'));
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Booking test error: ' + error.message + '</div>';
+                log('Booking Integration: ERROR - ' + error.message);
+            }
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            log('KHQR Payment System Test Suite loaded');
+            testServerConnection();
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoCheckInterval) {
+                clearInterval(autoCheckInterval);
+            }
+        });
+    </script>
+</body>
+</html>

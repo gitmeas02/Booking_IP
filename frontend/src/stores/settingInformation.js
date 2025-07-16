@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import axios from 'axios'
+import { defineStore } from 'pinia'
 
 export const useSettingInformationStore = defineStore('settingInformation', {
   state: () => ({
@@ -10,7 +10,7 @@ export const useSettingInformationStore = defineStore('settingInformation', {
     async fetchPersonalInfo() {
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.get('/api/me', {
+        const response = await axios.get('/me', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -39,7 +39,7 @@ export const useSettingInformationStore = defineStore('settingInformation', {
     async updatePersonalInfo(id, data) {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.put('/api/me', data, {
+        const response = await axios.put('/me', data, {
           headers: {
             Authorization: `Bearer ${token}`
           }

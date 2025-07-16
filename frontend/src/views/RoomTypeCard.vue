@@ -2,11 +2,19 @@
   <div class="room-card">
     <div class="room-image-section">
       <img
-        v-if="room?.images?.length"
-        :src="'http://localhost:9000/' + room.images[0].image_url"
+        v-if="hasRoomImage"
+        :src="getRoomImageUrl()"
         alt="Room"
         class="room-image"
+        @error="handleImageError"
+        @load="handleImageLoad"
       />
+      <div v-if="!hasRoomImage" class="no-image-placeholder">
+        <div class="placeholder-content">
+          <div class="placeholder-icon">🏨</div>
+          <div class="placeholder-text">No image available</div>
+        </div>
+      </div>
       <a href="#" class="room-photos-link">Room photos and details</a>
     </div>
     <div class="room-details-section">
@@ -60,10 +68,11 @@
   </div>
 </template>
 <script setup>
+import { getImageUrl } from "@/utils/imageUtils";
 import axios from "axios";
+import dayjs from "dayjs";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import dayjs from "dayjs";
 
 const props = defineProps({
   room: { type: Object, required: true },
@@ -72,9 +81,88 @@ const props = defineProps({
   selectedEndDate: { type: [String, Object], required: true },
 });
 
+// Debug: Log room data to understand structure
+console.log('Room data in RoomTypeCard:', props.room);
+if (props.room?.images) {
+  console.log('Room images:', props.room.images);
+} else {
+  console.log('No images found in room data');
+}
+
+// Check all possible image fields
+const imageFields = ['images', 'photos', 'image_url', 'image', 'image_path'];
+imageFields.forEach(field => {
+  if (props.room?.[field]) {
+    console.log(`Found ${field}:`, props.room[field]);
+  }
+});
+
 const router = useRouter();
 const selectedRoomCount = ref(1);
 const sameRoomCount = computed(() => props.roomCount);
+
+// Use centralized getImageUrl function from utils
+
+// Helper to get room image URL with fallbacks
+const getRoomImageUrl = () => {
+  const room = props.room;
+  
+  // Try different possible image field structures
+  if (room?.images && room.images.length > 0) {
+    const imageUrl = room.images[0].image_url || room.images[0].url || room.images[0];
+    return getImageUrl(imageUrl);
+  }
+  
+  // Try other possible field names
+  if (room?.image_url) {
+    return getImageUrl(room.image_url);
+  }
+  
+  if (room?.image) {
+    return getImageUrl(room.image);
+  }
+  
+  if (room?.photos && room.photos.length > 0) {
+    const imageUrl = room.photos[0].url || room.photos[0];
+    return getImageUrl(imageUrl);
+  }
+  
+  console.warn('No image found in room data:', room);
+  return '';
+};
+
+// Check if room has any image
+const hasRoomImage = computed(() => {
+  const room = props.room;
+  return !!(
+    (room?.images && room.images.length > 0) ||
+    room?.image_url ||
+    room?.image ||
+    (room?.photos && room.photos.length > 0)
+  );
+});
+
+// Image loading handlers
+const handleImageError = (event) => {
+  console.error('Room image failed to load:', event.target.src);
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent && !parent.querySelector('.fallback-room-image')) {
+    const fallback = document.createElement('div');
+    fallback.className = 'fallback-room-image';
+    fallback.innerHTML = `
+      <div class="fallback-content">
+        <div class="fallback-icon">🏨</div>
+        <div class="fallback-text">Image unavailable</div>
+      </div>
+    `;
+    parent.appendChild(fallback);
+  }
+};
+
+const handleImageLoad = (event) => {
+  console.log('Room image loaded successfully:', event.target.src);
+};
 
 // Helper to normalize the date (accepts string, object, or a value with property)
 const getDateValue = (date) => {
@@ -162,12 +250,48 @@ const reserveRoom = async () => {
 
 .room-image-section {
   position: relative;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .room-image {
   width: 100%;
   height: 200px;
   object-fit: cover;
+}
+
+.no-image-placeholder,
+.fallback-room-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-content,
+.fallback-content {
+  text-align: center;
+  color: #666;
+}
+
+.placeholder-icon,
+.fallback-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.placeholder-text,
+.fallback-text {
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .room-photos-link {

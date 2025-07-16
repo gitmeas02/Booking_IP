@@ -1,30 +1,32 @@
-import Homepage from "@/views/Homepage.vue";
-import ListRoomPage from "@/views/ListRoomPage.vue";
-import HistoryKeeper from "@/views/HistoryKeeper.vue";
-import SettingDetailPage from "@/views/SettingDetailPage.vue";
-import SettingPage from "@/views/SettingPage.vue";
-import CheckoutPage from "@/views/CheckoutPage.vue";
-import ProductDetailPage from "@/views/productDetailPage.vue";
+// Lazy load components for better performance
+const Homepage = () => import("@/views/Homepage.vue");
+const ListRoomPage = () => import("@/views/ListRoomPage.vue");
+const HistoryKeeper = () => import("@/views/HistoryKeeper.vue");
+const SettingDetailPage = () => import("@/views/SettingDetailPage.vue");
+const SettingPage = () => import("@/views/SettingPage.vue");
+const CheckoutPage = () => import("@/views/CheckoutPage.vue");
+const ProductDetailPage = () => import("@/views/productDetailPage.vue");
 
-import ForgotPassword from "@/views/Authentication/ForgotPassword.vue";
-import SignIn from "@/views/Authentication/SignIn.vue";
-import SignUp from "@/views/Authentication/SignUp.vue";
-import AuthenticationPage from "@/views/Authentication/AuthenticationPage.vue";
+const ForgotPassword = () => import("@/views/Authentication/ForgotPassword.vue");
+const SignIn = () => import("@/views/Authentication/SignIn.vue");
+const SignUp = () => import("@/views/Authentication/SignUp.vue");
+const AuthenticationPage = () => import("@/views/Authentication/AuthenticationPage.vue");
 
-import Admin from "@/views/AdminPage/Admin.vue";
+const Admin = () => import("@/views/AdminPage/Admin.vue");
 
-import Chatbox from "@/views/ChatBox.vue";
+const Chatbox = () => import("@/views/ChatBox.vue");
 
 import index2 from "./index2";
 
 import { createRouter, createWebHistory } from "vue-router";
-import UploadProperty from "@/views/AdminPage/UploadProperty.vue";
-import OwnerBookingList from "@/views/OwnerBookingList.vue";
-import OwnerDashboard from "@/views/OwnerDashboard.vue";
-import AdminBookingList from "@/views/AdminBookingList.vue";
+const UploadProperty = () => import("@/views/AdminPage/UploadProperty.vue");
+const OwnerBookingList = () => import("@/views/OwnerBookingList.vue");
+const OwnerDashboard = () => import("@/views/OwnerDashboard.vue");
+const AdminBookingList = () => import("@/views/AdminBookingList.vue");
+const RoomManagement = () => import("@/views/Owner/RoomManagement.vue");
 
 import axios from "axios";
-import EditRooms from "@/views/AdminPage/EditRooms.vue";
+const EditRooms = () => import("@/views/AdminPage/EditRooms.vue");
 
 const routes = [
   ...index2,
@@ -71,6 +73,15 @@ const routes = [
     path: "/ownerdashboard",
     name: "ownerdashboard",
     component: OwnerDashboard,
+  },
+  {
+    path: "/room-management",
+    name: "roomManagement",
+    component: RoomManagement,
+    meta: {
+      requiresAuth: true,
+      roles: ['owner']
+    }
   },
   {
     path: "/adminbookinglist",

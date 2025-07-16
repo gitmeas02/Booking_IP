@@ -54,7 +54,7 @@ class PaymentController extends Controller
         // Create transaction record
         $transaction = Transactions::create([
             'transaction_id' => 'TXN_' . Str::upper(Str::random(12)),
-            'bakong_account_id' => 'sok_chanmakara@aclb', // Could be dynamic based on merchant
+            'bakong_account_id' => 'khun_meas@aclb', // Could be dynamic based on merchant
             'qr_string' => $result['qr_string'],
             'qr_md5' => $result['md5'],
             'qr_full_hash' => $result['full_hash'],
@@ -76,7 +76,7 @@ class PaymentController extends Controller
             'qr_string' => $result['qr_string'],
             'md5' => $result['md5'],
             'amount' => $amount,
-            'expires_at' => $transaction->expires_at?->toISOString(),
+            'expires_at' => $transaction->expires_at?->format('Y-m-d H:i:s'),
             'message' => 'Payment QR generated successfully'
         ];
 
@@ -406,7 +406,7 @@ class PaymentController extends Controller
         // Create transaction record for tracking
         $transaction = Transactions::create([
             'transaction_id' => 'WEB_' . Str::upper(Str::random(12)),
-            'bakong_account_id' => 'sok_chanmakara@aclb',
+            'bakong_account_id' => 'khun_meas@aclb',
             'qr_string' => $result['qr_string'],
             'qr_md5' => $result['md5'],
             'qr_full_hash' => $result['full_hash'],
@@ -467,26 +467,35 @@ class PaymentController extends Controller
      */
     private function determineStatusFromApiResponse($apiData): string
     {
+        Log::info('Determining transaction status from API response', [
+            'api_data' => $apiData
+        ]);
+        
         if (empty($apiData)) {
+            Log::info('API data is empty, returning pending status');
             return 'pending';
         }
 
         // Check for Bakong API error responses first
         if (isset($apiData['responseCode'])) {
             $responseCode = (int)$apiData['responseCode'];
+            Log::info('Found responseCode', ['code' => $responseCode]);
             
             // Success codes (transaction found and completed)
             if ($responseCode === 0 || $responseCode === 200) {
+                Log::info('Response code indicates success');
                 return 'success';
             }
             
             // Error codes that indicate transaction not found (still pending)
             if (in_array($responseCode, [1, 404, 4040])) {
+                Log::info('Response code indicates transaction not found, still pending');
                 return 'pending'; // Transaction not found yet, keep checking
             }
             
             // Other error codes that indicate failure
             if ($responseCode > 0) {
+                Log::info('Response code indicates failure');
                 return 'failed';
             }
         }
@@ -543,14 +552,9 @@ class PaymentController extends Controller
             }
         }
 
-        // If we have substantial transaction data (like amount, references), assume payment was successful
-        if (isset($apiData['amount']) || isset($apiData['transactionId']) || isset($apiData['paymentReference']) || isset($apiData['transactionRef'])) {
-            // But only if there's no error code indicating failure
-            if (!isset($apiData['responseCode']) || (int)$apiData['responseCode'] === 0) {
-                return 'success';
-            }
-        }
-
+        // IMPORTANT: Only mark as successful if there's explicit confirmation
+        // Don't assume success just because we have transaction data
+        // If we reach here without explicit success indicators, it's still pending
         return 'pending';
     }
 
@@ -678,18 +682,18 @@ class PaymentController extends Controller
             // Create transaction record with booking data
             $transaction = Transactions::create([
                 'transaction_id' => 'TXN_' . Str::upper(Str::random(12)),
-                'bakong_account_id' => $result['data']['bakong_account_id'] ?? null,
-                'qr_string' => $result['data']['qr_string'],
-                'qr_md5' => $result['data']['qr_md5'],
-                'qr_full_hash' => $result['data']['qr_full_hash'],
-                'qr_short_hash' => $result['data']['qr_short_hash'],
+                'bakong_account_id' => 'khun_meas@aclb',
+                'qr_string' => $result['qr_string'],
+                'qr_md5' => $result['md5'],
+                'qr_full_hash' => $result['full_hash'],
+                'qr_short_hash' => $result['short_hash'],
                 'amount' => $amount,
-                'currency' => $result['data']['currency'] ?? 'KHR',
+                'currency' => 'KHR',
                 'merchant_name' => $merchantName,
                 'booking_reference' => $bookingReference,
                 'status' => 'pending',
                 'expires_at' => Carbon::now()->addMinutes(10),
-                'response_data' => $result['data']
+                'response_data' => $result
             ]);
 
             // Store booking data in session or cache for later use
@@ -701,10 +705,10 @@ class PaymentController extends Controller
             $responseData = [
                 'success' => true,
                 'transaction_id' => $transaction->transaction_id,
-                'qr_string' => $result['data']['qr_string'],
-                'qr_md5' => $result['data']['qr_md5'],
+                'qr_string' => $result['qr_string'],
+                'qr_md5' => $result['md5'],
                 'amount' => $amount,
-                'currency' => $result['data']['currency'] ?? 'KHR',
+                'currency' => 'KHR',
                 'merchant_name' => $merchantName,
                 'expires_at' => $transaction->expires_at,
                 'booking_reference' => $bookingReference,

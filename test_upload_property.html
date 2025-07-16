@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload Property API</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h1>Test Upload Property Functionality</h1>
+        
+        <div>
+            <h2>Test Authentication</h2>
+            <input type="text" id="loginEmail" placeholder="Email" value="admin@example.com">
+            <input type="password" id="loginPassword" placeholder="Password" value="password">
+            <button onclick="login()">Login</button>
+            <div id="loginResult"></div>
+        </div>
+        
+        <div>
+            <h2>Test Get Houses</h2>
+            <button onclick="getHouses()">Get My Houses</button>
+            <div id="housesResult"></div>
+        </div>
+        
+        <div>
+            <h2>Test Create Rooms</h2>
+            <label>Select House:</label>
+            <select id="houseSelect">
+                <option value="">-- Select a House --</option>
+            </select>
+            <br><br>
+            <label>Room Name:</label>
+            <input type="text" id="roomName" value="Test Room">
+            <br><br>
+            <label>Capacity:</label>
+            <input type="number" id="capacity" value="2">
+            <br><br>
+            <label>Price:</label>
+            <input type="number" id="price" value="100">
+            <br><br>
+            <label>Description:</label>
+            <textarea id="description">Test room description</textarea>
+            <br><br>
+            <label>Images:</label>
+            <input type="file" id="images" multiple accept="image/*">
+            <br><br>
+            <button onclick="createRoom()">Create Room</button>
+            <div id="createRoomResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8100/api';
+        let authToken = '';
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await axios.post(`${API_BASE_URL}/login`, {
+                    email: email,
+                    password: password
+                });
+                
+                authToken = response.data.token;
+                document.getElementById('loginResult').innerHTML = `
+                    <div style="color: green;">Login successful! Token: ${authToken.substring(0, 50)}...</div>
+                `;
+                
+                // Set default headers for future requests
+                axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+                
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = `
+                    <div style="color: red;">Login failed: ${error.response?.data?.message || error.message}</div>
+                `;
+            }
+        }
+
+        async function getHouses() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            try {
+                const response = await axios.get(`${API_BASE_URL}/houses/owner`);
+                
+                const houses = response.data;
+                document.getElementById('housesResult').innerHTML = `
+                    <div style="color: green;">Houses loaded: ${houses.length}</div>
+                    <pre>${JSON.stringify(houses, null, 2)}</pre>
+                `;
+                
+                // Populate the select dropdown
+                const houseSelect = document.getElementById('houseSelect');
+                houseSelect.innerHTML = '<option value="">-- Select a House --</option>';
+                
+                houses.forEach(house => {
+                    const option = document.createElement('option');
+                    option.value = house.id;
+                    option.textContent = `${house.property_name} - ${house.location?.city || 'Unknown City'}`;
+                    houseSelect.appendChild(option);
+                });
+                
+            } catch (error) {
+                document.getElementById('housesResult').innerHTML = `
+                    <div style="color: red;">Failed to load houses: ${error.response?.data?.message || error.message}</div>
+                `;
+            }
+        }
+
+        async function createRoom() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            const selectedHouseId = document.getElementById('houseSelect').value;
+            if (!selectedHouseId) {
+                alert('Please select a house');
+                return;
+            }
+            
+            const formData = new FormData();
+            
+            // Add room data
+            formData.append('rooms[0][name]', document.getElementById('roomName').value);
+            formData.append('rooms[0][capacity]', document.getElementById('capacity').value);
+            formData.append('rooms[0][default_price]', document.getElementById('price').value);
+            formData.append('rooms[0][description]', document.getElementById('description').value);
+            
+            // Add dummy amenities (you might need to adjust these IDs based on your database)
+            formData.append('rooms[0][amenities][0]', '1');
+            formData.append('rooms[0][amenities][1]', '2');
+            
+            // Add images
+            const imageFiles = document.getElementById('images').files;
+            for (let i = 0; i < imageFiles.length; i++) {
+                formData.append(`rooms[0][images][${i}]`, imageFiles[i]);
+            }
+            
+            try {
+                const response = await axios.post(
+                    `${API_BASE_URL}/owner/property/${selectedHouseId}/room`,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }
+                );
+                
+                document.getElementById('createRoomResult').innerHTML = `
+                    <div style="color: green;">Room created successfully!</div>
+                    <pre>${JSON.stringify(response.data, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                document.getElementById('createRoomResult').innerHTML = `
+                    <div style="color: red;">Failed to create room: ${error.response?.data?.message || error.message}</div>
+                    <pre>${JSON.stringify(error.response?.data, null, 2)}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

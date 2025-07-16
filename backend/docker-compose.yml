@@ -45,6 +45,8 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+    networks:
+      - laravel
 networks:
   laravel:
     driver: bridge

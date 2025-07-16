@@ -64,10 +64,15 @@ class AuthController extends Controller
 
         $token = $user->createToken('token')->plainTextToken;
 
+        // Load relationships to reduce subsequent API calls
+        $user->load(['roles', 'currentRole', 'ownerApplication']);
+
         return response()->json([
             'user'  => $user,
             'token'=> $token,
             'roles' => $user->roles->pluck('name'),
+            'current_role' => $user->getCurrentRoleName(),
+            'applications' => $user->ownerApplication()->get(),
         ]);
     }
     public function me(Request $request)

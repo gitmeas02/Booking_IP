@@ -33,7 +33,7 @@ class KHQRService
     public function generateIndividual(
         float $amount = 500.0, 
         string $merchantName = 'Hotel Booking Payment',
-        string $bakongAccountID = 'sok_chanmakara@aclb'
+        string $bakongAccountID = 'khun_meas@aclb'
     ): array {
         try {
             $individualInfo = new IndividualInfo(
@@ -105,7 +105,7 @@ class KHQRService
             // Create transaction record
             $transaction = Transactions::create([
                 'transaction_id' => 'LIVE_TEST_' . now()->format('YmdHis'),
-                'bakong_account_id' => 'sok_chanmakara@aclb',
+                'bakong_account_id' => 'khun_meas@aclb',
                 'qr_string' => $result['qr_string'],
                 'qr_md5' => $result['md5'],
                 'qr_full_hash' => $result['full_hash'],

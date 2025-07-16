@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Fetching System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .test-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .test-url {
+            color: #0066cc;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 10px;
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .test-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .config-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .log-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 5px;
+            border-left: 3px solid #007bff;
+            background: white;
+        }
+        .log-entry.error {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .log-entry.success {
+            border-left-color: #28a745;
+            background: #f5fff5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Image Fetching System Test</h1>
+    
+    <div class="test-section">
+        <h2>Configuration</h2>
+        <div class="config-info">
+            <div><strong>API Base URL:</strong> <code>http://localhost:8100/api</code></div>
+            <div><strong>Image Proxy Endpoint:</strong> <code>/images/{imagePath}</code></div>
+            <div><strong>MinIO Endpoint:</strong> <code>http://minio:9000</code> (from Docker)</div>
+            <div><strong>MinIO Bucket:</strong> <code>ownerimages</code></div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="testApiConnection()">Test API Connection</button>
+            <button onclick="testMinioConnection()">Test MinIO Connection</button>
+            <button onclick="testAllImages()">Test All Images</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Image Loading Tests</h2>
+        <div class="test-grid" id="imageTestGrid">
+            <!-- Test images will be populated here -->
+        </div>
+    </div>
+
+    <div class="log-section">
+        <h3>Debug Logs</h3>
+        <div id="logContainer">
+            <div class="log-entry">System ready for testing...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8100/api';
+        
+        // Test images covering different scenarios
+        const testImages = [
+            // Direct room images
+            { path: 'room-images/bathroom2.jpg', description: 'Bathroom Image' },
+            { path: 'room-images/bedroom1.jpg', description: 'Bedroom Image' },
+            { path: 'room-images/room_1_1736947556.jpg', description: 'Room with Timestamp' },
+            
+            // Owner application images
+            { path: 'owner_applications_images/test.jpg', description: 'Owner Application' },
+            { path: 'owner_applications_images/683d261743093.png', description: 'Owner Application PNG' },
+            
+            // Thumbnails
+            { path: 'rooms/thumbnails/thumb_1.jpg', description: 'Room Thumbnail' },
+            
+            // With ownerimages prefix (should be cleaned)
+            { path: 'ownerimages/room-images/bathroom2.jpg', description: 'With Prefix' },
+            
+            // Public images
+            { path: 'public/placeholder.jpg', description: 'Public Placeholder' },
+            
+            // Direct images
+            { path: 'images/test.jpg', description: 'Direct Image' },
+            
+            // Non-existent (should show placeholder)
+            { path: 'non-existent/image.jpg', description: 'Non-existent Image' }
+        ];
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '<div class="log-entry">Logs cleared...</div>';
+        }
+
+        function generateImageUrl(imagePath) {
+            // Simulate the imageUtils.js function
+            if (!imagePath) return '';
+            
+            // Handle different URL formats
+            if (imagePath.startsWith('http')) return imagePath;
+            
+            // Clean up the image path - remove 'ownerimages/' prefix if present
+            let cleanImagePath = imagePath;
+            if (cleanImagePath.startsWith('ownerimages/')) {
+                cleanImagePath = cleanImagePath.replace('ownerimages/', '');
+            }
+            
+            // Remove leading slashes
+            cleanImagePath = cleanImagePath.replace(/^\/+/, '');
+            
+            // Use Laravel image proxy
+            return `${API_BASE_URL}/images/${cleanImagePath}`;
+        }
+
+        function createImageTest(imageData) {
+            const imageUrl = generateImageUrl(imageData.path);
+            const testId = imageData.path.replace(/[^a-zA-Z0-9]/g, '_');
+            
+            const testItem = document.createElement('div');
+            testItem.className = 'test-item';
+            testItem.innerHTML = `
+                <h4>${imageData.description}</h4>
+                <div class="test-url">${imageUrl}</div>
+                <img class="test-image" src="${imageUrl}" alt="${imageData.description}">
+                <div class="status loading" id="status-${testId}">Loading...</div>
+            `;
+
+            const img = testItem.querySelector('img');
+            const statusDiv = testItem.querySelector('.status');
+
+            img.onload = function() {
+                statusDiv.textContent = 'SUCCESS: Image loaded';
+                statusDiv.className = 'status success';
+                log(`✅ ${imageData.description}: Image loaded successfully`, 'success');
+            };
+
+            img.onerror = function() {
+                statusDiv.textContent = 'ERROR: Failed to load';
+                statusDiv.className = 'status error';
+                log(`❌ ${imageData.description}: Image failed to load`, 'error');
+            };
+
+            return testItem;
+        }
+
+        function testAllImages() {
+            log('Starting comprehensive image tests...');
+            const grid = document.getElementById('imageTestGrid');
+            grid.innerHTML = '';
+
+            testImages.forEach(imageData => {
+                const testItem = createImageTest(imageData);
+                grid.appendChild(testItem);
+            });
+        }
+
+        async function testApiConnection() {
+            log('Testing API connection...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/test`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ API connection successful: ${data.message}`, 'success');
+                } else {
+                    log(`❌ API connection failed: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ API connection error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMinioConnection() {
+            log('Testing MinIO connection via API...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/test-minio`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ MinIO connection successful, files found: ${data.all_files?.length || 0}`, 'success');
+                    if (data.all_files && data.all_files.length > 0) {
+                        log(`📁 Sample files: ${data.all_files.slice(0, 3).join(', ')}...`);
+                    }
+                } else {
+                    log(`❌ MinIO connection failed: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ MinIO connection error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize the test
+        window.onload = function() {
+            log('Image fetching system test initialized');
+            log('Click "Test All Images" to start comprehensive testing');
+        };
+    </script>
+</body>
+</html>

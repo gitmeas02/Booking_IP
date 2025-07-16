@@ -6,17 +6,30 @@ use App\Models\Booking;
 use App\Models\RoomImage;
 use App\Models\RoomPrice;
 use App\Models\RoomType;
-use Auth;
+use App\Models\User;
+use App\Models\OwnerApplication;
+use Illuminate\Support\Facades\Auth;
 use Intervention\Image\Facades\Image;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Storage;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 
 class RoomTypeController extends Controller
 {
  public function storeMultiple(Request $request, $ownerApplicationId)
 {
+    // Verify the owner application belongs to the authenticated user
+    $user = Auth::user();
+    $application = OwnerApplication::where('id', $ownerApplicationId)
+        ->where('user_id', $user->id)
+        ->first();
+    
+    if (!$application) {
+        return response()->json(['error' => 'Property not found or you do not have permission to create rooms for this property'], 403);
+    }
+    
     $data = $request->validate([
         'rooms' => 'required|array|min:1',
         'rooms.*.id' => 'nullable|integer',
@@ -126,7 +139,7 @@ public function getRoomsIsAvailableIds(Request $request)
 {
     try {
         // Log incoming request
-        \Log::info('Room availability request:', $request->all());
+        Log::info('Room availability request:', $request->all());
 
         // Validate request
         $validated = $request->validate([
@@ -146,7 +159,7 @@ public function getRoomsIsAvailableIds(Request $request)
             ->where('default_price', $defaultPrice)
             ->get();
 
-        \Log::info('Found rooms:', ['count' => $rooms->count(), 'ids' => $rooms->pluck('id')]);
+        Log::info('Found rooms:', ['count' => $rooms->count(), 'ids' => $rooms->pluck('id')]);
         
         if ($rooms->isEmpty()) {
             return response()->json([
@@ -166,7 +179,7 @@ public function getRoomsIsAvailableIds(Request $request)
                 foreach ($room->blockDates as $block) {
                     if ($block->start_date < $validated['end_date'] && $block->end_date > $validated['start_date']) {
                         $isBlocked = true;
-                        \Log::info('Room is blocked:', ['room_id' => $room->id]);
+                        Log::info('Room is blocked:', ['room_id' => $room->id]);
                         break;
                     }
                 }
@@ -177,11 +190,11 @@ public function getRoomsIsAvailableIds(Request $request)
                 // TEMP: Skip booking check until we fix the booking table
                 // Just assume no bookings exist for now
                 $availableRooms[] = $room->id;
-                \Log::info('Room is available:', ['room_id' => $room->id]);
+                Log::info('Room is available:', ['room_id' => $room->id]);
             }
         }
 
-        \Log::info('Available rooms:', ['count' => count($availableRooms)]);
+        Log::info('Available rooms:', ['count' => count($availableRooms)]);
 
         $requestedQuantity = min((int)$validated['quantity'], count($availableRooms));
         $selectedRoomIds = array_slice($availableRooms, 0, $requestedQuantity);
@@ -192,7 +205,7 @@ public function getRoomsIsAvailableIds(Request $request)
             'total_available' => count($availableRooms)
         ]);
     } catch (\Exception $e) {
-        \Log::error('Room availability error: ' . $e->getMessage(), [
+        Log::error('Room availability error: ' . $e->getMessage(), [
             'trace' => $e->getTraceAsString()
         ]);
         return response()->json(['error' => $e->getMessage()], 500);

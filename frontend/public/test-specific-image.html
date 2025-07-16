@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specific Image Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-image {
+            max-width: 400px;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .info {
+            color: blue;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Specific Image Test</h1>
+    
+    <div class="test-container">
+        <h2>Test Your Specific Image Path</h2>
+        <div class="info">Testing: ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg</div>
+        <button onclick="testSpecificImage()">Test Specific Image</button>
+        <div id="specificImageResult"></div>
+    </div>
+
+    <script>
+        function testSpecificImage() {
+            const result = document.getElementById('specificImageResult');
+            result.innerHTML = '<div class="info">Testing specific image...</div>';
+            
+            const originalPath = 'ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg';
+            const cleanPath = originalPath.replace('ownerimages/', '');
+            
+            const testUrls = [
+                `http://localhost:8100/api/images/${cleanPath}`,
+                `http://localhost:8100/api/images/${originalPath}`,
+                `http://localhost:9000/ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg`,
+                `http://localhost:9000/${originalPath}`
+            ];
+            
+            result.innerHTML = `
+                <div class="info">Original path: ${originalPath}</div>
+                <div class="info">Clean path: ${cleanPath}</div>
+                <h3>Testing URLs:</h3>
+            `;
+            
+            testUrls.forEach((url, index) => {
+                const img = new Image();
+                const testDiv = document.createElement('div');
+                testDiv.innerHTML = `<div class="info">Testing URL ${index + 1}: ${url}</div>`;
+                result.appendChild(testDiv);
+                
+                img.onload = function() {
+                    testDiv.innerHTML += `<div class="success">✅ SUCCESS! Image loaded</div>`;
+                    testDiv.innerHTML += `<img src="${url}" class="test-image" alt="Test image">`;
+                };
+                
+                img.onerror = function() {
+                    testDiv.innerHTML += `<div class="error">❌ FAILED to load</div>`;
+                };
+                
+                img.src = url;
+            });
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            testSpecificImage();
+        };
+    </script>
+</body>
+</html>

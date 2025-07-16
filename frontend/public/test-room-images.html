@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Type Card Image Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-image {
+            max-width: 300px;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .info {
+            color: blue;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Room Type Card Image Test</h1>
+    
+    <div class="test-container">
+        <h2>Hotel Room Data Test</h2>
+        <button onclick="testHotelRoomData()">Test Hotel Room Data</button>
+        <div id="roomDataResult"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Room Type API Test</h2>
+        <button onclick="testRoomTypeAPI()">Test Room Type API</button>
+        <div id="roomTypeResult"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>MinIO Connection Test</h2>
+        <button onclick="testMinioConnection()">Test MinIO Connection</button>
+        <div id="minioResult"></div>
+    </div>
+
+    <script>
+        async function testMinioConnection() {
+            const result = document.getElementById('minioResult');
+            result.innerHTML = '<div class="info">Testing MinIO connection...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/test-minio');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <div class="success">✅ MinIO connected!</div>
+                        <div class="info">Status: ${data.status}</div>
+                        <div class="info">Bucket: ${data.bucket}</div>
+                        <div class="info">Endpoint: ${data.endpoint}</div>
+                        <div class="info">Files count: ${data.files_count}</div>
+                        <div class="info">Sample files: ${data.sample_files ? data.sample_files.join(', ') : 'None'}</div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ MinIO Error: ${response.status} - ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+        async function testHotelRoomData() {
+            const result = document.getElementById('roomDataResult');
+            result.innerHTML = '<div class="info">Testing hotel room data...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/house/1');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    let roomImageInfo = '';
+                    if (data.room_types && data.room_types.length > 0) {
+                        const firstRoom = data.room_types[0];
+                        roomImageInfo = `
+                            <h3>First Room Data Structure:</h3>
+                            <div class="info">Room Name: ${firstRoom.name}</div>
+                            <div class="info">Room ID: ${firstRoom.id}</div>
+                            <div class="info">Images field: ${firstRoom.images ? 'EXISTS' : 'MISSING'}</div>
+                            <div class="info">Photos field: ${firstRoom.photos ? 'EXISTS' : 'MISSING'}</div>
+                            <div class="info">Image URL field: ${firstRoom.image_url ? 'EXISTS' : 'MISSING'}</div>
+                            <div class="info">Image field: ${firstRoom.image ? 'EXISTS' : 'MISSING'}</div>
+                            <pre>${JSON.stringify(firstRoom, null, 2)}</pre>
+                        `;
+                        
+                        // Test image loading if images exist
+                        if (firstRoom.images && firstRoom.images.length > 0) {
+                            const imageUrl = firstRoom.images[0].image_url || firstRoom.images[0].url || firstRoom.images[0];
+                            if (imageUrl) {
+                                const fullUrl = `http://localhost:8100/api/images/${imageUrl}`;
+                                roomImageInfo += `
+                                    <h3>Testing Image Load:</h3>
+                                    <div class="info">Image URL: ${imageUrl}</div>
+                                    <div class="info">Full URL: ${fullUrl}</div>
+                                    <img src="${fullUrl}" class="test-image" alt="Test room image" 
+                                         onload="console.log('Room image loaded successfully')" 
+                                         onerror="console.log('Room image failed to load')">
+                                `;
+                            }
+                        }
+                    }
+                    
+                    result.innerHTML = `
+                        <div class="success">✅ Hotel data loaded!</div>
+                        <div class="info">Room Types: ${data.room_types ? data.room_types.length : 0}</div>
+                        ${roomImageInfo}
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Hotel data Error: ${response.status} - ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRoomTypeAPI() {
+            const result = document.getElementById('roomTypeResult');
+            result.innerHTML = '<div class="info">Testing room type API...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/rooms');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    let roomInfo = '';
+                    if (data.length > 0) {
+                        const firstRoom = data[0];
+                        roomInfo = `
+                            <h3>First Room from /api/rooms:</h3>
+                            <div class="info">Room Name: ${firstRoom.name}</div>
+                            <div class="info">Room ID: ${firstRoom.id}</div>
+                            <div class="info">Images field: ${firstRoom.images ? 'EXISTS' : 'MISSING'}</div>
+                            <div class="info">Photos field: ${firstRoom.photos ? 'EXISTS' : 'MISSING'}</div>
+                            <pre>${JSON.stringify(firstRoom, null, 2)}</pre>
+                        `;
+                    }
+                    
+                    result.innerHTML = `
+                        <div class="success">✅ Room Type API connected!</div>
+                        <div class="info">Total rooms: ${data.length}</div>
+                        ${roomInfo}
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Room Type API Error: ${response.status} - ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            testHotelRoomData();
+            testMinioConnection();
+        };
+
+        // Helper function to test image URL patterns
+        function testImageUrlPattern(imageUrl) {
+            const patterns = [
+                `http://localhost:8100/api/images/${imageUrl}`,
+                `http://localhost:9000/ownerimages/${imageUrl}`,
+                `http://localhost:8100/storage/${imageUrl}`,
+            ];
+            
+            console.log(`Testing image URL patterns for: ${imageUrl}`);
+            patterns.forEach(url => {
+                const img = new Image();
+                img.onload = () => console.log(`✅ Pattern SUCCESS: ${url}`);
+                img.onerror = () => console.log(`❌ Pattern FAILED: ${url}`);
+                img.src = url;
+            });
+        }
+    </script>
+</body>
+</html>

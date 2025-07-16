@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Utils Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .url-output {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        .test-image {
+            max-width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Image Utils Function Test</h1>
+
+    <div class="test-section">
+        <h2>Test imageUtils.js Functions</h2>
+        
+        <div class="input-group">
+            <label for="imagePathInput">Enter Image Path:</label>
+            <input type="text" id="imagePathInput" value="room-images/bathroom2.jpg" placeholder="e.g., room-images/bathroom2.jpg">
+        </div>
+        
+        <button onclick="testImageUrl()">Test Image URL Generation</button>
+        <button onclick="testImageLoad()">Test Image Loading</button>
+        
+        <div class="test-result" id="testResult">
+            Ready to test...
+        </div>
+        
+        <div class="url-output" id="urlOutput"></div>
+        
+        <div id="imageContainer"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Predefined Test Cases</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <div id="allTestsResult"></div>
+    </div>
+
+    <script>
+        // Simulate the imageUtils.js functions
+        const VITE_API_BASE_URL = 'http://localhost:8100/api';
+        
+        // This is the exact function from imageUtils.js
+        function getImageUrl(imagePath) {
+            if (!imagePath) return '';
+            
+            // Clean the path to remove any leading slashes
+            const cleanPath = imagePath.replace(/^\/+/, '');
+            
+            // Use the base URL directly since it already includes /api
+            return `${VITE_API_BASE_URL}/images/${cleanPath}`;
+        }
+
+        function testImageUrl() {
+            const imagePath = document.getElementById('imagePathInput').value;
+            const resultDiv = document.getElementById('testResult');
+            const urlDiv = document.getElementById('urlOutput');
+            
+            try {
+                const generatedUrl = getImageUrl(imagePath);
+                
+                resultDiv.innerHTML = `
+                    <strong>Test Results:</strong><br>
+                    Input Path: ${imagePath}<br>
+                    Generated URL: ${generatedUrl}<br>
+                    Status: ✅ URL generated successfully
+                `;
+                
+                urlDiv.textContent = generatedUrl;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <strong>Test Results:</strong><br>
+                    Input Path: ${imagePath}<br>
+                    Error: ${error.message}<br>
+                    Status: ❌ URL generation failed
+                `;
+                urlDiv.textContent = '';
+            }
+        }
+
+        function testImageLoad() {
+            const imagePath = document.getElementById('imagePathInput').value;
+            const imageContainer = document.getElementById('imageContainer');
+            const resultDiv = document.getElementById('testResult');
+            
+            try {
+                const generatedUrl = getImageUrl(imagePath);
+                
+                imageContainer.innerHTML = `
+                    <h3>Image Load Test:</h3>
+                    <img class="test-image" src="${generatedUrl}" alt="Test image: ${imagePath}" id="testImage">
+                    <div id="imageStatus">Loading...</div>
+                `;
+                
+                const img = document.getElementById('testImage');
+                const statusDiv = document.getElementById('imageStatus');
+                
+                img.onload = function() {
+                    statusDiv.innerHTML = '✅ Image loaded successfully';
+                    statusDiv.style.color = 'green';
+                    resultDiv.innerHTML = `
+                        <strong>Image Load Test:</strong><br>
+                        URL: ${generatedUrl}<br>
+                        Status: ✅ Image loaded successfully
+                    `;
+                };
+                
+                img.onerror = function() {
+                    statusDiv.innerHTML = '❌ Image failed to load';
+                    statusDiv.style.color = 'red';
+                    resultDiv.innerHTML = `
+                        <strong>Image Load Test:</strong><br>
+                        URL: ${generatedUrl}<br>
+                        Status: ❌ Image failed to load
+                    `;
+                };
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <strong>Image Load Test:</strong><br>
+                    Error: ${error.message}<br>
+                    Status: ❌ Test failed
+                `;
+            }
+        }
+
+        function runAllTests() {
+            const testCases = [
+                'room-images/bathroom2.jpg',
+                'room-images/bedroom1.jpg',
+                'room-images/room_1_1736947556.jpg',
+                'owner_applications_images/test.jpg',
+                'rooms/thumbnails/thumb_1.jpg',
+                '/room-images/bathroom2.jpg', // Test with leading slash
+                'room-images//bathroom2.jpg', // Test with double slash
+                '', // Test empty path
+                null, // Test null path
+                'placeholder.jpg'
+            ];
+            
+            const resultsDiv = document.getElementById('allTestsResult');
+            let resultsHtml = '<h3>All Test Results:</h3>';
+            
+            testCases.forEach((testCase, index) => {
+                try {
+                    const result = getImageUrl(testCase);
+                    resultsHtml += `
+                        <div class="test-result">
+                            Test ${index + 1}: Input: "${testCase}" → Output: "${result}"
+                        </div>
+                    `;
+                } catch (error) {
+                    resultsHtml += `
+                        <div class="test-result" style="background: #f8d7da;">
+                            Test ${index + 1}: Input: "${testCase}" → Error: ${error.message}
+                        </div>
+                    `;
+                }
+            });
+            
+            resultsDiv.innerHTML = resultsHtml;
+        }
+
+        // Initialize
+        window.onload = function() {
+            document.getElementById('testResult').textContent = 'Page loaded. Ready to test imageUtils functions.';
+        };
+    </script>
+</body>
+</html>

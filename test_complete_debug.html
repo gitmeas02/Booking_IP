@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Image Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .test-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .test-url {
+            color: #0066cc;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+        .test-image {
+            max-width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .config-display {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 5px;
+            border-left: 3px solid #007bff;
+            background: white;
+        }
+        .error-log {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Complete Image Debug Test</h1>
+
+    <div class="test-section">
+        <h2>Configuration</h2>
+        <div class="config-display">
+            <div>API Base URL: <span id="apiBaseUrl">http://localhost:8100/api</span></div>
+            <div>Image Proxy Endpoint: <span id="imageProxy">/images/</span></div>
+            <div>Generated Image URL Pattern: <span id="imagePattern">{API_BASE_URL}/images/{imagePath}</span></div>
+        </div>
+        <button onclick="testApiConnection()">Test API Connection</button>
+        <button onclick="testImageEndpoint()">Test Image Endpoint</button>
+        <button onclick="testAllImages()">Test All Images</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Image Tests</h2>
+        <div class="test-grid" id="imageTestGrid">
+            <!-- Images will be populated here -->
+        </div>
+    </div>
+
+    <div class="log-section">
+        <h3>Debug Logs</h3>
+        <div id="logContainer">
+            <div class="log-entry">Ready to test...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8100/api';
+        
+        // Test images from the original errors
+        const testImages = [
+            'room-images/bathroom2.jpg',
+            'room-images/bedroom1.jpg',
+            'room-images/room_1_1736947556.jpg',
+            'owner_applications_images/test.jpg',
+            'rooms/thumbnails/thumb_1.jpg',
+            'placeholder.jpg'
+        ];
+
+        function log(message, isError = false) {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = isError ? 'log-entry error-log' : 'log-entry';
+            logEntry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '<div class="log-entry">Logs cleared...</div>';
+        }
+
+        function generateImageUrl(imagePath) {
+            // Clean the path to avoid double slashes
+            const cleanPath = imagePath.replace(/^\/+/, '');
+            return `${API_BASE_URL}/images/${cleanPath}`;
+        }
+
+        function createImageTest(imagePath) {
+            const imageUrl = generateImageUrl(imagePath);
+            
+            const testItem = document.createElement('div');
+            testItem.className = 'test-item';
+            testItem.innerHTML = `
+                <div class="test-url">URL: ${imageUrl}</div>
+                <img class="test-image" src="${imageUrl}" alt="Test image: ${imagePath}">
+                <div class="status" id="status-${imagePath.replace(/[^a-zA-Z0-9]/g, '_')}">Loading...</div>
+            `;
+
+            const img = testItem.querySelector('img');
+            const statusDiv = testItem.querySelector('.status');
+            const statusId = imagePath.replace(/[^a-zA-Z0-9]/g, '_');
+
+            img.onload = function() {
+                statusDiv.textContent = 'SUCCESS: Image loaded';
+                statusDiv.className = 'status success';
+                log(`✅ Image loaded successfully: ${imagePath}`);
+            };
+
+            img.onerror = function() {
+                statusDiv.textContent = 'ERROR: Failed to load';
+                statusDiv.className = 'status error';
+                log(`❌ Image failed to load: ${imagePath}`, true);
+            };
+
+            return testItem;
+        }
+
+        function testAllImages() {
+            log('Starting image tests...');
+            const grid = document.getElementById('imageTestGrid');
+            grid.innerHTML = '';
+
+            testImages.forEach(imagePath => {
+                const testItem = createImageTest(imagePath);
+                grid.appendChild(testItem);
+            });
+        }
+
+        async function testApiConnection() {
+            log('Testing API connection...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/images`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    log('✅ API connection successful');
+                    const data = await response.text();
+                    log(`API response: ${data.substring(0, 200)}...`);
+                } else {
+                    log(`❌ API connection failed: ${response.status} ${response.statusText}`, true);
+                }
+            } catch (error) {
+                log(`❌ API connection error: ${error.message}`, true);
+            }
+        }
+
+        async function testImageEndpoint() {
+            log('Testing image endpoint...');
+            const testUrl = `${API_BASE_URL}/images/room-images/bathroom2.jpg`;
+            
+            try {
+                const response = await fetch(testUrl);
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    log(`✅ Image endpoint accessible: ${contentType}`);
+                } else {
+                    log(`❌ Image endpoint failed: ${response.status} ${response.statusText}`, true);
+                }
+            } catch (error) {
+                log(`❌ Image endpoint error: ${error.message}`, true);
+            }
+        }
+
+        // Initialize the test
+        window.onload = function() {
+            document.getElementById('apiBaseUrl').textContent = API_BASE_URL;
+            log('Debug test page loaded');
+        };
+    </script>
+</body>
+</html>

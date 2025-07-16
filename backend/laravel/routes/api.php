@@ -7,9 +7,13 @@ use App\Http\Controllers\BlockRoom\BlockRoomController;
 use App\Http\Controllers\Bookings\BookingController;
 use App\Http\Controllers\Houses\HouseListingController;
 use App\Http\Controllers\Images\ImageController;
+use App\Http\Controllers\ImageProxyController;
+use App\Http\Controllers\OptimizedImageController;
 use App\Http\Controllers\OwnerController;
+use App\Http\Controllers\OwnerRoomController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PrivateFileController;
 // use App\Models\OwnerApplication;
 use App\Http\Controllers\Room\RoomTypeController;
 use App\Models\RoomType;
@@ -31,6 +35,14 @@ Route::post('/payments/create-booking', [PaymentController::class, 'createBookin
 Route::get('/payments/{transactionId}/status', [PaymentController::class, 'checkStatus']);
 Route::get('/payments/{transactionId}/status-with-booking', [PaymentController::class, 'checkStatusAndCreateBooking']);
 Route::get('/payments', [PaymentController::class, 'getTransactions'])->middleware('auth:sanctum');
+
+// Image optimization routes
+Route::get('/images/proxy', [OptimizedImageController::class, 'proxy']);
+Route::post('/images/clear-cache', [OptimizedImageController::class, 'clearCache']);
+
+// Legacy image routes
+Route::get('/images/{path}', [ImageProxyController::class, 'getImage'])->where('path', '.*');
+Route::get('/test-minio', [ImageProxyController::class, 'testMinioConnection']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -64,11 +76,26 @@ Route::middleware('auth:sanctum')->prefix('owner')->group(function () {
     Route::post('/room/{id}/price', [RoomTypeController::class, 'updatePrice']);
     Route::get('/application/{id}/images', [ImageController::class, 'getUserApplicationImages']);
    //http://localhost:8100/api/owner/application/7/images
+   
+    // Room Management Routes
+    Route::get('/properties', [OwnerRoomController::class, 'getOwnerProperties']);
+    Route::get('/properties/{propertyId}/rooms', [OwnerRoomController::class, 'getPropertyRooms']);
+    Route::post('/rooms', [OwnerRoomController::class, 'createRoom']);
+    Route::put('/rooms/{roomId}', [OwnerRoomController::class, 'updateRoom']);
+    Route::delete('/rooms/{roomId}', [OwnerRoomController::class, 'deleteRoom']);
+    Route::get('/amenities', [OwnerRoomController::class, 'getAmenities']);
+    Route::get('/statistics', [OwnerRoomController::class, 'getRoomStatistics']);
 });
 // amenity
 Route::get('/amenities', [AmenityController::class, 'index']);
 Route::get('/rooms/available', [RoomTypeController::class, 'getRoomsIsAvailableIds']);
 Route::get('/rooms', [RoomTypeController::class, 'getAllRooms']);
+
+// Image proxy routes
+Route::get('/images/{imageName}', [ImageProxyController::class, 'getImage'])->where('imageName', '.*');
+Route::get('/images', [ImageProxyController::class, 'listImages']);
+Route::get('/test-minio', [ImageProxyController::class, 'testMinioConnection']);
+Route::get('/test-image/{imagePath}', [ImageProxyController::class, 'testSpecificImage'])->where('imagePath', '.*');
 
 //Bookings
 Route::post('/bookings', [BookingController::class, 'store']);
@@ -79,6 +106,13 @@ Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'updateMe'
 
 //Get all Applications
 Route::get('/allhouse',[HouseListingController::class,'getAllHouses']);
+Route::get('/hotels',[HouseListingController::class,'getAllHouses']); // Alias for allhouse
+
+// Test route
+Route::get('/test', function () {
+    return response()->json(['message' => 'API is working!', 'timestamp' => now()]);
+});
+
 Route::get('/rooms/blocked-today', [BlockRoomController::class, 'getTodayBlockedRooms']);
 Route::get('/house/{id}', [HouseListingController::class, 'getHouseById']);
 
@@ -101,3 +135,35 @@ Route::middleware('auth:sanctum')->get('/houses/{houseId}/rooms', [RoomsControll
 Route::middleware('auth:sanctum')->get('/houses/{houseId}/rooms/{roomId}', [RoomsController::class, 'getRoomByIdBelongtoHouseId'])->middleware('auth:sanctum');
 // Update a specific room type by ID
 Route::middleware('auth:sanctum')->put('/houses/{houseId}/rooms/{roomId}', [RoomsController::class, 'updateRoombyIdBelongtoHouseId'])->middleware('auth:sanctum');
+
+// Room Management Routes for Property Owners
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('owner')->group(function () {
+        // Property management
+        Route::get('properties', [OwnerRoomController::class, 'getOwnerProperties']);
+        Route::get('properties/{propertyId}/rooms', [OwnerRoomController::class, 'getPropertyRooms']);
+        
+        // Room management
+        Route::post('rooms', [OwnerRoomController::class, 'createRoom']);
+        Route::put('rooms/{roomId}', [OwnerRoomController::class, 'updateRoom']);
+        Route::delete('rooms/{roomId}', [OwnerRoomController::class, 'deleteRoom']);
+        Route::get('rooms/{roomId}', [OwnerRoomController::class, 'getRoom']);
+        
+        // Room amenities
+        Route::get('amenities', [OwnerRoomController::class, 'getAmenities']);
+        Route::post('rooms/{roomId}/amenities', [OwnerRoomController::class, 'updateRoomAmenities']);
+        
+        // Room statistics
+        Route::get('statistics', [OwnerRoomController::class, 'getRoomStatistics']);
+    });
+});
+
+// Private file routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/files/private/upload', [PrivateFileController::class, 'uploadPrivateFile']);
+    Route::get('/files/private/{path}', [PrivateFileController::class, 'getPrivateFile'])->where('path', '.*');
+    Route::get('/files/private/stream/{path}', [PrivateFileController::class, 'streamPrivateFile'])->where('path', '.*');
+    Route::get('/files/private/download/{path}', [PrivateFileController::class, 'downloadPrivateFile'])->where('path', '.*');
+    Route::delete('/files/private/{path}', [PrivateFileController::class, 'deletePrivateFile'])->where('path', '.*');
+    Route::get('/files/private/list/{directory?}', [PrivateFileController::class, 'listPrivateFiles'])->where('directory', '.*');
+});

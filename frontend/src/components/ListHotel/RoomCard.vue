@@ -4,12 +4,10 @@
     @click="$emit('click')"
   >
     <!-- Image -->
-    <div class="image">
+    <div class="image-container">
       <img
         v-if="room.room_types[0]?.images?.length"
-        :src="
-          'http://localhost:9000/' + room.room_types[0].images[0].thumbnail_url
-        "
+        :src="getImageUrl(room.room_types[0].images[0].thumbnail_url)"
         :alt="`Image of ${room.property_name}`"
         class="img"
       />
@@ -109,51 +107,53 @@
 </template>
 
 <script setup>
+import { getImageUrl } from "@/utils/imageUtils";
 import {
-  AirVent, // for Air conditioning
-  Flame, // for Heating
-  Wifi, // for Free Wi-Fi, High-speed internet
-  Tv, // for Flat-screen TV
-  Lock, // for Safe
-  // Fridge, // for Mini fridge
-  Microwave, // for Microwave
-  Coffee, // for Coffee/tea maker
-  DoorOpen, // for Balcony or terrace
-  Bath, // for Private bathroom, Bathtub, Hot tub
-  // Shower, // for Shower, Hot water
-  Square, // for Towels (placeholder, as no direct towel icon)
-  // HairDryer, // for Hairdryer
-  Droplet, // for Toiletries (placeholder for soap/shampoo)
-  Utensils, // for Kitchen, Kitchenette, Restaurant
-  // Stove, // for Stove
-  // Oven, // for Oven
-  Sandwich, // for Toaster (replacing BreadSlice)
-  // Dishwasher, // for Dishwasher
-  Waves, // for Swimming pool
-  Heart, // for Spa (placeholder for wellness)
-  ThermometerSun, // for Sauna
-  Dumbbell, // for Fitness center
-  Sun, // for Beachfront
-  Clock, // for 24-hour front desk
+  AirVent, // for Kids' play area
+  // Dice, // for Board games
+  AlertTriangle, // for EV charging station
+  Baby, // for Balcony or terrace
+  Bath, // for Airport shuttle
+  BatteryCharging, // for Bar
+  Bell, // for Pet-friendly, Pet bowls, Pet bed
+  Briefcase, // for Fire extinguishers
+  Camera, // for 24-hour front desk
   // Broom, // for Daily housekeeping
   // Elevator, // for Elevator
-  Car, // for Free parking, Car rental
-  PawPrint, // for Pet-friendly, Pet bowls, Pet bed
-  Briefcase, // for Business center
-  Users, // for Meeting room
-  Wine, // for Bar
-  Bell, // for Room service
-  EggFried, // for Breakfast included
-  ShoppingCart, // for Mini-market
+  Car, // for Beachfront
+  Clock, // for Microwave
+  Coffee, // for Coffee/tea maker
+  DoorOpen, // for Towels (placeholder, as no direct towel icon)
+  // HairDryer, // for Hairdryer
+  Droplet, // for Sauna
+  Dumbbell, // for Room service
+  EggFried, // for Smoke alarms
+  FireExtinguisher, // for Air conditioning
+  Flame, // for Swimming pool
+  Heart, // for Flat-screen TV
+  Lock, // for Safe
+
+  // Fridge, // for Mini fridge
+  Microwave, // for Free parking, Car rental
+  PawPrint, // for Mini-market
   // Wheelchair, // for Wheelchair accessible, Accessible bathroom
-  Plane, // for Airport shuttle
-  BatteryCharging, // for EV charging station
-  Baby, // for Baby cot
-  ToyBrick, // for Kids’ play area
-  // Dice, // for Board games
-  AlertTriangle, // for Smoke alarms
-  FireExtinguisher, // for Fire extinguishers
-  Camera, // for CCTV
+  Plane, // for Kitchen, Kitchenette, Restaurant
+  // Stove, // for Stove
+  // Oven, // for Oven
+  Sandwich, // for Breakfast included
+  ShoppingCart, // for Private bathroom, Bathtub, Hot tub
+  // Shower, // for Shower, Hot water
+  Square, // for Fitness center
+  Sun, // for Spa (placeholder for wellness)
+  ThermometerSun, // for Baby cot
+  ToyBrick, // for Free Wi-Fi, High-speed internet
+  Tv, // for Business center
+  Users, // for Toiletries (placeholder for soap/shampoo)
+  Utensils, // for Toaster (replacing BreadSlice)
+  // Dishwasher, // for Dishwasher
+  Waves, // for Heating
+  Wifi, // for Meeting room
+  Wine, // for Bar
 } from "lucide-vue-next";
 
 const icons = {
@@ -204,7 +204,7 @@ const icons = {
   "Car rental": Car,
   "EV charging station": BatteryCharging,
   "Baby cot": Baby,
-  "Kids’ play area": ToyBrick,
+  "Kids' play area": ToyBrick,
   // "Board games": Dice,
   "Pet bowls": PawPrint,
   "Pet bed": PawPrint,

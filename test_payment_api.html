@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Payment API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .qr-code {
+            max-width: 300px;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payment API Test</h1>
+    
+    <div class="container">
+        <h2>Test Payment with Booking</h2>
+        
+        <div class="form-group">
+            <label>Amount (KHR):</label>
+            <input type="number" id="amount" value="100" min="1">
+        </div>
+        
+        <div class="form-group">
+            <label>Merchant Name:</label>
+            <input type="text" id="merchantName" value="Khun Hotel - Room Booking">
+        </div>
+        
+        <div class="form-group">
+            <label>User ID:</label>
+            <input type="number" id="userId" value="1" min="1">
+        </div>
+        
+        <div class="form-group">
+            <label>Hotel ID:</label>
+            <input type="number" id="hotelId" value="1" min="1">
+        </div>
+        
+        <div class="form-group">
+            <label>Room IDs (comma-separated):</label>
+            <input type="text" id="roomIds" value="1,2" placeholder="1,2,3">
+        </div>
+        
+        <div class="form-group">
+            <label>Check-in Date:</label>
+            <input type="date" id="checkinDate" value="2024-01-20">
+        </div>
+        
+        <div class="form-group">
+            <label>Check-out Date:</label>
+            <input type="date" id="checkoutDate" value="2024-01-22">
+        </div>
+        
+        <div class="form-group">
+            <label>Number of Guests:</label>
+            <input type="number" id="guests" value="2" min="1">
+        </div>
+        
+        <button class="button" onclick="createPayment()">Create Payment & QR Code</button>
+        
+        <div id="result"></div>
+        
+        <div id="qrContainer" class="qr-container" style="display: none;">
+            <h3>QR Code for Payment</h3>
+            <img id="qrCode" class="qr-code" alt="QR Code">
+            <div id="paymentInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        async function createPayment() {
+            const amount = document.getElementById('amount').value;
+            const merchantName = document.getElementById('merchantName').value;
+            const userId = document.getElementById('userId').value;
+            const hotelId = document.getElementById('hotelId').value;
+            const roomIds = document.getElementById('roomIds').value.split(',').map(id => parseInt(id.trim()));
+            const checkinDate = document.getElementById('checkinDate').value;
+            const checkoutDate = document.getElementById('checkoutDate').value;
+            const guests = document.getElementById('guests').value;
+            
+            const paymentData = {
+                amount: parseFloat(amount),
+                merchant_name: merchantName,
+                user_id: parseInt(userId),
+                room_ids: roomIds,
+                hotel_id: parseInt(hotelId),
+                check_in_date: checkinDate,
+                check_out_date: checkoutDate,
+                number_of_guests: parseInt(guests),
+                total_price: parseFloat(amount),
+                special_request: 'Test booking request',
+                payment_method: 'khqr'
+            };
+            
+            console.log('Creating payment with data:', paymentData);
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/payments/with-booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                const result = await response.json();
+                console.log('Payment API Response:', result);
+                
+                if (result.success) {
+                    showSuccess('Payment created successfully!');
+                    displayQRCode(result);
+                    showPaymentInfo(result);
+                } else {
+                    showError('Payment creation failed: ' + result.message);
+                }
+                
+                // Show full response for debugging
+                document.getElementById('result').innerHTML += 
+                    '<div class="info"><strong>Full API Response:</strong><pre>' + 
+                    JSON.stringify(result, null, 2) + '</pre></div>';
+                
+            } catch (error) {
+                console.error('Error creating payment:', error);
+                showError('Network error: ' + error.message);
+            }
+        }
+        
+        function displayQRCode(paymentData) {
+            if (paymentData.qr_string) {
+                const qrData = encodeURIComponent(paymentData.qr_string);
+                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}&format=png&margin=20`;
+                
+                document.getElementById('qrCode').src = qrImageUrl;
+                document.getElementById('qrContainer').style.display = 'block';
+                
+                console.log('QR Code generated with data:', paymentData.qr_string);
+            } else {
+                showError('No QR string received from API');
+            }
+        }
+        
+        function showPaymentInfo(paymentData) {
+            const info = `
+                <div class="info">
+                    <strong>Payment Information:</strong><br>
+                    Transaction ID: ${paymentData.transaction_id}<br>
+                    Amount: ${paymentData.amount} ${paymentData.currency}<br>
+                    Merchant: ${paymentData.merchant_name}<br>
+                    Booking Reference: ${paymentData.booking_reference}<br>
+                    MD5 Hash: ${paymentData.qr_md5}<br>
+                    Expires: ${paymentData.expires_at}
+                </div>
+            `;
+            
+            document.getElementById('paymentInfo').innerHTML = info;
+        }
+        
+        function showSuccess(message) {
+            document.getElementById('result').innerHTML = 
+                '<div class="success">' + message + '</div>';
+        }
+        
+        function showError(message) {
+            document.getElementById('result').innerHTML = 
+                '<div class="error">' + message + '</div>';
+        }
+        
+        // Set default dates
+        window.onload = function() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dayAfter = new Date(today);
+            dayAfter.setDate(dayAfter.getDate() + 2);
+            
+            document.getElementById('checkinDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('checkoutDate').value = dayAfter.toISOString().split('T')[0];
+        };
+    </script>
+</body>
+</html>

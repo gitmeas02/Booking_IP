@@ -45,7 +45,7 @@
         </button>
         <button 
           class="px-4 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded transition-colors" 
-          @click="$router.push('/upload-property')"
+          @click="$router.push('/update-property')"
         >
           Upload Room
         </button>

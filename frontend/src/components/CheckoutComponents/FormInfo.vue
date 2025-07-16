@@ -1,13 +1,16 @@
 <script setup>
 import {
-    CheckCircle,
-    CircleDollarSign,
-    CreditCard,
-    Download,
-    QrCode,
-    X,
+  CheckCircle,
+  CircleDollarSign,
+  CreditCard,
+  Download,
+  QrCode,
+  X,
 } from "lucide-vue-next";
 import { computed, onUnmounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 // Define props
 const props = defineProps({
@@ -59,8 +62,47 @@ const formatDate = (dateString) => {
 };
 
 const generateQRCode = async () => {
-  // This will be called by parent component after payment is created
-  console.log("QR code generation handled by parent component");
+  // Don't generate if already generating or if payment is completed
+  if (isGeneratingQR.value || showSuccessModal.value) return;
+  
+  try {
+    isGeneratingQR.value = true;
+    console.log("🔄 Generating QR code...");
+    
+    // Create a basic payment if no current QR data exists
+    if (!currentQRData.value) {
+      const response = await fetch('http://localhost:8100/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          amount: amount.value,
+          merchant_name: merchantName,
+          booking_reference: 'MANUAL_QR_' + Date.now()
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log("✅ QR code generated successfully");
+        handlePaymentCreated(result);
+      } else {
+        console.error('❌ Failed to generate QR code:', result.message);
+      }
+    } else {
+      // Just refresh the QR image display - don't create new payment
+      console.log("🔄 Refreshing QR code display...");
+      const qrData = encodeURIComponent(currentQRData.value.qr_string);
+      qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&format=png&margin=10&_t=${Date.now()}`;
+    }
+  } catch (error) {
+    console.error('❌ Error generating QR code:', error);
+  } finally {
+    isGeneratingQR.value = false;
+  }
 };
 
 // Auto-refresh QR code every 2 minutes
@@ -69,8 +111,46 @@ const startAutoRefresh = () => {
     clearInterval(qrRefreshInterval.value);
   }
 
-  qrRefreshInterval.value = setInterval(() => {
-    generateQRCode();
+  console.log("🔄 Starting QR code auto-refresh (every 2 minutes)");
+  
+  qrRefreshInterval.value = setInterval(async () => {
+    if (currentQRData.value && selectedPayment.value === 'qr' && !showSuccessModal.value) {
+      console.log("🔄 Auto-refreshing QR code...");
+      
+      try {
+        const response = await fetch('http://localhost:8100/api/payments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            amount: amount.value,
+            merchant_name: merchantName,
+            booking_reference: 'AUTO_REFRESH_' + Date.now()
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Update QR data but keep the same transaction monitoring
+          const oldTransactionId = transactionId.value;
+          currentQRData.value = result;
+          
+          // Update QR image with new data
+          const qrData = encodeURIComponent(result.qr_string);
+          const timestamp = Date.now();
+          qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&format=png&margin=15&cache=${timestamp}`;
+          
+          console.log("✅ QR code auto-refreshed successfully");
+        } else {
+          console.error("❌ QR code auto-refresh failed:", result.message);
+        }
+      } catch (error) {
+        console.error("❌ Error during QR code auto-refresh:", error);
+      }
+    }
   }, 120000); // 2 minutes
 };
 
@@ -91,40 +171,75 @@ const downloadQRCode = () => {
 
 // Handle payment creation from parent component
 const handlePaymentCreated = (paymentData) => {
+  console.log("🔧 handlePaymentCreated called with data:", paymentData);
+  
+  // Reset generating state
+  isGeneratingQR.value = false;
+  
+  // Switch to QR payment method automatically
+  selectedPayment.value = "qr";
+  
   currentQRData.value = paymentData;
   transactionId.value = paymentData.transaction_id;
 
-  // Generate QR image URL
-  const qrData = encodeURIComponent(paymentData.qr_string);
-  qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&format=png&margin=10`;
+  // Generate QR image URL with better caching
+  if (paymentData.qr_string) {
+    const qrData = encodeURIComponent(paymentData.qr_string);
+    const timestamp = Date.now();
+    qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&format=png&margin=15&cache=${timestamp}`;
+    
+    console.log("✅ QR Code generated:", {
+      qr_string: paymentData.qr_string,
+      qr_image_url: qrImageUrl.value,
+      transaction_id: paymentData.transaction_id
+    });
+    
+    // Start auto-refresh for QR code
+    startAutoRefresh();
+    
+    // Start payment status checking
+    startPaymentStatusChecking();
+  } else {
+    console.error("❌ No QR string found in payment data:", paymentData);
+  }
 
   console.log("✅ Payment created with booking data:", paymentData);
-
-  // Start checking payment status
-  startPaymentStatusChecking();
 };
 
-// Start payment status checking
+// Start payment status checking with optimized intervals
 const startPaymentStatusChecking = () => {
   if (statusCheckInterval.value) {
     clearInterval(statusCheckInterval.value);
   }
 
-  // Check immediately and then every 3 seconds
-  checkPaymentStatus();
+  // Don't check immediately - wait for actual payment
+  console.log("🔍 Starting payment status monitoring...");
+  
+  // Check every 5 seconds for first 2 minutes, then every 10 seconds
+  let checkCount = 0;
   statusCheckInterval.value = setInterval(() => {
+    checkCount++;
     checkPaymentStatus();
-  }, 3000);
+    
+    // Switch to slower checking after 2 minutes (24 checks at 5 seconds each)
+    if (checkCount >= 24) {
+      clearInterval(statusCheckInterval.value);
+      statusCheckInterval.value = setInterval(() => {
+        checkPaymentStatus();
+      }, 10000); // 10 seconds
+    }
+  }, 5000); // Initial 5 seconds
 };
 
 // Payment status checker with enhanced logging and better error handling
 const checkPaymentStatus = async () => {
-  if (!transactionId.value) return;
+  if (!transactionId.value) {
+    console.log("⚠️ No transaction ID available for status check");
+    return;
+  }
 
   try {
-    console.log(
-      `Checking payment status for transaction: ${transactionId.value}`
-    );
+    console.log(`🔍 Checking payment status for transaction: ${transactionId.value}`);
 
     const response = await fetch(
       `http://localhost:8100/api/payments/${transactionId.value}/status-with-booking`,
@@ -137,17 +252,20 @@ const checkPaymentStatus = async () => {
     );
 
     if (!response.ok) {
-      console.error(`HTTP Error: ${response.status} ${response.statusText}`);
+      console.error(`❌ HTTP Error: ${response.status} ${response.statusText}`);
       return;
     }
 
     const data = await response.json();
-    console.log("Payment status response:", data);
+    console.log("📊 Payment status response:", data);
 
     if (data.success) {
       if (data.status === "success" && data.booking_created) {
         // Payment completed successfully and booking created
         console.log("🎉 Payment completed successfully and booking created!");
+
+        // Stop checking first to prevent duplicate modals
+        stopAllIntervals();
 
         // Prepare payment details for the success modal
         const transaction = data.transaction;
@@ -175,32 +293,25 @@ const checkPaymentStatus = async () => {
           bookingReference: transaction?.booking_reference || "N/A",
         };
 
-        // Show success modal
-        showSuccessModal.value = true;
-
-        // Stop all intervals when payment is completed
-        stopAllIntervals();
-
-        // Log successful payment detection
-        console.log(`✅ Payment and booking completed using ${methodUsed} method`);
+        // Show success modal only if not already shown
+        if (!showSuccessModal.value) {
+          showSuccessModal.value = true;
+          console.log(`✅ Payment and booking completed using ${methodUsed} method`);
+        }
       } else if (data.status === "failed") {
-        // Payment failed
         console.log("❌ Payment failed");
-        // You can show an error modal here if needed
         stopAllIntervals();
       } else if (data.status === "expired") {
-        // Payment expired
         console.log("⏰ Payment expired");
         stopAllIntervals();
       } else {
-        // Still pending
         console.log("⏳ Payment still pending...");
       }
     } else {
-      console.log("Payment status check failed:", data.message);
+      console.log("⚠️ Payment status check failed:", data.message);
     }
   } catch (error) {
-    console.error("Error checking payment status:", error);
+    console.error("❌ Error checking payment status:", error);
   }
 };
 
@@ -221,6 +332,18 @@ const stopAllIntervals = () => {
 const closeSuccessModal = () => {
   showSuccessModal.value = false;
   paymentDetails.value = null;
+};
+
+// Navigate to booking history
+const viewOrderHistory = () => {
+  closeSuccessModal();
+  router.push('/booking-history');
+};
+
+// Navigate to home page
+const redirectToHome = () => {
+  closeSuccessModal();
+  router.push('/');
 };
 
 // Test function to manually trigger success modal (for debugging)
@@ -283,30 +406,30 @@ defineExpose({
     <!-- Payment Success Modal -->
     <div
       v-if="showSuccessModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
       @click.self="closeSuccessModal"
     >
-      <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 relative">
+      <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 relative success-modal shadow-2xl">
         <!-- Close button -->
         <button
           @click="closeSuccessModal"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X class="h-6 w-6" />
         </button>
 
-        <!-- Success icon -->
+        <!-- Success icon with animation -->
         <div class="text-center mb-6">
           <div
-            class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4"
+            class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-4 animate-bounce"
           >
-            <CheckCircle class="h-10 w-10 text-green-600" />
+            <CheckCircle class="h-12 w-12 text-green-600" />
           </div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">
-            Payment Successful
+          <h2 class="text-3xl font-bold text-gray-900 mb-2">
+            🎉 Payment Successful!
           </h2>
-          <p class="text-gray-600">Thank you for Booking at Ptes Khmer.</p>
-          <p class="text-gray-600">Your Booking is being processed!</p>
+          <p class="text-gray-600 text-lg">Thank you for booking with Khun Hotel!</p>
+          <p class="text-green-600 font-semibold">Your room has been reserved successfully!</p>
         </div>
 
         <!-- Payment details -->
@@ -364,13 +487,13 @@ defineExpose({
         <div class="mt-8 space-y-3">
           <button
             @click="viewOrderHistory"
-            class="w-full bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium btn-hover"
           >
-            View Order History
+            View Booking History
           </button>
           <button
             @click="redirectToHome"
-            class="w-full bg-white text-gray-900 py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium"
+            class="w-full bg-white text-gray-900 py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium btn-hover"
           >
             Back to Home
           </button>
@@ -540,19 +663,22 @@ defineExpose({
         <!-- Enhanced QR Content -->
         <div
           v-if="selectedPayment === 'qr'"
-          class="flex flex-col items-center space-y-4"
+          class="flex flex-col items-center space-y-6"
         >
           <!-- QR Code Container -->
           <div
-            class="relative bg-white p-6 border-2 border-gray-300 rounded-lg shadow-lg"
+            class="relative bg-gradient-to-b from-blue-50 to-white p-8 border-2 border-blue-200 rounded-xl shadow-xl"
           >
             <div
               v-if="isGeneratingQR"
-              class="w-48 h-48 flex items-center justify-center"
+              class="w-64 h-64 flex items-center justify-center"
             >
-              <div
-                class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
-              ></div>
+              <div class="text-center">
+                <div
+                  class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"
+                ></div>
+                <p class="text-blue-600 font-semibold">Generating QR Code...</p>
+              </div>
             </div>
 
             <div v-else-if="qrImageUrl" class="text-center">
@@ -560,75 +686,84 @@ defineExpose({
               <img
                 :src="qrImageUrl"
                 alt="KHQR Payment Code"
-                class="w-48 h-48 mx-auto border border-gray-200 rounded-lg"
+                class="w-64 h-64 mx-auto border-2 border-gray-200 rounded-xl shadow-md"
+                loading="lazy"
               />
 
               <!-- Currency and Amount Display -->
-              <div class="mt-3 p-2 bg-gray-50 rounded-lg">
-                <div class="text-lg font-bold text-blue-900">
+              <div class="mt-4 p-3 bg-blue-100 rounded-lg">
+                <div class="text-2xl font-bold text-blue-900">
                   {{ amount.toLocaleString() }} {{ currency }}
                 </div>
-                <div class="text-sm text-gray-600">៛ Cambodian Riel</div>
+                <div class="text-sm text-blue-700">Cambodian Riel</div>
+                <div class="text-xs text-blue-600 mt-1">
+                  🔄 Auto-refreshes every 2 minutes
+                </div>
               </div>
             </div>
 
             <div
               v-else
-              class="w-48 h-48 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg"
+              class="w-64 h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-xl"
             >
               <div class="text-center text-gray-500">
-                <QrCode class="h-12 w-12 mx-auto mb-2" />
-                <p>Click to generate QR code</p>
+                <QrCode class="h-16 w-16 mx-auto mb-4" />
+                <p>QR Code will appear here</p>
+                <p class="text-sm">Complete booking to generate</p>
               </div>
             </div>
           </div>
 
           <!-- Merchant Name -->
           <div class="text-center">
-            <h4 class="text-lg font-semibold text-gray-800">
+            <h4 class="text-xl font-bold text-gray-800">
               {{ merchantName }}
             </h4>
-            <p class="text-sm text-gray-600">Pteas Khmer Hotel Booking</p>
+            <p class="text-blue-600 font-semibold">Hotel Booking Payment</p>
+          </div>
+
+          <!-- Payment Instructions -->
+          <div class="text-center bg-blue-50 p-4 rounded-lg max-w-md">
+            <h5 class="font-semibold text-blue-900 mb-2">Payment Instructions:</h5>
+            <ol class="text-sm text-blue-700 space-y-1 text-left">
+              <li>1. Open your mobile banking app (ABA, Wing, etc.)</li>
+              <li>2. Select "Scan QR Code" or "Pay with QR"</li>
+              <li>3. Scan the QR code above</li>
+              <li>4. Confirm the payment amount</li>
+              <li>5. Complete the transaction</li>
+            </ol>
           </div>
 
           <!-- Action Buttons -->
-          <div class="flex gap-3">
+          <div class="flex gap-4">
             <button
               @click="generateQRCode"
               :disabled="isGeneratingQR"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
             >
-              <QrCode class="h-4 w-4" />
-              {{ isGeneratingQR ? "Generating..." : "Generate New QR" }}
+              <QrCode class="h-5 w-5" />
+              {{ isGeneratingQR ? "Generating..." : "Refresh QR Code" }}
             </button>
 
             <button
               @click="downloadQRCode"
               :disabled="!currentQRData"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+              class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
             >
-              <Download class="h-4 w-4" />
-              Download QR
+              <Download class="h-5 w-5" />
+              Save QR Code
             </button>
           </div>
 
           <!-- Transaction Info -->
           <div
             v-if="currentQRData"
-            class="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded-lg"
+            class="text-center text-sm text-gray-600 bg-gray-50 p-4 rounded-lg max-w-md"
           >
-            <p><strong>Transaction ID:</strong> {{ transactionId }}</p>
-          </div>
-
-          <!-- Instructions -->
-          <div class="text-center text-sm text-gray-500 max-w-md">
-            <p>
-              Scan the QR code with your mobile banking app (ABA, Wing, etc.) to
-              complete the payment.
-            </p>
-            <p class="mt-2 font-medium">
-              This QR code remains valid until payment is completed.
-            </p>
+            <p class="font-semibold mb-2">Transaction Details:</p>
+            <p><strong>ID:</strong> {{ transactionId }}</p>
+            <p><strong>Amount:</strong> {{ amount.toLocaleString() }} {{ currency }}</p>
+            <p><strong>Status:</strong> <span class="text-orange-600">Waiting for payment...</span></p>
           </div>
         </div>
       </div>
@@ -657,9 +792,13 @@ defineExpose({
 </template>
 
 <style scoped>
-/* Add some animations for better UX */
+/* Enhanced animations for better UX */
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
 }
 
 @keyframes spin {
@@ -671,18 +810,96 @@ defineExpose({
   }
 }
 
-/* Pulse animation for countdown */
-.bg-blue-100 {
-  animation: pulse 2s infinite;
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+    transform: translate3d(0,0,0);
+  }
+  40%, 43% {
+    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+    transform: translate3d(0, -30px, 0);
+  }
+  70% {
+    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+    transform: translate3d(0, -15px, 0);
+  }
+  90% {
+    transform: translate3d(0,-4px,0);
+  }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
+/* Smooth transitions */
+.transition-colors {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Modal animations */
+.modal-enter-active, .modal-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-enter-from, .modal-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* Success modal specific styles */
+.success-modal {
+  animation: successSlideIn 0.5s ease-out;
+}
+
+@keyframes successSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
   }
-  50% {
-    opacity: 0.8;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* QR Code container animation */
+.qr-container {
+  animation: qrFadeIn 0.5s ease-out;
+}
+
+@keyframes qrFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Button hover effects */
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading dots animation */
+@keyframes loadingDots {
+  0%, 20% {
+    color: rgba(0, 0, 0, 0.4);
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0.2),
+                 0.5em 0 0 rgba(0, 0, 0, 0.2);
+  }
+  40% {
+    color: rgba(0, 0, 0, 1);
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0.4),
+                 0.5em 0 0 rgba(0, 0, 0, 0.2);
+  }
+  60% {
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 1),
+                 0.5em 0 0 rgba(0, 0, 0, 0.4);
+  }
+  80%, 100% {
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 1),
+                 0.5em 0 0 rgba(0, 0, 0, 1);
   }
 }
 </style>

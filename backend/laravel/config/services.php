@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'bakong' => [
+        'api_token' => env('BAKONG_API_TOKEN'),
+        'api_url' => env('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh'),
+        'environment' => env('BAKONG_API_ENV', 'production'),
+    ],
+
 ];

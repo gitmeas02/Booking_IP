@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Image URLs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-url {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .debug-info {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Image URLs</h1>
+        <p>Testing the failing image URLs from the console errors...</p>
+        
+        <div id="results"></div>
+        
+        <button onclick="runTests()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Run Tests
+        </button>
+    </div>
+
+    <script>
+        // Get the failing URLs from the console errors
+        const failingUrls = [
+            // Room images that are failing
+            'http://localhost:8100/api/images/room-images/room_1_1752581872_687646f00d30f.jpg',
+            'http://localhost:8100/api/images/room-images/room_2_1752581874_687646f22fc83.jpg',
+            'http://localhost:8100/api/images/room-images/room_3_1752581874_687646f281f57.jpg',
+            'http://localhost:8100/api/images/room-images/room_4_1752581874_687646f2d4e8b.jpg',
+            'http://localhost:8100/api/images/room-images/room_9_1752611767_6876bbb759f19.jpg',
+            
+            // Owner application images
+            'http://localhost:8100/api/images/owner_applications_images/dummy1.jpg',
+            'http://localhost:8100/api/images/owner_applications_images/dummy2.jpg',
+            'http://localhost:8100/api/images/owner_applications_images/dummy3.jpg',
+            'http://localhost:8100/api/images/owner_applications_images/dummy4.jpg',
+            
+            // Test with ownerimages prefix
+            'http://localhost:8100/api/images/ownerimages/room-images/room_1_1752581872_687646f00d30f.jpg',
+            'http://localhost:8100/api/images/ownerimages/owner_applications_images/dummy1.jpg',
+            
+            // Test MinIO connection
+            'http://localhost:8100/api/test-minio',
+            'http://localhost:8100/api/images'
+        ];
+
+        async function testUrl(url) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                return {
+                    url: url,
+                    status: response.status,
+                    success: response.ok,
+                    contentType: response.headers.get('content-type'),
+                    contentLength: response.headers.get('content-length')
+                };
+            } catch (error) {
+                return {
+                    url: url,
+                    status: 'ERROR',
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function runTests() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing URLs...</p>';
+            
+            const results = [];
+            
+            for (const url of failingUrls) {
+                const result = await testUrl(url);
+                results.push(result);
+                
+                // Update results as we go
+                resultsDiv.innerHTML = results.map(r => `
+                    <div class="test-result ${r.success ? 'success' : 'error'}">
+                        <div class="test-url">${r.url}</div>
+                        <div>Status: ${r.status}</div>
+                        ${r.contentType ? `<div>Content-Type: ${r.contentType}</div>` : ''}
+                        ${r.contentLength ? `<div>Content-Length: ${r.contentLength}</div>` : ''}
+                        ${r.error ? `<div>Error: ${r.error}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+            
+            // Summary
+            const successCount = results.filter(r => r.success).length;
+            const failCount = results.filter(r => !r.success).length;
+            
+            resultsDiv.innerHTML += `
+                <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
+                    <h3>Summary</h3>
+                    <p><strong>Total URLs tested:</strong> ${results.length}</p>
+                    <p><strong>Successful:</strong> ${successCount}</p>
+                    <p><strong>Failed:</strong> ${failCount}</p>
+                </div>
+            `;
+        }
+
+        // Auto-run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

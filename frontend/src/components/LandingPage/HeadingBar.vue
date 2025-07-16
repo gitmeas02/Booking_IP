@@ -29,7 +29,7 @@
           <div class="relative group">
             <button
               class="p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-1"
-              @click="toggleCurrencyDropdown"
+              @click="debouncedToggleCurrencyDropdown"
               aria-label="Select currency"
             >
               <CircleDollarSign class="w-5 h-5" />
@@ -144,7 +144,7 @@
             <button
               id="role"
               class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 hover:bg-gray-200 transition-all duration-200"
-              @click="toggleRoleSwitcher"
+              @click="debouncedToggleRoleSwitcher"
               aria-label="Switch user role"
             >
               <span class="text-sm">{{ currentRole.charAt(0).toUpperCase() + currentRole.slice(1) }}</span>
@@ -185,7 +185,7 @@
 
           <!-- Mobile Menu Button -->
           <button
-            @click="toggleMobileMenu"
+            @click="debouncedToggleMobileMenu"
             class="sm:hidden p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
             :aria-label="isMobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'"
             aria-expanded="isMobileMenuOpen"
@@ -286,19 +286,19 @@
 </template>
 
 <script setup>
-import { RouterLink, useRoute, useRouter } from "vue-router";
-import {
-  User,
-  CircleDollarSign,
-  ShoppingCart,
-  CircleHelp,
-  Building,
-  Menu,
-  X,
-  ChevronDown,
-} from "lucide-vue-next";
-import { onMounted, ref, computed, onUnmounted, watch } from "vue";
 import axios from 'axios';
+import {
+  Building,
+  ChevronDown,
+  CircleDollarSign,
+  CircleHelp,
+  Menu,
+  ShoppingCart,
+  User,
+  X,
+} from "lucide-vue-next";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 
 // Create Axios instance with VITE_API_BASE_URL from .env
 const axiosInstance = axios.create({
@@ -370,6 +370,15 @@ const toggleMobileMenu = () => {
   if (!isMobileMenuOpen.value) isRoleSwitcherOpen.value = false;
 };
 
+// Debounced functions for better performance
+let toggleMobileMenuTimeout;
+const debouncedToggleMobileMenu = () => {
+  clearTimeout(toggleMobileMenuTimeout);
+  toggleMobileMenuTimeout = setTimeout(() => {
+    toggleMobileMenu();
+  }, 100);
+};
+
 // Close mobile menu
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
@@ -382,9 +391,27 @@ const toggleRoleSwitcher = () => {
   isRoleSwitcherOpen.value = !isRoleSwitcherOpen.value;
 };
 
+// Debounced role switcher
+let toggleRoleSwitcherTimeout;
+const debouncedToggleRoleSwitcher = () => {
+  clearTimeout(toggleRoleSwitcherTimeout);
+  toggleRoleSwitcherTimeout = setTimeout(() => {
+    toggleRoleSwitcher();
+  }, 100);
+};
+
 // Toggle currency dropdown
 const toggleCurrencyDropdown = () => {
   isCurrencyDropdownOpen.value = !isCurrencyDropdownOpen.value;
+};
+
+// Debounced currency dropdown
+let toggleCurrencyDropdownTimeout;
+const debouncedToggleCurrencyDropdown = () => {
+  clearTimeout(toggleCurrencyDropdownTimeout);
+  toggleCurrencyDropdownTimeout = setTimeout(() => {
+    toggleCurrencyDropdown();
+  }, 100);
 };
 
 // Select currency
@@ -451,24 +478,49 @@ const switchRole = async (role) => {
 const fetchUserData = async () => {
   try {
     isLoading.value = true;
+    
+    // First, try to get user data from localStorage for faster loading
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        isAuthenticated.value = true;
+        roles.value = userData.roles || [];
+        currentRole.value = userData.current_role || roles.value[0] || 'user';
+        
+        // If we have stored data, load it immediately but still fetch fresh data
+        console.log('Loading user data from cache...');
+      } catch (e) {
+        console.warn('Failed to parse stored user data:', e);
+        localStorage.removeItem('user');
+      }
+    }
+    
+    // Then fetch fresh data from API
     const res = await axiosInstance.get('/me');
     if (res?.data?.user) {
       isAuthenticated.value = true;
-      const roleRes = await axiosInstance.get('/user-roles/' + res.data.user.id);
-      if (roleRes?.data?.success) {
-        roles.value = roleRes.data.roles.map(r => r.name);
-        currentRole.value = roleRes.data.current_role || roles.value[0] || 'user';
-      }
+      roles.value = res.data.roles || [];
+      currentRole.value = res.data.current_role || roles.value[0] || 'user';
+      
+      // Update localStorage with fresh data
+      localStorage.setItem('user', JSON.stringify({
+        ...res.data.user,
+        roles: res.data.roles,
+        current_role: res.data.current_role
+      }));
     } else {
       isAuthenticated.value = false;
       roles.value = [];
       currentRole.value = '';
+      localStorage.removeItem('user');
     }
   } catch (err) {
-    console.warn('User not authenticated or error fetching roles:', err);
+    console.warn('User not authenticated or error fetching user data:', err);
     isAuthenticated.value = false;
     roles.value = [];
     currentRole.value = '';
+    localStorage.removeItem('user');
     if (err.response?.status !== 401) {
       showError('Failed to load user data. Please try again.');
     }

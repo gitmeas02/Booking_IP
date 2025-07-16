@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Laravel Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: booking_backend
+    ports:
+      - "8100:8000"
+    volumes:
+      - ./backend/laravel:/var/www/html
+      - ./backend/laravel/storage:/var/www/html/storage
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:3CJWWStS4YD2Z7ZBRq/B6A6z/d6n3vrirc/zOLUk4tw=
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=booking_db
+      - DB_USERNAME=booking_user
+      - DB_PASSWORD=booking_pass
+      - BAKONG_API_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMzZhYzE3MWM0YTcwNDA0YSJ9LCJpYXQiOjE3NDc0MTQwMTMsImV4cCI6MTc1NTE5MDAxM30.tOiwZ7dwJdl-r0S5Neft0WNsLBZBp8vCvTjhIrGPahw
+      - BAKONG_API_URL=https://api-bakong.nbc.gov.kh
+      - BAKONG_API_ENV=production
+    depends_on:
+      - mysql
+    networks:
+      - booking_network
+
+  # Vue.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: booking_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8100
+    depends_on:
+      - backend
+    networks:
+      - booking_network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: booking_mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: booking_db
+      MYSQL_USER: booking_user
+      MYSQL_PASSWORD: booking_pass
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/laravel/database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - booking_network
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: booking_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - booking_network
+
+  # Nginx (Load Balancer/Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: booking_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - booking_network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  booking_network:
+    driver: bridge

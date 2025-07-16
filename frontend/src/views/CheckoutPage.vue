@@ -12,7 +12,7 @@
         <div class="h-48 w-full relative">
           <img
             v-if="bookingDetails.hotelPhotos && bookingDetails.hotelPhotos.length > 0"
-            :src="'http://localhost:9000/ownerimages/' + bookingDetails.hotelPhotos[currentHotelImageIndex].url"
+            :src="getImageUrl(bookingDetails.hotelPhotos[currentHotelImageIndex].url)"
             alt="Hotel image"
             class="h-full w-full object-cover transition-opacity duration-500"
           />
@@ -57,7 +57,7 @@
         <div class="h-48 w-full relative">
           <img
             v-if="bookingDetails.roomImages && bookingDetails.roomImages.length > 0"
-            :src="'http://localhost:9000/' + bookingDetails.roomImages[currentRoomImageIndex].image_url"
+            :src="getImageUrl(bookingDetails.roomImages[currentRoomImageIndex].image_url)"
             alt="Room image"
             class="h-full w-full object-cover transition-opacity duration-500"
           />
@@ -216,6 +216,7 @@
 import BookingSummary from "@/components/CheckoutComponents/BookingSummary.vue";
 import FormInfo from "@/components/CheckoutComponents/FormInfo.vue";
 import { useRoomStore } from "@/stores/store";
+import { getImageUrl } from "@/utils/imageUtils";
 import axios from "axios";
 import dayjs from "dayjs";
 import { Bed, MapPin, Shield } from "lucide-vue-next";
@@ -339,17 +340,17 @@ const getModalImageSrc = () => {
   
   const image = images[modalImageIndex.value];
   if (modalType.value === 'hotel') {
-    return `http://localhost:9000/ownerimages/${image.url}`;
+    return getImageUrl(image.url);
   } else {
-    return `http://localhost:9000/${image.image_url}`; //image.
+    return getImageUrl(image.image_url);
   }
 };
 
 const getThumbnailSrc = (image) => {
   if (modalType.value === 'hotel') {
-    return `http://localhost:9000/ownerimages/${image.url}`;
+    return getImageUrl(image.url);
   } else {
-    return `http://localhost:9000/${image.image_url}`;// image_url
+    return getImageUrl(image.image_url);
   }
 };
 

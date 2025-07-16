@@ -32,6 +32,17 @@
         <ChevronRight :class="isRoom ? 'text-white' : 'text-gray-800'" />
       </RouterLink>
 
+      <!-- Room Management -->
+      <RouterLink to="/room-management" :class="['flex items-center justify-between cursor-pointer w-full text-left text-xl hover:bg-gray-100',
+        isRoomManagement ? 'bg-[#572222] text-white' : ''
+      ]">
+        <div :class="['flex items-center gap-2', isRoomManagement ? 'text-white' : 'text-gray-500']">
+          <Settings />
+          <span :class="isRoomManagement ? 'text-white' : 'text-gray-800'">Manage Rooms</span>
+        </div>
+        <ChevronRight :class="isRoomManagement ? 'text-white' : 'text-gray-800'" />
+      </RouterLink>
+
       <!-- Message -->
       <RouterLink to="/chat" :class="['flex items-center justify-between cursor-pointer w-full text-left text-xl hover:bg-gray-100',
         isChat ? 'bg-[#572222] text-white' : ''
@@ -94,7 +105,7 @@
 </template>
 
 <script setup>
-import { Book, House, MessageSquare, ChevronRight, CalendarDays, CircleDollarSign, Headset, Settings } from 'lucide-vue-next';
+import { Book, CalendarDays, ChevronRight, CircleDollarSign, Headset, House, MessageSquare, Settings } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -102,6 +113,7 @@ const route = useRoute();
 
 const isBooking = computed(() => route.path === '/');
 const isRoom = computed(() => route.path === '/upload-property');
+const isRoomManagement = computed(() => route.path === '/room-management');
 const isChat = computed(() => route.path === '/chat');
 const isCalendar = computed(() => route.path === '/calendar');
 const isPayment = computed(() => route.path === '/payment');

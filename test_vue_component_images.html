@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vue Component Image Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+        .url-display { background: #e9ecef; padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; }
+        img { max-width: 200px; height: auto; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .test-result.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .test-result.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Vue Component Image URL Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Updated imageUtils.js Logic</h2>
+        <div id="imageutils-test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test RoomTypeCard Image Scenarios</h2>
+        <div id="roomtypecard-test-results"></div>
+    </div>
+
+    <script>
+        // Simulate the updated imageUtils.js getImageUrl function
+        function getImageUrl(imagePath) {
+            if (!imagePath) {
+                return getPlaceholderImage();
+            }
+
+            // Handle different URL formats
+            if (imagePath.startsWith('http')) {
+                return imagePath;
+            }
+
+            // Keep the full path including 'ownerimages/' prefix
+            // Database stores: ownerimages/room-images/room_1_xxx.jpg
+            // API expects: ownerimages/room-images/room_1_xxx.jpg
+            let cleanImagePath = imagePath;
+
+            // Remove leading slashes
+            cleanImagePath = cleanImagePath.replace(/^\/+/, '');
+
+            // Use Laravel image proxy
+            const API_BASE_URL = 'http://localhost:8100/api';
+            const fullUrl = `${API_BASE_URL}/images/${cleanImagePath}`;
+            
+            return fullUrl;
+        }
+
+        function getPlaceholderImage() {
+            return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTRweCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+        }
+
+        // Simulate RoomTypeCard getRoomImageUrl function
+        function getRoomImageUrl(room) {
+            // Try different possible image field structures
+            if (room?.images && room.images.length > 0) {
+                const imageUrl = room.images[0].image_url || room.images[0].url || room.images[0];
+                return getImageUrl(imageUrl);
+            }
+            
+            // Try other possible field names
+            if (room?.image_url) {
+                return getImageUrl(room.image_url);
+            }
+            
+            if (room?.image) {
+                return getImageUrl(room.image);
+            }
+            
+            if (room?.photos && room.photos.length > 0) {
+                const imageUrl = room.photos[0].url || room.photos[0];
+                return getImageUrl(imageUrl);
+            }
+            
+            return '';
+        }
+
+        // Test imageUtils.js function
+        function testImageUtils() {
+            const testPaths = [
+                'ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg',
+                'room-images/room_1_1752564367_6876028ff215e.jpg',
+                'ownerimages/hotel-images/hotel_1_123456789.jpg',
+                '/ownerimages/room-images/room_2_123456789.jpg',
+                'http://example.com/image.jpg',
+                null,
+                ''
+            ];
+
+            const results = document.getElementById('imageutils-test-results');
+            results.innerHTML = '<h3>imageUtils.js Test Results:</h3>';
+            
+            testPaths.forEach(path => {
+                const generatedUrl = getImageUrl(path);
+                const isExpectedFormat = generatedUrl.includes('ownerimages/') || generatedUrl.startsWith('http') || generatedUrl.startsWith('data:');
+                
+                results.innerHTML += `
+                    <div class="test-result ${isExpectedFormat ? 'success' : 'error'}">
+                        <strong>Input:</strong> ${path || 'null'}<br>
+                        <strong>Generated URL:</strong> ${generatedUrl}<br>
+                        <strong>Status:</strong> ${isExpectedFormat ? '✓ Correct format' : '✗ Incorrect format'}
+                    </div>
+                `;
+            });
+        }
+
+        // Test RoomTypeCard scenarios
+        function testRoomTypeCard() {
+            const testRooms = [
+                {
+                    name: 'Deluxe Room',
+                    images: [
+                        { image_url: 'ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg' }
+                    ]
+                },
+                {
+                    name: 'Standard Room',
+                    image_url: 'ownerimages/room-images/room_2_123456789.jpg'
+                },
+                {
+                    name: 'Suite',
+                    photos: [
+                        { url: 'ownerimages/hotel-images/suite_1_987654321.jpg' }
+                    ]
+                },
+                {
+                    name: 'Room with no image',
+                    // No image fields
+                }
+            ];
+
+            const results = document.getElementById('roomtypecard-test-results');
+            results.innerHTML = '<h3>RoomTypeCard Test Results:</h3>';
+            
+            testRooms.forEach(room => {
+                const generatedUrl = getRoomImageUrl(room);
+                const hasValidImage = generatedUrl && generatedUrl !== '';
+                
+                results.innerHTML += `
+                    <div class="test-result ${hasValidImage ? 'success' : 'error'}">
+                        <strong>Room:</strong> ${room.name}<br>
+                        <strong>Generated URL:</strong> ${generatedUrl || 'No URL generated'}<br>
+                        <strong>Status:</strong> ${hasValidImage ? '✓ Has valid image URL' : '✗ No image URL'}
+                        ${generatedUrl ? `<br><img src="${generatedUrl}" alt="Test Image" style="max-width: 150px;">` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        // Run tests when page loads
+        window.onload = function() {
+            testImageUtils();
+            testRoomTypeCard();
+        };
+    </script>
+</body>
+</html>

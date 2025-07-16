@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image URL Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+        .url-display { background: #e9ecef; padding: 10px; border-radius: 4px; font-family: monospace; }
+        img { max-width: 200px; height: auto; border: 1px solid #ddd; border-radius: 4px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>Image URL Generation Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Database Path to API URL</h2>
+        <div id="url-test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Image Loading Test</h2>
+        <div id="image-test-results"></div>
+    </div>
+
+    <script>
+        // Simulate the updated getImageUrl function
+        function getImageUrl(imagePath) {
+            if (!imagePath) return '';
+            
+            // Handle different URL formats
+            if (imagePath.startsWith('http')) {
+                return imagePath;
+            }
+            
+            // Keep the full path including 'ownerimages/' prefix
+            let cleanImagePath = imagePath;
+            
+            // Build the final API URL
+            const API_BASE_URL = 'http://localhost:8100/api';
+            const fullUrl = `${API_BASE_URL}/images/${cleanImagePath}`;
+            
+            return fullUrl;
+        }
+
+        // Test the URL generation
+        function testUrlGeneration() {
+            const testPaths = [
+                'ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg',
+                'room-images/room_1_1752564367_6876028ff215e.jpg',
+                'ownerimages/hotel-images/hotel_1_123456789.jpg'
+            ];
+
+            const results = document.getElementById('url-test-results');
+            results.innerHTML = '<h3>URL Generation Results:</h3>';
+            
+            testPaths.forEach(path => {
+                const generatedUrl = getImageUrl(path);
+                results.innerHTML += `
+                    <div class="url-display">
+                        <strong>Database Path:</strong> ${path}<br>
+                        <strong>Generated URL:</strong> ${generatedUrl}
+                    </div>
+                `;
+            });
+        }
+
+        // Test actual image loading
+        function testImageLoading() {
+            const testUrl = 'http://localhost:8100/api/images/ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg';
+            const results = document.getElementById('image-test-results');
+            
+            results.innerHTML = `
+                <h3>Testing Image Load:</h3>
+                <div class="url-display">URL: ${testUrl}</div>
+                <div id="image-status">Loading...</div>
+                <br>
+                <img id="test-image" src="${testUrl}" alt="Test Image">
+            `;
+            
+            const img = document.getElementById('test-image');
+            const status = document.getElementById('image-status');
+            
+            img.onload = function() {
+                status.innerHTML = '<span class="success">✓ Image loaded successfully!</span>';
+            };
+            
+            img.onerror = function() {
+                status.innerHTML = '<span class="error">✗ Image failed to load</span>';
+            };
+        }
+
+        // Run tests when page loads
+        window.onload = function() {
+            testUrlGeneration();
+            testImageLoading();
+        };
+    </script>
+</body>
+</html>

@@ -305,8 +305,9 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
 import axios from "@/axios";
+import { computed, onMounted, ref } from "vue";
+import { getImageUrl } from "@/utils/imageUtils";
 
 export default {
   name: "EditRoom",
@@ -585,9 +586,8 @@ export default {
     }
 
     // Image handling functions
-    function getImageUrl(path) {
-      // Adjust this based on your MinIO/storage setup
-      return path.startsWith('http') ? path : `http://localhost:9000/${path}`;
+    function getImageUrlLocal(path) {
+      return getImageUrl(path);
     }
 
 function markImageForDeletion(imageId) {
@@ -713,7 +713,7 @@ function markImageForDeletion(imageId) {
       selectHouse,
       selectRoom,
       updateRoom,
-      getImageUrl,
+      getImageUrl: getImageUrlLocal,
       markImageForDeletion,
       triggerFileInput,
       handleFileUpload,

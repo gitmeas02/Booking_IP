@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Loading Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-image {
+            max-width: 300px;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .info {
+            color: blue;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Test</h1>
+    
+    <div class="test-container">
+        <h2>Backend API Test</h2>
+        <button onclick="testAPI()">Test API Connection</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Image Proxy Test</h2>
+        <button onclick="testImageProxy()">Test Image Proxy</button>
+        <div id="imageProxyResult"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Hotel Data Test</h2>
+        <button onclick="testHotelData()">Test Hotel Data</button>
+        <div id="hotelDataResult"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Direct Image Test</h2>
+        <input type="text" id="imageUrlInput" placeholder="Enter image filename" value="test.jpg">
+        <button onclick="testDirectImage()">Test Direct Image</button>
+        <div id="directImageResult"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = '<div class="info">Testing API connection...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/allhouse');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <div class="success">✅ API connected successfully!</div>
+                        <div class="info">Response status: ${response.status}</div>
+                        <div class="info">Data length: ${data.length}</div>
+                        <pre>${JSON.stringify(data.slice(0, 1), null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ API Error: ${response.status} - ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testImageProxy() {
+            const result = document.getElementById('imageProxyResult');
+            result.innerHTML = '<div class="info">Testing image proxy...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/images');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <div class="success">✅ Image proxy connected!</div>
+                        <div class="info">Images found: ${data.count}</div>
+                        <pre>${JSON.stringify(data.images, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Image proxy Error: ${response.status} - ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testHotelData() {
+            const result = document.getElementById('hotelDataResult');
+            result.innerHTML = '<div class="info">Testing hotel data...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/house/1');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <div class="success">✅ Hotel data loaded!</div>
+                        <div class="info">Photos: ${data.photos ? data.photos.length : 0}</div>
+                        ${data.photos && data.photos.length > 0 ? 
+                            `<div class="info">First photo URL: ${data.photos[0].url}</div>` : 
+                            '<div class="error">No photos found</div>'
+                        }
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Hotel data Error: ${response.status} - ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        function testDirectImage() {
+            const result = document.getElementById('directImageResult');
+            const imageUrl = document.getElementById('imageUrlInput').value;
+            
+            if (!imageUrl) {
+                result.innerHTML = '<div class="error">Please enter an image filename</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing direct image loading...</div>';
+            
+            const fullUrl = `http://localhost:8100/api/images/${imageUrl}`;
+            
+            const img = new Image();
+            img.onload = function() {
+                result.innerHTML = `
+                    <div class="success">✅ Image loaded successfully!</div>
+                    <div class="info">URL: ${fullUrl}</div>
+                    <img src="${fullUrl}" class="test-image" alt="Test image">
+                `;
+            };
+            
+            img.onerror = function() {
+                result.innerHTML = `
+                    <div class="error">❌ Image failed to load</div>
+                    <div class="info">URL: ${fullUrl}</div>
+                    <div class="error">Check console for more details</div>
+                `;
+            };
+            
+            img.src = fullUrl;
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

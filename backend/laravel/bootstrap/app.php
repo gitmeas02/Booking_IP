@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Add performance monitoring middleware
+        // $middleware->api([
+        //     \App\Http\Middleware\PerformanceMonitor::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

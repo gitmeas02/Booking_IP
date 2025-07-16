@@ -39,7 +39,14 @@
           </p>
         </div>
 
-        <button type="submit" class="submit-btn">Sign In</button>
+        <button type="submit" class="submit-btn" :disabled="loading">
+          <span v-if="loading" class="loading-spinner"></span>
+          {{ loading ? 'Signing In...' : 'Sign In' }}
+        </button>
+        
+        <div v-if="error" class="error-message">
+          {{ error }}
+        </div>
       </form>
     </div>
 
@@ -52,29 +59,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import axiosInstance from '@/axios';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const email = ref('');
 const password = ref('');
 const error = ref('');
+const loading = ref(false);
 const router = useRouter();
 
 const handleSignIn = async () => {
   error.value = '';
+  loading.value = true;
 
   try {
-    const response = await axios.post('/api/login', {
+    const response = await axiosInstance.post('/login', {
       email: email.value,
       password: password.value,
     });
 
-    const token = response.data.token;
+    const { token, user, roles, current_role, applications } = response.data;
+    
+    // Store authentication data
     localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    localStorage.setItem('user', JSON.stringify({
+      ...user,
+      roles: roles,
+      current_role: current_role,
+      applications: applications
+    }));
+    
+    // Set authorization header for future requests
+    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-    location.reload(); // you might want to remove this in production
+    // Navigate without page reload for better performance
     router.push('/setting');
   } catch (err) {
     console.error('Login failed', err);
@@ -83,13 +102,15 @@ const handleSignIn = async () => {
     } else {
       error.value = 'Login failed. Please try again.';
     }
+  } finally {
+    loading.value = false;
   }
 };
 
 onMounted(() => {
   const token = localStorage.getItem('token');
   if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     router.push('/setting');
   }
 });
@@ -202,6 +223,45 @@ h2 {
   font-size: 16px;
   cursor: pointer;
   width: 100%;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #1a1a1a;
+}
+
+.submit-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-top: 1rem;
+  text-align: center;
+  background: #ffeaea;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #e74c3c;
 }
 
 .ghost-btn {

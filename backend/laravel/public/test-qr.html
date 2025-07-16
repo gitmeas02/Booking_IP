@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .qr-container { text-align: center; margin: 20px 0; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button { 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        code { 
+            background-color: #f8f9fa; 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+            font-family: 'Courier New', monospace;
+        }
+        .qr-container img { border: 2px solid #ddd; padding: 10px; border-radius: 10px; }
+        #transaction-info { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 KHQR Payment Test</h1>
+    <div id="status"></div>
+    
+    <h2>Instructions:</h2>
+    <div class="info">
+        <p><strong>⚠️ Important:</strong> Make sure the Laravel server is running before testing!</p>
+        <p>Run this command in your terminal:</p>
+        <code>cd "d:\Vue JS\IP_II\TestBooking\Booking_IP\backend\laravel" && php artisan serve --port=8100</code>
+    </div>
+    <ol>
+        <li>Start the Laravel server (see command above)</li>
+        <li>Click "Generate QR Code" below</li>
+        <li>Scan the QR code with the official Bakong app</li>
+        <li>QR code will auto-refresh every 2 minutes</li>
+        <li>If you see "Cannot Connect to server", check:</li>
+        <ul>
+            <li>Your internet connection</li>
+            <li>Make sure you're using the official Bakong app</li>
+            <li>The account 'khun_meas@aclb' must be active</li>
+            <li>Bakong servers are accessible from your location</li>
+        </ul>
+    </ol>
+    
+    <button onclick="generateQR()">Generate QR Code</button>
+    <button onclick="checkStatus()">Check Status</button>
+    
+    <div id="qr-container"></div>
+    <div id="transaction-info"></div>
+    
+    <script>
+        let currentTransaction = null;
+        let statusInterval = null;
+        let qrRefreshInterval = null;
+        
+        async function generateQR() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div class="info">🔄 Generating QR code...</div>';
+            
+            try {
+                const response = await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: 1000,
+                        merchant_name: 'Test Hotel',
+                        booking_reference: 'TEST_' + Date.now()
+                    })
+                });
+                
+                // Check if response is actually JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response. Make sure Laravel server is running on port 8100.');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentTransaction = result.transaction_id;
+                    statusDiv.innerHTML = '<div class="success">✅ QR code generated successfully!</div>';
+                    
+                    displayQRCode(result);
+                    
+                    // Start checking status
+                    startStatusCheck();
+                    
+                    // Start auto-refresh QR code every 2 minutes
+                    startQRRefresh();
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Failed to generate QR code: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                console.error('Error generating QR:', error);
+                statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+        
+        function displayQRCode(result) {
+            const qrContainer = document.getElementById('qr-container');
+            const timestamp = Date.now(); // Add timestamp to prevent caching
+            
+            qrContainer.innerHTML = `
+                <div class="qr-container">
+                    <h3>Scan this QR code with Bakong app:</h3>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(result.qr_string)}&_t=${timestamp}" alt="QR Code">
+                    <p><strong>Amount:</strong> ${result.amount} KHR</p>
+                    <p><strong>Merchant:</strong> ${result.merchant_name}</p>
+                    <p><strong>Account:</strong> ${result.account_id}</p>
+                    <p><small>QR Code auto-refreshes every 2 minutes</small></p>
+                </div>
+            `;
+            
+            document.getElementById('transaction-info').innerHTML = `
+                <h3>Transaction Details:</h3>
+                <p><strong>Transaction ID:</strong> ${result.transaction_id}</p>
+                <p><strong>Status:</strong> <span id="payment-status">Pending</span></p>
+                <p><strong>Last Updated:</strong> <span id="last-updated">${new Date().toLocaleTimeString()}</span></p>
+            `;
+        }
+        
+        function startQRRefresh() {
+            // Clear existing interval
+            if (qrRefreshInterval) {
+                clearInterval(qrRefreshInterval);
+            }
+            
+            // Refresh QR code every 2 minutes (120000ms)
+            qrRefreshInterval = setInterval(async () => {
+                if (currentTransaction) {
+                    try {
+                        const statusDiv = document.getElementById('status');
+                        statusDiv.innerHTML = '<div class="info">🔄 Refreshing QR code...</div>';
+                        
+                        const response = await fetch('/api/payments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                amount: 1000,
+                                merchant_name: 'Test Hotel',
+                                booking_reference: 'REFRESH_' + Date.now()
+                            })
+                        });
+                        
+                        const contentType = response.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            throw new Error('Server returned non-JSON response during refresh.');
+                        }
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            currentTransaction = result.transaction_id;
+                            displayQRCode(result);
+                            statusDiv.innerHTML = '<div class="success">✅ QR code refreshed successfully!</div>';
+                        } else {
+                            statusDiv.innerHTML = '<div class="error">❌ Failed to refresh QR code: ' + result.message + '</div>';
+                        }
+                    } catch (error) {
+                        console.error('Error refreshing QR:', error);
+                        document.getElementById('status').innerHTML = '<div class="error">❌ Error refreshing QR: ' + error.message + '</div>';
+                    }
+                }
+            }, 120000); // 2 minutes
+        }
+        
+        async function checkStatus() {
+            if (!currentTransaction) {
+                alert('Please generate a QR code first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/payments/${currentTransaction}/status`);
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response. Make sure Laravel server is running.');
+                }
+                
+                const result = await response.json();
+                
+                document.getElementById('payment-status').innerHTML = result.status || 'Unknown';
+                document.getElementById('last-updated').innerHTML = new Date().toLocaleTimeString();
+                
+                if (result.status === 'success') {
+                    document.getElementById('status').innerHTML = '<div class="success">🎉 Payment completed successfully!</div>';
+                    stopAllIntervals();
+                } else if (result.status === 'failed') {
+                    document.getElementById('status').innerHTML = '<div class="error">❌ Payment failed</div>';
+                    stopAllIntervals();
+                } else if (result.status === 'expired') {
+                    document.getElementById('status').innerHTML = '<div class="warning">⏰ Payment expired</div>';
+                    stopAllIntervals();
+                } else {
+                    document.getElementById('status').innerHTML = '<div class="warning">⏳ Payment still pending</div>';
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+                document.getElementById('status').innerHTML = '<div class="error">❌ Error checking status: ' + error.message + '</div>';
+            }
+        }
+        
+        function startStatusCheck() {
+            // Clear existing interval
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+            
+            // Check status every 5 seconds
+            statusInterval = setInterval(async () => {
+                if (currentTransaction) {
+                    await checkStatus();
+                }
+            }, 5000);
+        }
+        
+        function stopAllIntervals() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+            if (qrRefreshInterval) {
+                clearInterval(qrRefreshInterval);
+                qrRefreshInterval = null;
+            }
+        }
+        
+        // Stop intervals when page is closed
+        window.addEventListener('beforeunload', stopAllIntervals);
+        
+        // Test server connection on page load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/payments', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    document.getElementById('status').innerHTML = '<div class="warning">⚠️ Server connection test failed. Make sure Laravel server is running on port 8100.</div>';
+                }
+            } catch (error) {
+                document.getElementById('status').innerHTML = '<div class="error">❌ Cannot connect to server. Please start Laravel server: <code>php artisan serve --port=8100</code></div>';
+            }
+        });
+    </script>
+</body>
+</html>

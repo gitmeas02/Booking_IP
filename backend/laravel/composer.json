@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "aws/aws-sdk-php": "^3.349",
         "fidele007/bakong-khqr-php": "^1.2",
         "intervention/image": "^2",
         "laravel/framework": "^12.0",

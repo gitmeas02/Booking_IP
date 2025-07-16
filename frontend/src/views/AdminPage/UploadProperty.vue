@@ -12,6 +12,26 @@
         <button class="nav-button">Home</button>
       </div>
 
+      <!-- House Selection -->
+      <div class="form-column space-y-4 p-4 bg-white rounded-2xl shadow-md mb-4">
+        <div class="flex w-full flex-col">
+          <label for="houseSelect" class="block text-sm font-medium text-gray-700 mb-1">
+            Select Property to Add Rooms
+          </label>
+          <select
+            id="houseSelect"
+            v-model="selectedHouseId"
+            class="form-select w-full border border-gray-300 p-2 focus:ring focus:ring-blue-200 rounded"
+            required
+          >
+            <option value="">-- Select a Property --</option>
+            <option v-for="house in houses" :key="house.id" :value="house.id">
+              {{ house.property_name }} - {{ house.location?.city || 'Unknown City' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <!-- Photo Upload Section -->
       <div
         class="upload-area"
@@ -240,9 +260,9 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
-import { Icon } from "@iconify/vue";
 import axios from "@/axios";
+import { Icon } from "@iconify/vue";
+import { computed, onMounted, ref } from "vue";
 
 export default {
   name: "UploadProperty",
@@ -264,9 +284,11 @@ export default {
     const amenitiesData = ref([]);
     const isLoadingAmenities = ref(false);
     const photos = ref([]);
+    const houses = ref([]);
+    const selectedHouseId = ref("");
+    const isLoadingHouses = ref(false);
     const maxPhotos = 10;
     const maxFileSize = 5 * 1024 * 1024; // 5MB
-    const appId = 1;
     const URL = import.meta.env.VITE_API_BASE_URL;
     console.log("API Base URL:", URL);
 
@@ -321,6 +343,12 @@ export default {
     }
 
     async function submitForm() {
+      // Validate house selection
+      if (!selectedHouseId.value) {
+        alert("Please select a property to add rooms to.");
+        return;
+      }
+
       const formData = new FormData();
 
       // Build rooms array
@@ -386,25 +414,28 @@ export default {
         }
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         const res = await axios.post(
-          `${URL}/owner/property/${appId}/room`,
+          `${URL}/owner/property/${selectedHouseId.value}/room`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
           }
         );
-        console.log("Property created:", res.data);
-        alert("Property hosted successfully!");
+        console.log("Rooms created successfully:", res.data);
+        alert("Rooms created successfully!");
+        
+        // Reset form
+        resetForm();
       } catch (error) {
         console.error(
-          "Failed to host property:",
+          "Failed to create rooms:",
           error.response?.data || error
         );
         const errors = error.response?.data?.errors;
         if (errors) {
           const errorMessages = Object.values(errors).flat().join("\n");
-          alert(`Failed to host property:\n${errorMessages}`);
+          alert(`Failed to create rooms:\n${errorMessages}`);
         } else {
-          alert("Failed to host property. Please try again.");
+          alert("Failed to create rooms. Please try again.");
         }
       }
     }
@@ -435,7 +466,46 @@ export default {
 
     onMounted(() => {
       getAmenities();
+      fetchHouses();
     });
+
+    async function fetchHouses() {
+      isLoadingHouses.value = true;
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("You must be logged in to access houses.");
+          return;
+        }
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        
+        const response = await axios.get(`${URL}/houses/owner`);
+        houses.value = response.data;
+      } catch (error) {
+        console.error("Failed to fetch houses:", error);
+        alert("Failed to load your properties. Please try again.");
+      } finally {
+        isLoadingHouses.value = false;
+      }
+    }
+
+    function resetForm() {
+      peopleCapacity.value = 1;
+      roomCount.value = 1;
+      roomType.value = "";
+      price.value = 0;
+      description.value = "";
+      photos.value = [];
+      selectedHouseId.value = "";
+      isEditing.value = false;
+      
+      // Reset amenities
+      amenitiesData.value.forEach(group => {
+        group.amenities.forEach(amenity => {
+          amenity.selected = false;
+        });
+      });
+    }
 
     const increasePrice = () => {
       price.value += 1;
@@ -540,6 +610,11 @@ export default {
       prevPhoto,
       submitForm,
       isLoadingAmenities,
+      houses,
+      selectedHouseId,
+      isLoadingHouses,
+      fetchHouses,
+      resetForm,
     };
   },
 };
@@ -738,6 +813,25 @@ export default {
   gap: 15px;
   align-items: center;
   justify-content: space-between;
+}
+
+.form-select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.form-select option {
+  padding: 8px;
 }
 
 /* ========================

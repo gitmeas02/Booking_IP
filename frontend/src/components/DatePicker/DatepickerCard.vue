@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import DateRangePicker from './DateRangePicker.vue';
 import SelectRoom from './selectRoom.vue';
 
@@ -12,6 +12,7 @@ const rooms = ref(1);
 const adults = ref(2);
 const children = ref(0);
 const pets = ref(false);
+const isSearching = ref(false);
 
 // ✅ Format date in YYYY-MM-DD based on local time (not UTC)
 const formatDateOnly = (date) => {
@@ -32,18 +33,38 @@ const handleRoomChange = (payload) => {
     children.value = payload.children;
 };
 
+// Debounced search function
+let searchTimeout;
 const handleSearch = () => {
-    emit('search', {
-        street: street.value,
-        startDate: startDate.value ? formatDateOnly(startDate.value) : '',
-        endDate: endDate.value ? formatDateOnly(endDate.value) : '',
-        rooms: rooms.value,
-        adults: adults.value,
-        children: children.value,
-        capacity: adults.value + children.value,
-        pets: pets.value,
-    });
+    if (isSearching.value) return;
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        isSearching.value = true;
+        
+        try {
+            emit('search', {
+                street: street.value,
+                startDate: startDate.value ? formatDateOnly(startDate.value) : '',
+                endDate: endDate.value ? formatDateOnly(endDate.value) : '',
+                rooms: rooms.value,
+                adults: adults.value,
+                children: children.value,
+                capacity: adults.value + children.value,
+                pets: pets.value,
+            });
+        } finally {
+            setTimeout(() => {
+                isSearching.value = false;
+            }, 1000);
+        }
+    }, 300);
 };
+
+// Computed property for button text
+const buttonText = computed(() => {
+    return isSearching.value ? 'Searching...' : 'Search';
+});
 </script>
 
 <template>
@@ -57,7 +78,9 @@ const handleSearch = () => {
                     <input v-model="street" placeholder="Enter Your Destination or Property" />
                     <i id="search" class="pi pi-search"></i>
                 </div>
-                <button @click="handleSearch">Search</button>
+                <button @click="handleSearch" :disabled="isSearching" class="search-btn">
+                    {{ buttonText }}
+                </button>
             </div>
 
             <div class="datePickerContainer">
@@ -149,9 +172,16 @@ p {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-#inputSearch button:hover {
+#inputSearch button:hover:not(:disabled) {
     background-color: hsl(206, 100%, 88%);
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+}
+
+#inputSearch button:disabled {
+    background-color: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .selectRoom {

@@ -17,14 +17,25 @@
       <div class="main-image-container">
         <img
           v-if="hotelDetail.photos && hotelDetail.photos.length"
-          :src="
-            'http://localhost:9000/ownerimages/' +
-            hotelDetail.photos[currentImageIndex].url
-          "
+          :src="getImageUrl(hotelDetail.photos[currentImageIndex].url)"
           alt="Hotel main image"
           class="main-image"
           @click="openPhotoModal(currentImageIndex)"
+          @error="handleImageError"
+          @load="handleImageLoad"
         />
+        <div v-if="imageLoading" class="image-loading">Loading...</div>
+        <div v-if="imageError" class="image-error">
+          <span>Image unavailable</span>
+        </div>
+        <!-- Debug button -->
+        <button 
+          v-if="hotelDetail?.photos?.length"
+          @click="testImageLoad(getImageUrl(hotelDetail.photos[0]?.url))"
+          class="debug-button"
+        >
+          Test Image Load
+        </button>
         <div class="navigation-dots">
           <span
             v-for="(_, index) in hotelDetail.photos"
@@ -46,9 +57,11 @@
           @click="openPhotoModal(index)"
         >
           <img
-            :src="'http://localhost:9000/ownerimages/' + image.url"
+            :src="getImageUrl(image.url)"
             alt="Room thumbnail"
             class="thumbnail"
+            @error="handleThumbnailError"
+            @load="handleThumbnailLoad"
           />
           <div
             v-if="index === hotelDetail.photos.length - 1"
@@ -409,7 +422,12 @@
           >
             <ChevronLeft />
           </button>
-          <img :src="images[currentPhotoIndex]" class="modal-image" />
+          <img 
+            :src="getImageUrl(hotelDetail.photos[currentPhotoIndex].url)" 
+            class="modal-image"
+            @error="handleModalImageError"
+            @load="handleModalImageLoad"
+          />
           <button
             class="modal-nav right"
             @click="nextPhoto"
@@ -434,12 +452,13 @@
 <script setup>
 import { useRoomStore } from "@/stores/store";
 import { useSearchStore } from "@/stores/useSearchStore";
-import { onMounted, ref, computed } from "vue";
+import dayjs from "dayjs";
+import { ChevronLeft, ChevronRight, X } from "lucide-vue-next";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import CommentSection from "./commentSection.vue";
 import RoomTypeCard from "./RoomTypeCard.vue";
-import { X, ChevronLeft, ChevronRight } from "lucide-vue-next";
-import dayjs from "dayjs";
+import { getImageUrl } from "@/utils/imageUtils";
 
 const router = useRouter();
 const hotelStore = useRoomStore();
@@ -451,6 +470,86 @@ const activeTab = ref("overview");
 const modalVisible = ref(false);
 const currentImageIndex = ref(0);
 const currentPhotoIndex = ref(0);
+const imageLoading = ref(false);
+const imageError = ref(false);
+
+// Image loading handlers
+const handleImageError = (event) => {
+  console.error('Main image failed to load:', event.target.src);
+  imageError.value = true;
+  imageLoading.value = false;
+  
+  // Create a fallback image with CSS
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent && !parent.querySelector('.fallback-image')) {
+    const fallback = document.createElement('div');
+    fallback.className = 'fallback-image';
+    fallback.innerHTML = `
+      <div class="fallback-content">
+        <div class="fallback-icon">🏨</div>
+        <div class="fallback-text">Image not available</div>
+      </div>
+    `;
+    parent.appendChild(fallback);
+  }
+};
+
+const handleImageLoad = (event) => {
+  console.log('Main image loaded successfully:', event.target.src);
+  imageError.value = false;
+  imageLoading.value = false;
+};
+
+const handleThumbnailError = (event) => {
+  console.error('Thumbnail failed to load:', event.target.src);
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent && !parent.querySelector('.fallback-thumbnail')) {
+    const fallback = document.createElement('div');
+    fallback.className = 'fallback-thumbnail';
+    fallback.innerHTML = `
+      <div class="fallback-content">
+        <div class="fallback-icon">🏨</div>
+      </div>
+    `;
+    parent.appendChild(fallback);
+  }
+};
+
+const handleThumbnailLoad = (event) => {
+  console.log('Thumbnail loaded successfully:', event.target.src);
+};
+
+const handleModalImageError = (event) => {
+  console.error('Modal image failed to load:', event.target.src);
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent && !parent.querySelector('.fallback-modal')) {
+    const fallback = document.createElement('div');
+    fallback.className = 'fallback-modal';
+    fallback.innerHTML = `
+      <div class="fallback-content">
+        <div class="fallback-icon">🏨</div>
+        <div class="fallback-text">Image not available</div>
+      </div>
+    `;
+    parent.appendChild(fallback);
+  }
+};
+
+const handleModalImageLoad = (event) => {
+  console.log('Modal image loaded successfully:', event.target.src);
+};
+
+// Debug function to test image loading
+const testImageLoad = (url) => {
+  console.log('Testing image load for URL:', url);
+  const img = new Image();
+  img.onload = () => console.log('✅ Image loaded successfully:', url);
+  img.onerror = () => console.log('❌ Image failed to load:', url);
+  img.src = url;
+};
 
 // Use search store for dates - fallback to defaults if not set
 const selectedStartDate = computed(() => searchStore.startDate || dayjs().format('YYYY-MM-DD'));
@@ -492,7 +591,7 @@ const uniqueRoomTypesWithCountAndAvailableRoomType = computed(() => {
 const images = computed(() => {
   return (
     hotelDetail.value?.photos?.map(
-      (photo) => `http://localhost:9000/ownerimages/${photo.url}`
+      (photo) => getImageUrl(photo.url)
     ) || []
   );
 });
@@ -530,26 +629,32 @@ const scrollToComments = () => {
   }
 };
 
-const reserveRoom = async (room) => { // select rooms this mean we get roons [4,2,.eg.]
+const reserveRoom = async (room) => { // select rooms this mean we get rooms [4,2,.eg.]
   try {
     // Fetch available room IDs from backend
-    const res = await fetch("http://localhost:8100/api/rooms/available", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: room.name,
-        default_price: room.default_price,
-        start_date: selectedStartDate.value,
-        end_date: selectedEndDate.value,
-        quantity: room.count || 1,
-      }),
+    const url = new URL("http://localhost:8100/api/rooms/available");
+    url.searchParams.append("name", room.name);
+    url.searchParams.append("default_price", room.default_price);
+    url.searchParams.append("start_date", selectedStartDate.value);
+    url.searchParams.append("end_date", selectedEndDate.value);
+    url.searchParams.append("quantity", room.count || 1);
+    
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
     });
-    console.log("Datahhhhhhhhh",res.data)
+    
+    console.log("Response status:", res.status);
+    
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     
     const data = await res.json();
+    console.log("Data received:", data);
     
     if (!data.room_ids || data.room_ids.length === 0) {
       alert("No available rooms for your selection.");
@@ -578,10 +683,24 @@ const reserveRoom = async (room) => { // select rooms this mean we get roons [4,
 
 onMounted(async () => {
   try {
+    imageLoading.value = true;
+    console.log("Fetching hotel with ID:", hotelId);
+    
     hotelDetail.value = await hotelStore.fetchHotelById(hotelId);
-    console.log("Hotel Detail", hotelDetail.value);
+    console.log("Hotel Detail:", hotelDetail.value);
+    
+    if (hotelDetail.value?.photos && hotelDetail.value.photos.length > 0) {
+      console.log("Photos found:", hotelDetail.value.photos);
+      console.log("First photo URL:", hotelDetail.value.photos[0]?.url);
+      console.log("Generated image URL:", getImageUrl(hotelDetail.value.photos[0]?.url));
+    } else {
+      console.warn("No photos found in hotel detail");
+    }
+    
+    imageLoading.value = false;
   } catch (error) {
     console.error("Failed to load hotel details:", error);
+    imageLoading.value = false;
   }
 });
 </script>
@@ -763,6 +882,10 @@ onMounted(async () => {
   overflow: hidden;
   border-radius: 8px;
   margin-bottom: 10px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .main-image {
@@ -770,6 +893,84 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover;
   cursor: pointer;
+}
+
+.image-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #666;
+  font-size: 16px;
+}
+
+.image-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #999;
+  font-size: 14px;
+  text-align: center;
+}
+
+.fallback-image,
+.fallback-thumbnail,
+.fallback-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.fallback-content {
+  text-align: center;
+  color: #666;
+}
+
+.fallback-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.fallback-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fallback-thumbnail .fallback-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.fallback-modal .fallback-icon {
+  font-size: 64px;
+  margin-bottom: 12px;
+}
+
+.fallback-modal .fallback-text {
+  font-size: 18px;
+}
+
+.debug-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  z-index: 10;
 }
 
 .navigation-dots {
@@ -806,6 +1007,10 @@ onMounted(async () => {
   overflow: hidden;
   border-radius: 8px;
   cursor: pointer;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .thumbnail {

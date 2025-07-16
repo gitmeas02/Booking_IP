@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Generation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .qr-container {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            background: #f9f9f9;
+        }
+        .qr-code {
+            max-width: 300px;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Generation Test</h1>
+    
+    <div>
+        <h2>Test QR Code Generation</h2>
+        <p>This will test the QR code generation directly using the API.</p>
+        
+        <button class="button" onclick="testQRGeneration()">Test QR Generation</button>
+        <button class="button" onclick="clearResults()">Clear Results</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testQRGeneration() {
+            showResult('Testing QR code generation...', 'info');
+            
+            const bookingData = {
+                amount: 100,
+                merchant_name: "Khun Hotel - Test Booking",
+                user_id: 1,
+                room_ids: [1, 2],
+                hotel_id: 1,
+                check_in_date: "2024-01-20",
+                check_out_date: "2024-01-22",
+                number_of_guests: 2,
+                total_price: 100,
+                special_request: "Test booking for QR code generation",
+                payment_method: "khqr"
+            };
+            
+            try {
+                const response = await fetch('http://localhost:8100/api/payments/with-booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('✅ QR Code generated successfully!', 'success');
+                    displayQRCode(result);
+                    showAPIResponse(result);
+                } else {
+                    showResult('❌ QR Code generation failed: ' + result.message, 'error');
+                    showAPIResponse(result);
+                }
+                
+            } catch (error) {
+                showResult('❌ Network error: ' + error.message, 'error');
+                console.error('Error:', error);
+            }
+        }
+        
+        function displayQRCode(apiResult) {
+            if (apiResult.qr_string) {
+                const qrData = encodeURIComponent(apiResult.qr_string);
+                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}&format=png&margin=20`;
+                
+                const qrContainer = document.createElement('div');
+                qrContainer.className = 'qr-container';
+                qrContainer.innerHTML = `
+                    <h3>Generated QR Code</h3>
+                    <img src="${qrImageUrl}" alt="QR Code" class="qr-code">
+                    <div style="margin-top: 15px;">
+                        <strong>Transaction ID:</strong> ${apiResult.transaction_id}<br>
+                        <strong>Amount:</strong> ${apiResult.amount} ${apiResult.currency}<br>
+                        <strong>Merchant:</strong> ${apiResult.merchant_name}<br>
+                        <strong>MD5 Hash:</strong> ${apiResult.qr_md5}<br>
+                        <strong>Booking Reference:</strong> ${apiResult.booking_reference}
+                    </div>
+                `;
+                
+                document.getElementById('results').appendChild(qrContainer);
+            } else {
+                showResult('❌ No QR string found in API response', 'error');
+            }
+        }
+        
+        function showAPIResponse(result) {
+            const responseDiv = document.createElement('div');
+            responseDiv.className = 'result';
+            responseDiv.innerHTML = `
+                <h4>Full API Response:</h4>
+                <pre>${JSON.stringify(result, null, 2)}</pre>
+            `;
+            document.getElementById('results').appendChild(responseDiv);
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+            document.getElementById('results').appendChild(resultDiv);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
