@@ -8,12 +8,12 @@ import {
     X,
 } from "lucide-vue-next";
 import { computed, onUnmounted, ref, watch } from "vue";
+import EnhancedQRCode from "./EnhancedQRCode.vue";
 
 // Define props
 const props = defineProps({
   amount: {
     type: Number,
-    default: 100
   }
 });
 
@@ -557,11 +557,13 @@ defineExpose({
 
             <div v-else-if="qrImageUrl" class="text-center">
               <!-- QR Code Image -->
-              <img
-                :src="qrImageUrl"
-                alt="KHQR Payment Code"
-                class="w-48 h-48 mx-auto border border-gray-200 rounded-lg"
-              />
+           <EnhancedQRCode
+          v-if="currentQRData"
+          :qrString="currentQRData.qr_string"
+          :amount="amount"
+          :currency="currency"
+          :merchantName="merchantName"
+        />
 
               <!-- Currency and Amount Display -->
               <div class="mt-3 p-2 bg-gray-50 rounded-lg">
