@@ -4,10 +4,12 @@
     @click="$emit('click')"
   >
     <!-- Image -->
-    <div class="image-container">
+    <div class="image">
       <img
         v-if="room.room_types[0]?.images?.length"
-        :src="getImageUrl(room.room_types[0].images[0].thumbnail_url)"
+        :src="
+          'http://localhost:9000/' + room.room_types[0].images[0].thumbnail_url
+        "
         :alt="`Image of ${room.property_name}`"
         class="img"
       />
@@ -109,7 +111,7 @@
 <script setup>
 import { getImageUrl } from "@/utils/imageUtils";
 import {
-  AirVent, // for Kids' play area
+  AirVent, // for Kids’ play area
   // Dice, // for Board games
   AlertTriangle, // for EV charging station
   Baby, // for Balcony or terrace
@@ -204,7 +206,7 @@ const icons = {
   "Car rental": Car,
   "EV charging station": BatteryCharging,
   "Baby cot": Baby,
-  "Kids' play area": ToyBrick,
+  "Kids’ play area": ToyBrick,
   // "Board games": Dice,
   "Pet bowls": PawPrint,
   "Pet bed": PawPrint,

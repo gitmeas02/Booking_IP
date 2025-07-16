@@ -307,7 +307,6 @@
 <script>
 import axios from "@/axios";
 import { computed, onMounted, ref } from "vue";
-import { getImageUrl } from "@/utils/imageUtils";
 
 export default {
   name: "EditRoom",
@@ -586,8 +585,22 @@ export default {
     }
 
     // Image handling functions
-    function getImageUrlLocal(path) {
-      return getImageUrl(path);
+    function getImageUrl(path) {
+      if (!path) return '';
+      
+      // Handle different URL formats
+      if (path.startsWith('http')) {
+        return path;
+      }
+      
+      // Clean up the image URL - remove 'ownerimages/' prefix if present
+      let cleanPath = path;
+      if (cleanPath.startsWith('ownerimages/')) {
+        cleanPath = cleanPath.replace('ownerimages/', '');
+      }
+      
+      // Use Laravel image proxy instead of direct MinIO access
+      return `http://localhost:8100/api/images/${cleanPath}`;
     }
 
 function markImageForDeletion(imageId) {
@@ -713,7 +726,7 @@ function markImageForDeletion(imageId) {
       selectHouse,
       selectRoom,
       updateRoom,
-      getImageUrl: getImageUrlLocal,
+      getImageUrl,
       markImageForDeletion,
       triggerFileInput,
       handleFileUpload,

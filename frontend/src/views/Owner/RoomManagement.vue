@@ -372,7 +372,6 @@ import { useOptimizedAPI, useOptimizedClick } from '@/composables/usePerformance
 import axios from 'axios';
 import { Home, Plus, RotateCcw, Star, Upload, X } from 'lucide-vue-next';
 import { computed, onMounted, reactive, ref } from 'vue';
-import { getImageUrl } from '@/utils/imageUtils';
 
 // Reactive state
 const properties = ref([]);
@@ -616,7 +615,7 @@ const closeModal = () => {
 // Get room image
 const getRoomImage = (room) => {
   if (room.images && room.images.length > 0) {
-    return getImageUrl(room.images[0].image_url);
+    return `/storage/${room.images[0].image_url}`;
   }
   return '/src/assets/images/default-room.jpg';
 };

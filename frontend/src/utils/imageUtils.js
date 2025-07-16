@@ -25,9 +25,6 @@ export function getImageUrl(imagePath, options = {}) {
   // API expects: ownerimages/room-images/room_1_xxx.jpg
   let cleanImagePath = imagePath;
 
-  // Remove leading slashes
-  cleanImagePath = cleanImagePath.replace(/^\/+/, '');
-
   // Use Laravel image proxy - API_BASE_URL already includes /api
   const fullUrl = `${API_BASE_URL}/images/${cleanImagePath}`;
   

@@ -112,7 +112,6 @@
         
         <div class="test-section">
             <h2>🔧 Test Controls</h2>
-            <button class="btn" onclick="testWorkingPath()">Test Working Path</button>
             <button class="btn" onclick="testAllImages()">Test All Images</button>
             <button class="btn" onclick="testRoomImages()">Test Room Images</button>
             <button class="btn" onclick="testHotelImages()">Test Hotel Images</button>
@@ -259,51 +258,23 @@
             return div;
         }
 
-        // Add a function to test the actual working path
-        async function testWorkingPath() {
-            log('🧪 Testing the working path format...');
-            
-            // Test the path that you confirmed works
-            const workingPath = 'room-images/room_1_1752564367_6876028ff215e.jpg';
-            const fullUrl = `${IMAGE_PROXY_URL}/${workingPath}`;
-            
-            log(`Testing working URL: ${fullUrl}`);
-            
-            const result = await testImageLoad(fullUrl, 'Working Path Test');
-            
-            const proxyImagesDiv = document.getElementById('proxyImages');
-            proxyImagesDiv.innerHTML = '';
-            proxyImagesDiv.appendChild(createImageElement(result));
-            
-            updateResults();
-        }
-
-        // Function to convert database path to API path
-        function convertDatabasePathToApiPath(dbPath) {
-            // Database stores: ownerimages/room-images/room_1_xxx.jpg
-            // API expects: ownerimages/room-images/room_1_xxx.jpg (keep full path)
-            return dbPath; // No conversion needed - keep full path
-        }
-
         async function testImageProxy() {
             log('🔍 Testing Image Proxy...');
             
-            // Test sample image paths - database stores full path with ownerimages/
+            // Test sample image paths
             const testPaths = [
-                'room-images/room_1_1752564367_6876028ff215e.jpg',
-                'rooms/thumbnails/thum_room_1_1752564367_6876028ff215e.jpg',
+                'room-images/room_1_1737781554_676285b4c5b7f.jpg',
+                'rooms/thumbnails/thum_room_1_1737781554_676285b4c5b7f.jpg',
                 'owner_applications_images/sample_image.jpg',
-                'ownerimages/room-images/room_1_1752564367_6876028ff215e.jpg'
+                'ownerimages/room-images/room_1_1737781554_676285b4c5b7f.jpg'
             ];
             
             const proxyImagesDiv = document.getElementById('proxyImages');
             proxyImagesDiv.innerHTML = '';
             
             for (const path of testPaths) {
-                // Convert database path to API path
-                const apiPath = convertDatabasePathToApiPath(path);
-                const url = `${IMAGE_PROXY_URL}/${apiPath}`;
-                const result = await testImageLoad(url, `Proxy: ${path} → ${apiPath}`);
+                const url = `${IMAGE_PROXY_URL}/${path}`;
+                const result = await testImageLoad(url, `Proxy: ${path}`);
                 proxyImagesDiv.appendChild(createImageElement(result));
             }
             
@@ -326,9 +297,7 @@
                 for (const room of rooms.slice(0, 10)) { // Test first 10 rooms
                     if (room.images && room.images.length > 0) {
                         for (const image of room.images.slice(0, 2)) { // Test first 2 images per room
-                            // Convert database path to API path
-                            const apiPath = convertDatabasePathToApiPath(image.image_url);
-                            const url = `${IMAGE_PROXY_URL}/${apiPath}`;
+                            const url = `${IMAGE_PROXY_URL}/${image.image_url.replace('ownerimages/', '')}`;
                             const result = await testImageLoad(url, `Room ${room.id}: ${image.image_url}`);
                             roomImagesDiv.appendChild(createImageElement(result));
                         }
@@ -358,9 +327,7 @@
                 for (const hotel of hotels.slice(0, 10)) { // Test first 10 hotels
                     if (hotel.photos && hotel.photos.length > 0) {
                         for (const photo of hotel.photos.slice(0, 2)) { // Test first 2 photos per hotel
-                            // Convert database path to API path
-                            const apiPath = convertDatabasePathToApiPath(photo.url);
-                            const url = `${IMAGE_PROXY_URL}/${apiPath}`;
+                            const url = `${IMAGE_PROXY_URL}/${photo.url.replace('ownerimages/', '')}`;
                             const result = await testImageLoad(url, `Hotel ${hotel.id}: ${photo.url}`);
                             hotelImagesDiv.appendChild(createImageElement(result));
                         }

@@ -12,22 +12,18 @@ class ImageProxyController extends Controller
     public function getImage($imageName)
     {
         try {
-            // Clean up the image name - remove any 'ownerimages/' prefix if present
-            $cleanImageName = str_replace('ownerimages/', '', $imageName);
+            // Keep the full path including 'ownerimages/' prefix
+            // The frontend already sends the correct path format
+            $cleanImageName = $imageName;
             
             // Log for debugging
-            Log::info("Image request: original={$imageName}, cleaned={$cleanImageName}");
+            Log::info("Image request: path={$imageName}");
             
             // Try different possible paths
             $possiblePaths = [
-                $cleanImageName,                    // Direct path: room-images/bathroom2.jpg
-                "ownerimages/{$cleanImageName}",    // Full path: ownerimages/room-images/bathroom2.jpg
+                $cleanImageName,                    // Direct path as provided
+                "ownerimages/{$cleanImageName}",    // Add ownerimages if not present
                 $imageName,                         // Original path as provided
-                "room-images/{$cleanImageName}",    // Room images folder
-                "rooms/thumbnails/{$cleanImageName}", // Room thumbnails folder
-                "owner_applications_images/{$cleanImageName}", // Owner application images
-                "public/{$cleanImageName}",         // Public folder
-                "images/{$cleanImageName}",         // Images folder
             ];
             
             $imageContent = null;

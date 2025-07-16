@@ -458,7 +458,6 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import CommentSection from "./commentSection.vue";
 import RoomTypeCard from "./RoomTypeCard.vue";
-import { getImageUrl } from "@/utils/imageUtils";
 
 const router = useRouter();
 const hotelStore = useRoomStore();
@@ -472,6 +471,32 @@ const currentImageIndex = ref(0);
 const currentPhotoIndex = ref(0);
 const imageLoading = ref(false);
 const imageError = ref(false);
+
+// Image URL helper function
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    console.warn('No image URL provided');
+    return '/placeholder-image.jpg'; // fallback image
+  }
+  
+  // Handle different URL formats
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
+  }
+  
+  // Clean up the image URL - remove 'ownerimages/' prefix if present
+  let cleanImageUrl = imageUrl;
+  if (cleanImageUrl.startsWith('ownerimages/')) {
+    cleanImageUrl = cleanImageUrl.replace('ownerimages/', '');
+  }
+  
+  // Use Laravel image proxy instead of direct MinIO access
+  const fullUrl = `http://localhost:8100/api/images/${cleanImageUrl}`;
+  console.log('Generated image URL:', fullUrl);
+  console.log('Original imageUrl:', imageUrl);
+  console.log('Cleaned imageUrl:', cleanImageUrl);
+  return fullUrl;
+};
 
 // Image loading handlers
 const handleImageError = (event) => {

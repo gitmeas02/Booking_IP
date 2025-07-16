@@ -54,7 +54,7 @@ services:
     container_name: booking_mysql
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_DATABASE: booking_db
       MYSQL_USER: booking_user
@@ -72,7 +72,7 @@ services:
     container_name: booking_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     networks:
