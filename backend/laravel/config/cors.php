@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Cross-Origin Resource Sharing (CORS) Configuration
@@ -20,12 +19,13 @@ return [
         'register',
         'login',
         'me',
-        'sanctum/csrf-cookie'
+        'sanctum/csrf-cookie',
+        'payments/*'
     ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000'],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 

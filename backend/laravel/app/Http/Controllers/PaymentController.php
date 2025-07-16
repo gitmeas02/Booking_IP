@@ -483,8 +483,20 @@ class PaymentController extends Controller
             
             // Success codes (transaction found and completed)
             if ($responseCode === 0 || $responseCode === 200) {
-                Log::info('Response code indicates success');
-                return 'success';
+                // STRICT CHECK: Only mark as success if we have actual payment evidence
+                if ((isset($apiData['amount']) && $apiData['amount'] > 0) ||
+                    (isset($apiData['transactionId']) && !empty($apiData['transactionId'])) ||
+                    (isset($apiData['status']) && strtolower($apiData['status']) === 'completed') ||
+                    (isset($apiData['transactionStatus']) && strtolower($apiData['transactionStatus']) === 'success') ||
+                    (isset($apiData['responseMessage']) && 
+                     (strpos(strtolower($apiData['responseMessage']), 'success') !== false ||
+                      strpos(strtolower($apiData['responseMessage']), 'completed') !== false))) {
+                    Log::info('Response code indicates success with payment verification');
+                    return 'success';
+                } else {
+                    Log::info('Response code 0/200 but no clear payment verification, treating as pending');
+                    return 'pending';
+                }
             }
             
             // Error codes that indicate transaction not found (still pending)
@@ -520,11 +532,17 @@ class PaymentController extends Controller
             }
         }
 
-        // Check various status fields that Bakong might use
+        // Check various status fields that Bakong might use - with payment verification
         if (isset($apiData['status'])) {
             $apiStatus = strtolower($apiData['status']);
             if (in_array($apiStatus, ['completed', 'success', 'paid', 'confirmed', 'successful'])) {
-                return 'success';
+                // Must have payment amount or transaction details for verification
+                if ((isset($apiData['amount']) && $apiData['amount'] > 0) ||
+                    (isset($apiData['transactionId']) && !empty($apiData['transactionId']))) {
+                    return 'success';
+                }
+                Log::info('Status indicates success but no payment verification data');
+                return 'pending';
             }
             if (in_array($apiStatus, ['failed', 'rejected', 'cancelled', 'error'])) {
                 return 'failed';
@@ -534,7 +552,13 @@ class PaymentController extends Controller
         if (isset($apiData['transactionStatus'])) {
             $transactionStatus = strtolower($apiData['transactionStatus']);
             if (in_array($transactionStatus, ['success', 'completed', 'successful'])) {
-                return 'success';
+                // Must have payment amount or transaction details for verification
+                if ((isset($apiData['amount']) && $apiData['amount'] > 0) ||
+                    (isset($apiData['transactionId']) && !empty($apiData['transactionId']))) {
+                    return 'success';
+                }
+                Log::info('Transaction status indicates success but no payment verification data');
+                return 'pending';
             }
             if (in_array($transactionStatus, ['failed', 'error'])) {
                 return 'failed';
@@ -775,28 +799,75 @@ class PaymentController extends Controller
             $result = $this->checkTransactionWithMultipleMethods($transaction);
 
             if ($result['success'] && isset($result['data']) && !empty($result['data'])) {
-                // Update transaction status
-                $transaction->update([
-                    'status' => 'success',
-                    'response_data' => $result['data'],
-                    'updated_at' => now()
+                // Determine the actual status from API response
+                $newStatus = $this->determineStatusFromApiResponse($result['data']);
+                
+                Log::info('Payment status check result', [
+                    'transaction_id' => $transactionId,
+                    'new_status' => $newStatus,
+                    'api_data' => $result['data']
                 ]);
 
-                // Create booking automatically
-                $bookingData = cache()->get('booking_data_' . $transactionId);
-                if ($bookingData) {
-                    $this->createBookingFromCachedData($transaction, $bookingData);
+                if ($newStatus === 'success') {
+                    // Update transaction status
+                    $transaction->update([
+                        'status' => 'success',
+                        'response_data' => $result['data'],
+                        'updated_at' => now()
+                    ]);
+
+                    $bookingCreated = false;
+                    $bookingIds = [];
+                    
+                    // Create booking automatically if not already created
+                    $existingBooking = Booking::where('payment_transaction_id', $transactionId)->first();
+                    if (!$existingBooking) {
+                        $bookingData = cache()->get('booking_data_' . $transactionId);
+                        if ($bookingData) {
+                            try {
+                                $bookingIds = $this->createBookingFromCachedData($transaction, $bookingData);
+                                $bookingCreated = true;
+                                Log::info('Booking created successfully', [
+                                    'transaction_id' => $transactionId,
+                                    'booking_ids' => $bookingIds
+                                ]);
+                            } catch (\Exception $e) {
+                                Log::error('Failed to create booking after payment', [
+                                    'transaction_id' => $transactionId,
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
+                        } else {
+                            Log::warning('No booking data found in cache', [
+                                'transaction_id' => $transactionId
+                            ]);
+                        }
+                    } else {
+                        $bookingCreated = true;
+                        $bookingIds = [$existingBooking->id];
+                        Log::info('Booking already exists for transaction', [
+                            'transaction_id' => $transactionId,
+                            'booking_id' => $existingBooking->id
+                        ]);
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'success',
+                        'transaction' => $transaction->fresh(), // Get updated transaction
+                        'booking_created' => $bookingCreated,
+                        'booking_ids' => $bookingIds,
+                        'api_response' => $result['data'],
+                        'method_used' => $result['method_used'] ?? 'unknown',
+                        'message' => $bookingCreated ? 'Payment completed and booking created!' : 'Payment completed but booking creation failed'
+                    ]);
+                } else {
+                    // Update status but don't create booking yet
+                    $transaction->update([
+                        'response_data' => $result['data'],
+                        'updated_at' => now()
+                    ]);
                 }
-
-                return response()->json([
-                    'success' => true,
-                    'status' => 'success',
-                    'transaction' => $transaction,
-                    'booking_created' => true,
-                    'api_response' => $result['data'],
-                    'method_used' => $result['method_used'] ?? 'unknown',
-                    'message' => 'Payment completed and booking created!'
-                ]);
             }
 
             return response()->json([
@@ -810,6 +881,110 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error checking payment status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test endpoint to simulate payment success without real money
+     * This is for development and testing purposes only
+     */
+    public function simulatePaymentSuccess($transactionId)
+    {
+        try {
+            $transaction = Transactions::where('transaction_id', $transactionId)->first();
+
+            if (!$transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction not found'
+                ], 404);
+            }
+
+            if ($transaction->status === 'success') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction already marked as successful'
+                ], 400);
+            }
+
+            // Simulate successful payment response
+            $fakeApiResponse = [
+                'responseCode' => 0,
+                'responseMessage' => 'Success',
+                'errorCode' => null,
+                'data' => [
+                    'hash' => 'fake_hash_' . time(),
+                    'fromAccountId' => 'test_account@test',
+                    'toAccountId' => 'khun_meas@aclb',
+                    'currency' => 'KHR',
+                    'amount' => $transaction->amount,
+                    'description' => 'Simulated test payment',
+                    'createdDateMs' => time() * 1000,
+                    'acknowledgedDateMs' => time() * 1000 + 1000,
+                    'trackingStatus' => null,
+                    'receiverBank' => null,
+                    'receiverBankAccount' => null,
+                    'instructionRef' => null,
+                    'externalRef' => 'TEST_' . time()
+                ]
+            ];
+
+            // Update transaction status
+            $transaction->update([
+                'status' => 'success',
+                'response_data' => $fakeApiResponse,
+                'updated_at' => now()
+            ]);
+
+            $bookingCreated = false;
+            $bookingIds = [];
+            
+            // Create booking automatically if not already created
+            $existingBooking = Booking::where('payment_transaction_id', $transactionId)->first();
+            if (!$existingBooking) {
+                $bookingData = cache()->get('booking_data_' . $transactionId);
+                if ($bookingData) {
+                    try {
+                        $bookingIds = $this->createBookingFromCachedData($transaction, $bookingData);
+                        $bookingCreated = true;
+                        Log::info('Booking created successfully via simulation', [
+                            'transaction_id' => $transactionId,
+                            'booking_ids' => $bookingIds
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create booking after simulated payment', [
+                            'transaction_id' => $transactionId,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                } else {
+                    Log::warning('No booking data found in cache for simulation', [
+                        'transaction_id' => $transactionId
+                    ]);
+                }
+            } else {
+                $bookingCreated = true;
+                $bookingIds = [$existingBooking->id];
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment simulated successfully and booking created!',
+                'status' => 'success',
+                'transaction' => $transaction->fresh(),
+                'booking_created' => $bookingCreated,
+                'booking_ids' => $bookingIds,
+                'api_response' => $fakeApiResponse,
+                'method_used' => 'simulation',
+                'note' => 'This is a simulated payment for testing purposes'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error simulating payment success: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error simulating payment: ' . $e->getMessage()
             ], 500);
         }
     }

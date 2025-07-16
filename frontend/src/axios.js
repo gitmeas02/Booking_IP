@@ -1,46 +1,45 @@
 import axios from 'axios';
 
-// Create an Axios instance with default configuration
+// IMPORTANT: If you change .env, restart your Vite dev server to reload environment variables.
+// Uses VITE_API_BASE_URL from .env (e.g., VITE_API_BASE_URL=http://localhost:8100/api)
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8100/api';
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Set initial token if available
-const token = localStorage.getItem('token');
-if (token) {
-  axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
+// Log the API Base URL for debugging
+console.log('Using API Base URL:', apiBaseUrl);
+console.log('Environment variable VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
 
 // Request interceptor to add authentication token
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Retrieve token from localStorage if not already set
+    // Always set token from localStorage if available
     const token = localStorage.getItem('token');
-    if (token && !config.headers.Authorization) {
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization;
     }
+    console.log(`Making request to: ${config.baseURL}/${config.url}`);
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor to handle authentication errors
 axiosInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized access (e.g., token expired or invalid)
       console.warn('Unauthorized request. Redirecting to login...');
       localStorage.removeItem('token'); // Clear invalid token
       localStorage.removeItem('user'); // Clear user data
-      delete axiosInstance.defaults.headers.common['Authorization'];
       // Redirect to login page (adjust route as needed)
       window.location.href = '/authentication/signin';
     }

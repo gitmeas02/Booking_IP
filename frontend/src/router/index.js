@@ -16,6 +16,8 @@ const Admin = () => import("@/views/AdminPage/Admin.vue");
 
 const Chatbox = () => import("@/views/ChatBox.vue");
 
+import axiosInstance from '@/axios'; // Use the shared axios instance
+
 import index2 from "./index2";
 
 import { createRouter, createWebHistory } from "vue-router";
@@ -25,7 +27,6 @@ const OwnerDashboard = () => import("@/views/OwnerDashboard.vue");
 const AdminBookingList = () => import("@/views/AdminBookingList.vue");
 const RoomManagement = () => import("@/views/Owner/RoomManagement.vue");
 
-import axios from "axios";
 const EditRooms = () => import("@/views/AdminPage/EditRooms.vue");
 
 const routes = [
@@ -173,29 +174,6 @@ const routes = [
   },
 ];
 
-
-// Create Axios instance with base URL
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-  withCredentials:true
-});
-
-// Add interceptor for authentication token
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
@@ -209,7 +187,7 @@ router.beforeEach(async (to, from, next) => {
       return next();
     }
 
-    const res = await axiosInstance.get('/me');
+    const res = await axiosInstance.get('me');
     const isAuthenticated = !!res?.data?.user;
     const userId = res?.data?.user?.id;
 
@@ -225,7 +203,7 @@ router.beforeEach(async (to, from, next) => {
 
     // Check role-based access
     if (isAuthenticated && to.meta.roles) {
-      const roleRes = await axiosInstance.get(`/user-roles/${userId}`);
+      const roleRes = await axiosInstance.get(`user-roles/${userId}`);
 
       console.log("printing roleRes")
       console.log(roleRes)

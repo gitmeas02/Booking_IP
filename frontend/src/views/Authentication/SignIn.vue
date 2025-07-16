@@ -60,6 +60,7 @@
 
 <script setup>
 import axiosInstance from '@/axios';
+import { Icon } from '@iconify/vue'; // Import Icon component for use in template
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -69,18 +70,18 @@ const error = ref('');
 const loading = ref(false);
 const router = useRouter();
 
+// NOTE: Make sure your backend exposes POST /api/login or /login at VITE_API_BASE_URL
 const handleSignIn = async () => {
   error.value = '';
   loading.value = true;
 
   try {
-    const response = await axiosInstance.post('/login', {
+    const response = await axiosInstance.post('login', {
       email: email.value,
       password: password.value,
     });
 
     const { token, user, roles, current_role, applications } = response.data;
-    
     // Store authentication data
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify({
@@ -89,16 +90,15 @@ const handleSignIn = async () => {
       current_role: current_role,
       applications: applications
     }));
-    
-    // Set authorization header for future requests
-    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
+    // No need to manually set Authorization header, interceptor handles it
     // Navigate without page reload for better performance
-    router.push('/setting');
+    if (router.currentRoute.value.path !== '/setting') {
+      router.push('/setting');
+    }
   } catch (err) {
     console.error('Login failed', err);
     if (err.response?.status === 422 || err.response?.status === 401) {
-      error.value = err.response.data.message || 'Invalid credentials.';
+      error.value = err.response?.data?.message || 'Invalid credentials.';
     } else {
       error.value = 'Login failed. Please try again.';
     }
@@ -109,8 +109,7 @@ const handleSignIn = async () => {
 
 onMounted(() => {
   const token = localStorage.getItem('token');
-  if (token) {
-    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  if (token && router.currentRoute.value.path !== '/setting') {
     router.push('/setting');
   }
 });

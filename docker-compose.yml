@@ -10,26 +10,8 @@ services:
     volumes:
       - ./backend/laravel:/var/www/html
       - ./backend/laravel/storage:/var/www/html/storage
-    environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - APP_KEY=base64:3CJWWStS4YD2Z7ZBRq/B6A6z/d6n3vrirc/zOLUk4tw=
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=booking_db
-      - DB_USERNAME=booking_user
-      - DB_PASSWORD=booking_pass
-      - MINIO_ACCESS_KEY_ID=admin
-      - MINIO_SECRET_ACCESS_KEY=password123
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_REGION=us-east-1
-      - MINIO_BUCKET=ownerimages
-      - MINIO_USE_SSL=false
-      - MINIO_USE_PATH_STYLE_ENDPOINT=true
-      - BAKONG_API_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMzZhYzE3MWM0YTcwNDA0YSJ9LCJpYXQiOjE3NDc0MTQwMTMsImV4cCI6MTc1NTE5MDAxM30.tOiwZ7dwJdl-r0S5Neft0WNsLBZBp8vCvTjhIrGPahw
-      - BAKONG_API_URL=https://api-bakong.nbc.gov.kh
-      - BAKONG_API_ENV=production
+    env_file:
+      - ./backend/laravel/.env
     depends_on:
       - mysql
       - minio
@@ -47,8 +29,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8100
+    env_file:
+      - ./frontend/.env
     depends_on:
       - backend
     networks:

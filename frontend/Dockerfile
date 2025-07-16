@@ -1,6 +1,9 @@
 # Frontend Dockerfile
 FROM node:18-alpine
 
+# Install bash
+RUN apk add --no-cache bash
+
 # Set working directory
 WORKDIR /app
 

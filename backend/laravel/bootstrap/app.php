@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Add CORS middleware to all API routes
+        $middleware->api([
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+        
         // Add performance monitoring middleware
         // $middleware->api([
         //     \App\Http\Middleware\PerformanceMonitor::class,

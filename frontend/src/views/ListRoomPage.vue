@@ -132,10 +132,11 @@ const searchHotels = async () => {
 };
 
 // Navigate to room details page with current search query params
-const viewRoomDetails = (roomId) => {
+const viewRoomDetails = (hotelId) => {
+  console.log("Navigating to hotel details for hotelId:", hotelId);
   router.push({
     name: "ProductsDetails",
-    params: { id: roomId },
+    params: { id: hotelId },
     query: {
       street: searchStore.street,
       startDate: searchStore.startDate ? searchStore.startDate.toString() : null,

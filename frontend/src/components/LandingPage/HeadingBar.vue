@@ -286,7 +286,7 @@
 </template>
 
 <script setup>
-import axios from 'axios';
+import axiosInstance from '@/axios'; // Use the shared axios instance
 import {
   Building,
   ChevronDown,
@@ -299,40 +299,6 @@ import {
 } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
-
-// Create Axios instance with VITE_API_BASE_URL from .env
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-});
-
-// Add interceptor for authentication token
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Add response interceptor for error handling
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      showError('Session expired. Please sign in again.');
-      router.push('/authentication/signin');
-    }
-    return Promise.reject(error);
-  }
-);
 
 const router = useRouter();
 const route = useRoute();
@@ -446,7 +412,7 @@ const switchRole = async (role) => {
 
   try {
     isLoading.value = true;
-    const response = await axiosInstance.post('/switch-role', { role });
+    const response = await axiosInstance.post('switch-role', { role });
     
     if (response.data && response.data.success) {
       currentRole.value = role;
@@ -497,7 +463,7 @@ const fetchUserData = async () => {
     }
     
     // Then fetch fresh data from API
-    const res = await axiosInstance.get('/me');
+    const res = await axiosInstance.get('me');
     if (res?.data?.user) {
       isAuthenticated.value = true;
       roles.value = res.data.roles || [];
