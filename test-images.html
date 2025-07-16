@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Test</title>
+</head>
+<body>
+    <h1>Testing Image URLs</h1>
+    <div id="results"></div>
+    <script>
+        // Test API endpoints
+        fetch('http://localhost:8100/api/rooms')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Rooms:', data);
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                // Test image URLs
+                if (data.length > 0) {
+                    const room = data[0];
+                    if (room.images && room.images.length > 0) {
+                        const imageUrl = room.images[0].image_url;
+                        console.log('Testing image URL:', imageUrl);
+                        
+                        const img = document.createElement('img');
+                        img.src = 'http://localhost:8100/api/images/' + imageUrl;
+                        img.style.width = '300px';
+                        img.onload = () => console.log('Image loaded successfully');
+                        img.onerror = () => console.log('Image failed to load');
+                        document.body.appendChild(img);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('results').innerHTML = '<p>Error: ' + error.message + '</p>';
+            });
+    </script>
+</body>
+</html>

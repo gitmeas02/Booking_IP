@@ -20,10 +20,15 @@ export function getImageUrl(imagePath, options = {}) {
     return imagePath;
   }
 
-  // Keep the full path including 'ownerimages/' prefix
+  // Remove 'ownerimages/' prefix since ImageProxyController handles it
   // Database stores: ownerimages/room-images/room_1_xxx.jpg
-  // API expects: ownerimages/room-images/room_1_xxx.jpg
+  // API expects: room-images/room_1_xxx.jpg (ImageProxyController adds ownerimages/)
   let cleanImagePath = imagePath;
+  
+  // Remove ownerimages/ prefix if present
+  if (cleanImagePath.startsWith('ownerimages/')) {
+    cleanImagePath = cleanImagePath.replace('ownerimages/', '');
+  }
 
   // Use Laravel image proxy - API_BASE_URL already includes /api
   const fullUrl = `${API_BASE_URL}/images/${cleanImagePath}`;

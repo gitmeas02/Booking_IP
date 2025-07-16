@@ -123,7 +123,7 @@ public function updateRoomByIdAndOwnerApplication(Request $request, $roomId){
     
 }
 public function getAllRooms(){
-    $rooms = RoomType::with('blockDates')->get();
+    $rooms = RoomType::with(['blockDates', 'images', 'amenities'])->get();
     return response()->json($rooms);
 }
 
@@ -154,7 +154,7 @@ public function getRoomsIsAvailableIds(Request $request)
         $defaultPrice = (float)$validated['default_price'];
 
         // Find rooms matching name and price
-        $rooms = RoomType::with('blockDates')
+        $rooms = RoomType::with(['blockDates', 'images', 'amenities'])
             ->where('name', $validated['name'])
             ->where('default_price', $defaultPrice)
             ->get();
@@ -221,7 +221,7 @@ public function getRoomsIsAvailable(Request $request)
         return response()->json(['error' => 'start_date and end_date are required'], 422);
     }
 
-    $roomTypes = RoomType::with('blockDates')->get();
+    $roomTypes = RoomType::with(['blockDates', 'images', 'amenities'])->get();
 
     $seen = [];
 

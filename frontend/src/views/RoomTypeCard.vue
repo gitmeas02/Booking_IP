@@ -1,5 +1,5 @@
 <template>
-  <div class="room-card">
+  <div class="room-card" @click="navigateToRoomDetails" style="cursor: pointer;">
     <div class="room-image-section">
       <img
         v-if="hasRoomImage"
@@ -15,7 +15,7 @@
           <div class="placeholder-text">No image available</div>
         </div>
       </div>
-      <a href="#" class="room-photos-link">Room photos and details</a>
+      <a href="#" class="room-photos-link" @click.stop>Room photos and details</a>
     </div>
     <div class="room-details-section">
       <h4 class="room-type">
@@ -58,11 +58,11 @@
         </div>
       </div>
       <div class="room-quantity">
-        <select v-model="selectedRoomCount">
+        <select v-model="selectedRoomCount" @click.stop>
           <option v-for="n in sameRoomCount" :key="n" :value="n">{{ n }}</option>
         </select>
       </div>
-      <button class="book-now-btn" @click="reserveRoom">Book now</button>
+      <button class="book-now-btn" @click.stop="reserveRoom">Book now</button>
       <div class="minutes-info">Booking only takes 2 minutes</div>
     </div>
   </div>
@@ -218,22 +218,37 @@ const reserveRoom = async () => {
     // Navigate to checkout with room IDs and metadata
     router.push({
       name: "checkout",
-      params: { id: props.room.id }, // This is crucial for the :id in route
       query: {
-        roomIds: res.data.room_ids.join(","),
-        hotelId: props.room.hotel_id || props.room.application_id || 2,
-        checkin: startDate,
-        checkout: endDate,
-        quantity: selectedRoomCount.value,
-        roomName: props.room.name,
-        roomPrice: props.room.default_price,
-        capacity: props.room.capacity,
+        rooms: JSON.stringify(res.data.room_ids),
+        metadata: JSON.stringify({
+          room_name: props.room.name,
+          price: props.room.default_price,
+          start_date: startDate,
+          end_date: endDate,
+          quantity: selectedRoomCount.value,
+        }),
       },
     });
   } catch (err) {
-    console.error("Failed to reserve room:", err);
-    alert("Failed to reserve room. Please try again: " + err.message);
+    console.error("Error reserving room:", err);
+    alert("Error checking availability. Please try again.");
   }
+};
+
+// Navigation function to handle card clicks
+const navigateToRoomDetails = () => {
+  // Navigate to product detail page with room information
+  router.push({
+    name: 'productDetail',
+    params: {
+      id: props.room.id || props.room.room_type_id || 1
+    },
+    query: {
+      room_type_id: props.room.id || props.room.room_type_id,
+      start_date: getDateValue(props.selectedStartDate),
+      end_date: getDateValue(props.selectedEndDate)
+    }
+  });
 };
 </script>
 
