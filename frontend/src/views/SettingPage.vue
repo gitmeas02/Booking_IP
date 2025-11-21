@@ -23,6 +23,9 @@
 import Card from '@/components/SettingCard.vue'
 import { clearAuth, getCurrentUser } from '@/utils/auth'
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const cards = [
   {
@@ -82,7 +85,9 @@ const user = ref(null)
 
 const logout = () => {
   clearAuth()
-  window.location.href = '/authentication/signin'
+  // Dispatch custom event to notify components of auth change
+  window.dispatchEvent(new CustomEvent('auth-changed'))
+  router.push('/authentication/signin')
 }
 
 onMounted(() => {

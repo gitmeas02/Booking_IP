@@ -91,8 +91,11 @@ const handleSignIn = async () => {
     // Set authorization header for future requests
     axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-    // Redirect using window.location for immediate navigation
-    window.location.href = '/setting';
+    // Dispatch custom event to notify components of auth change
+    window.dispatchEvent(new CustomEvent('auth-changed'));
+
+    // Use router.push for smooth navigation without page reload
+    await router.push('/setting');
   } catch (err) {
     console.error('Login error:', err);
     

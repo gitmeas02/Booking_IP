@@ -503,7 +503,8 @@ const handleClickOutside = (e) => {
     isCurrencyDropdownOpen.value = false;
   }
 };
-watch(route, (newRoute) => {
+// Watch for route changes and refresh user data
+watch(route, async (newRoute) => {
   console.log('Current Route:', {
     path: newRoute.path,
     name: newRoute.name,
@@ -511,11 +512,32 @@ watch(route, (newRoute) => {
     params: newRoute.params,
     query: newRoute.query
   });
+  
+  // Refresh user data when navigating to/from auth pages
+  if (newRoute.path === '/setting' || newRoute.path === '/authentication/signin') {
+    await fetchUserData(true); // Force refresh to get latest data
+  }
 });
+
+// Listen for storage changes (login/logout in same tab)
+const handleStorageChange = async (e) => {
+  if (e.key === 'token' || e.key === 'user') {
+    await fetchUserData(true);
+  }
+};
+
+// Custom event listener for same-tab auth changes
+const handleAuthChange = async () => {
+  await fetchUserData(true);
+};
+
 onMounted(async () => {
   await fetchUserData();
   // await fetchCartCount();
   document.addEventListener("click", handleClickOutside);
+  window.addEventListener('storage', handleStorageChange);
+  window.addEventListener('auth-changed', handleAuthChange);
+  
   console.log('Initial Route:', {
     path: route.path,
     name: route.name,
@@ -527,6 +549,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
+  window.removeEventListener('storage', handleStorageChange);
+  window.removeEventListener('auth-changed', handleAuthChange);
 });
 </script>
 

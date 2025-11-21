@@ -34,14 +34,16 @@ axiosInstance.interceptors.request.use(
 // Response interceptor to handle authentication errors
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized access (e.g., token expired or invalid)
-      console.warn('Unauthorized request. Redirecting to login...');
+      console.warn('Unauthorized request. Token expired or invalid.');
       localStorage.removeItem('token'); // Clear invalid token
       localStorage.removeItem('user'); // Clear user data
-      // Redirect to login page (adjust route as needed)
-      window.location.href = '/authentication/signin';
+      
+      // Let the router guard handle the redirect to avoid full page reload
+      // The next navigation will trigger the guard which will redirect to signin
+      // Don't manually redirect here to prevent page reloads
     }
     return Promise.reject(error);
   }
