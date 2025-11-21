@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Payment Endpoint</title>
+</head>
+<body>
+    <h1>Test Payment with Booking Endpoint</h1>
+    <button onclick="testPayment()">Test Payment Creation</button>
+    <div id="result"></div>
+
+    <script>
+        async function testPayment() {
+            const testData = {
+                amount: 100,
+                merchant_name: "Test Hotel - Room Booking",
+                user_id: 1,
+                room_ids: [1],
+                hotel_id: 1,
+                check_in_date: "2025-07-18",
+                check_out_date: "2025-07-19",
+                number_of_guests: 2,
+                total_price: 100,
+                special_request: "Test booking",
+                payment_method: "khqr"
+            };
+
+            try {
+                console.log("Testing payment endpoint with data:", testData);
+                
+                const response = await fetch('http://localhost:8000/api/payments/with-booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const data = await response.json();
+                console.log("Response:", data);
+                
+                document.getElementById('result').innerHTML = `
+                    <h3>Response Status: ${response.status}</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

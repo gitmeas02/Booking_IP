@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <router-link
         to="/your-target-route"
         class="card flex flex-col justify-between items-center max-w-xs p-6 rounded-lg shadow-md bg-white text-center h-44 transition-transform duration-200 ease-in-out cursor-pointer hover:translate-y-[-6px] hover:shadow-lg">
@@ -22,4 +22,4 @@ defineProps({
 
 <style scoped>
 /* Tailwind handles all the styling, no need for custom CSS */
-</style>
+</style> -->

@@ -70,12 +70,13 @@ const error = ref('');
 const loading = ref(false);
 const router = useRouter();
 
+// NOTE: Make sure your backend exposes POST /api/login or /login at VITE_API_BASE_URL
 const handleSignIn = async () => {
   error.value = '';
   loading.value = true;
 
   try {
-    const response = await axiosInstance.post('/login', {
+    const response = await axiosInstance.post('login', {
       email: email.value,
       password: password.value,
     });
@@ -114,8 +115,7 @@ const handleSignIn = async () => {
 
 onMounted(() => {
   const token = localStorage.getItem('token');
-  if (token) {
-    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  if (token && router.currentRoute.value.path !== '/setting') {
     router.push('/setting');
   }
 });

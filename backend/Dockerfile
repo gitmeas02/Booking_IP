@@ -13,6 +13,7 @@ RUN apk add --no-cache \
     freetype-dev \
     oniguruma-dev \
     libxml2-dev \
+    bash \
     zip \
     unzip \
     libzip-dev \

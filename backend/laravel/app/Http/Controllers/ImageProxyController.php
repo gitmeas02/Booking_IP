@@ -138,6 +138,114 @@ class ImageProxyController extends Controller
         }
     }
 
+    public function uploadImage(Request $request)
+    {
+        try {
+            $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // Max 10MB
+                'folder' => 'string|nullable'
+            ]);
+
+            $image = $request->file('image');
+            $folder = $request->input('folder', 'ownerimages');
+            
+            // Generate unique filename
+            $fileName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $path = $folder . '/' . $fileName;
+            
+            // Upload to MinIO
+            $uploaded = Storage::disk('minio')->put($path, file_get_contents($image->getRealPath()));
+            
+            if ($uploaded) {
+                Log::info("Image uploaded successfully: {$path}");
+                return response()->json([
+                    'success' => true,
+                    'path' => $path,
+                    'url' => "/api/images/{$path}",
+                    'filename' => $fileName
+                ]);
+            } else {
+                throw new \Exception('Failed to upload to MinIO');
+            }
+        } catch (\Exception $e) {
+            Log::error("Error uploading image: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function uploadMultipleImages(Request $request)
+    {
+        try {
+            $request->validate([
+                'images' => 'required|array',
+                'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+                'folder' => 'string|nullable'
+            ]);
+
+            $folder = $request->input('folder', 'ownerimages');
+            $uploadedFiles = [];
+
+            foreach ($request->file('images') as $image) {
+                $fileName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $path = $folder . '/' . $fileName;
+                
+                $uploaded = Storage::disk('minio')->put($path, file_get_contents($image->getRealPath()));
+                
+                if ($uploaded) {
+                    $uploadedFiles[] = [
+                        'path' => $path,
+                        'url' => "/api/images/{$path}",
+                        'filename' => $fileName
+                    ];
+                    Log::info("Image uploaded successfully: {$path}");
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'files' => $uploadedFiles,
+                'count' => count($uploadedFiles)
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error uploading multiple images: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteImage($imagePath)
+    {
+        try {
+            $decodedPath = urldecode($imagePath);
+            
+            if (Storage::disk('minio')->exists($decodedPath)) {
+                Storage::disk('minio')->delete($decodedPath);
+                Log::info("Image deleted successfully: {$decodedPath}");
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Image deleted successfully'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Image not found'
+                ], 404);
+            }
+        } catch (\Exception $e) {
+            Log::error("Error deleting image {$imagePath}: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function testSpecificImage($imagePath)
     {
         try {

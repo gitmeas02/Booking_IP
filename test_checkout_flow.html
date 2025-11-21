@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Checkout Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #0056b3; }
+        .qr-container { text-align: center; margin: 20px 0; }
+        .qr-container img { border: 2px solid #ddd; border-radius: 8px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .form-group { margin: 10px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Checkout Flow Test - REAL KHQR Payment</h1>
+        
+        <div class="section info">
+            <h3>ℹ️ Instructions</h3>
+            <p><strong>This test creates REAL payment QR codes that require actual payment!</strong></p>
+            <ol>
+                <li>Fill in the booking details below</li>
+                <li>Click "Create Payment & QR Code"</li>
+                <li>Scan the QR code with a real banking app (ABA, Wing, etc.)</li>
+                <li>Complete the actual payment</li>
+                <li>Monitor the payment status checking</li>
+                <li>Success modal should ONLY appear after real payment is verified</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h3>📋 Booking Details</h3>
+            <div class="form-group">
+                <label>Amount (KHR):</label>
+                <input type="number" id="amount" value="1000" min="100">
+            </div>
+            <div class="form-group">
+                <label>Merchant Name:</label>
+                <input type="text" id="merchantName" value="Khun Hotel - Room Booking">
+            </div>
+            <div class="form-group">
+                <label>User ID:</label>
+                <input type="number" id="userId" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Hotel ID:</label>
+                <input type="number" id="hotelId" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Room IDs (comma-separated):</label>
+                <input type="text" id="roomIds" value="1,2" placeholder="1,2,3">
+            </div>
+            <div class="form-group">
+                <label>Check-in Date:</label>
+                <input type="date" id="checkinDate">
+            </div>
+            <div class="form-group">
+                <label>Check-out Date:</label>
+                <input type="date" id="checkoutDate">
+            </div>
+            <div class="form-group">
+                <label>Number of Guests:</label>
+                <input type="number" id="guests" value="2" min="1">
+            </div>
+            
+            <button class="button" onclick="createPaymentWithBooking()">Create Payment & QR Code</button>
+        </div>
+
+        <div id="paymentSection" class="section" style="display: none;">
+            <h3>💳 Payment QR Code</h3>
+            <div id="qrContainer" class="qr-container"></div>
+            <div id="paymentInfo"></div>
+            <button class="button" onclick="checkPaymentStatus()">Check Payment Status</button>
+            <button class="button" onclick="startAutoCheck()">Start Auto-Check</button>
+            <button class="button" onclick="stopAutoCheck()">Stop Auto-Check</button>
+        </div>
+
+        <div id="result" class="section"></div>
+        <div id="statusResult" class="section"></div>
+    </div>
+
+    <script>
+        let currentTransactionId = null;
+        let autoCheckInterval = null;
+
+        // Set default dates
+        window.onload = function() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dayAfter = new Date(today);
+            dayAfter.setDate(dayAfter.getDate() + 2);
+            
+            document.getElementById('checkinDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('checkoutDate').value = dayAfter.toISOString().split('T')[0];
+        };
+
+        async function createPaymentWithBooking() {
+            const amount = document.getElementById('amount').value;
+            const merchantName = document.getElementById('merchantName').value;
+            const userId = document.getElementById('userId').value;
+            const hotelId = document.getElementById('hotelId').value;
+            const roomIds = document.getElementById('roomIds').value.split(',').map(id => parseInt(id.trim()));
+            const checkinDate = document.getElementById('checkinDate').value;
+            const checkoutDate = document.getElementById('checkoutDate').value;
+            const guests = document.getElementById('guests').value;
+
+            const bookingData = {
+                amount: parseFloat(amount),
+                merchant_name: merchantName,
+                user_id: parseInt(userId),
+                room_ids: roomIds,
+                hotel_id: parseInt(hotelId),
+                check_in_date: checkinDate,
+                check_out_date: checkoutDate,
+                number_of_guests: parseInt(guests),
+                total_price: parseFloat(amount),
+                special_request: 'Test booking request - REAL payment required',
+                payment_method: 'khqr'
+            };
+
+            console.log('Creating payment with booking data:', bookingData);
+            showResult('Creating payment...', 'info');
+
+            try {
+                const response = await fetch('http://localhost:8100/api/payments/with-booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                const result = await response.json();
+                console.log('Payment API Response:', result);
+
+                if (result.success) {
+                    currentTransactionId = result.transaction_id;
+                    showResult('✅ Payment created successfully! Scan QR code to pay.', 'success');
+                    displayQRCode(result);
+                    showPaymentInfo(result);
+                    document.getElementById('paymentSection').style.display = 'block';
+                } else {
+                    showResult('❌ Payment creation failed: ' + result.message, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error creating payment:', error);
+                showResult('❌ Network error: ' + error.message, 'error');
+            }
+        }
+
+        function displayQRCode(paymentData) {
+            if (paymentData.qr_string) {
+                const qrData = encodeURIComponent(paymentData.qr_string);
+                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}&format=png&margin=20`;
+                
+                document.getElementById('qrContainer').innerHTML = `
+                    <h4>📱 Scan this QR Code with your banking app</h4>
+                    <img src="${qrImageUrl}" alt="Payment QR Code">
+                    <p><strong>⚠️ This is a REAL payment QR code!</strong></p>
+                    <p>Amount: ${paymentData.amount} KHR</p>
+                    <p>Merchant: ${paymentData.merchant_name}</p>
+                `;
+            } else {
+                showResult('❌ No QR string received from API', 'error');
+            }
+        }
+
+        function showPaymentInfo(paymentData) {
+            document.getElementById('paymentInfo').innerHTML = `
+                <div class="info">
+                    <h4>💰 Payment Information:</h4>
+                    <p><strong>Transaction ID:</strong> ${paymentData.transaction_id}</p>
+                    <p><strong>Amount:</strong> ${paymentData.amount} ${paymentData.currency}</p>
+                    <p><strong>Merchant:</strong> ${paymentData.merchant_name}</p>
+                    <p><strong>Booking Reference:</strong> ${paymentData.booking_reference}</p>
+                    <p><strong>Expires:</strong> ${paymentData.expires_at || 'No expiration'}</p>
+                </div>
+            `;
+        }
+
+        async function checkPaymentStatus() {
+            if (!currentTransactionId) {
+                showStatusResult('❌ No transaction to check', 'error');
+                return;
+            }
+
+            showStatusResult('🔍 Checking payment status...', 'info');
+
+            try {
+                const response = await fetch(`http://localhost:8100/api/payments/${currentTransactionId}/status-with-booking`);
+                const result = await response.json();
+
+                console.log('Status check result:', result);
+
+                if (result.success) {
+                    const status = result.status;
+                    const message = result.message;
+                    
+                    if (status === 'success' && result.booking_created) {
+                        showStatusResult(`🎉 PAYMENT SUCCESSFUL! ${message}`, 'success');
+                        stopAutoCheck(); // Stop checking once successful
+                    } else if (status === 'failed') {
+                        showStatusResult(`❌ PAYMENT FAILED! ${message}`, 'error');
+                        stopAutoCheck();
+                    } else if (status === 'expired') {
+                        showStatusResult(`⏰ PAYMENT EXPIRED! ${message}`, 'error');
+                        stopAutoCheck();
+                    } else {
+                        showStatusResult(`⏳ Payment pending: ${message}`, 'info');
+                    }
+
+                    // Show detailed response for debugging
+                    const details = `
+                        <pre>Full Response: ${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    document.getElementById('statusResult').innerHTML += details;
+                } else {
+                    showStatusResult(`❌ Status check failed: ${result.message}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error checking status:', error);
+                showStatusResult('❌ Network error: ' + error.message, 'error');
+            }
+        }
+
+        function startAutoCheck() {
+            if (autoCheckInterval) {
+                clearInterval(autoCheckInterval);
+            }
+
+            showStatusResult('🔄 Starting automatic status checking (every 5 seconds)...', 'info');
+            autoCheckInterval = setInterval(checkPaymentStatus, 5000);
+        }
+
+        function stopAutoCheck() {
+            if (autoCheckInterval) {
+                clearInterval(autoCheckInterval);
+                autoCheckInterval = null;
+                showStatusResult('⏸️ Automatic checking stopped', 'info');
+            }
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `section ${type}`;
+            resultDiv.innerHTML = message;
+        }
+
+        function showStatusResult(message, type) {
+            const statusDiv = document.getElementById('statusResult');
+            statusDiv.className = `section ${type}`;
+            statusDiv.innerHTML = message;
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', stopAutoCheck);
+    </script>
+</body>
+</html>

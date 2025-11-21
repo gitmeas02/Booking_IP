@@ -34,6 +34,7 @@ Route::post('/payments/with-booking', [PaymentController::class, 'createPaymentW
 Route::post('/payments/create-booking', [PaymentController::class, 'createBookingAfterPayment']);
 Route::get('/payments/{transactionId}/status', [PaymentController::class, 'checkStatus']);
 Route::get('/payments/{transactionId}/status-with-booking', [PaymentController::class, 'checkStatusAndCreateBooking']);
+Route::post('/payments/{transactionId}/simulate-success', [PaymentController::class, 'simulatePaymentSuccess']);
 Route::get('/payments', [PaymentController::class, 'getTransactions'])->middleware('auth:sanctum');
 
 // Image optimization routes
@@ -96,6 +97,13 @@ Route::get('/images/{imageName}', [ImageProxyController::class, 'getImage'])->wh
 Route::get('/images', [ImageProxyController::class, 'listImages']);
 Route::get('/test-minio', [ImageProxyController::class, 'testMinioConnection']);
 Route::get('/test-image/{imagePath}', [ImageProxyController::class, 'testSpecificImage'])->where('imagePath', '.*');
+
+// Image upload routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/images/upload', [ImageProxyController::class, 'uploadImage']);
+    Route::post('/images/upload-multiple', [ImageProxyController::class, 'uploadMultipleImages']);
+    Route::delete('/images/{imagePath}', [ImageProxyController::class, 'deleteImage'])->where('imagePath', '.*');
+});
 
 //Bookings
 Route::post('/bookings', [BookingController::class, 'store']);

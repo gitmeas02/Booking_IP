@@ -218,9 +218,12 @@ const props = defineProps({
   room: { type: Object, required: true },
 });
 
+const emit = defineEmits(['click']);
+
 function viewHotel(id) {
-  // Optional: additional behavior before navigating
-  console.log("View hotel (room id):", id);
+  // Navigate to hotel product details page
+  console.log("Navigate to hotel details:", id);
+  emit('click', id);
 }
 </script>
 

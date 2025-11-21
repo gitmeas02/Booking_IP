@@ -9,6 +9,7 @@ import {
 } from "lucide-vue-next";
 import { computed, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
+import axios from "@/axios";
 
 const router = useRouter();
 
@@ -69,37 +70,24 @@ const generateQRCode = async () => {
     isGeneratingQR.value = true;
     console.log("🔄 Generating QR code...");
     
-    // Create a basic payment if no current QR data exists
-    if (!currentQRData.value) {
-      const response = await fetch('http://localhost:8100/api/payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          amount: amount.value,
-          merchant_name: merchantName,
-          booking_reference: 'MANUAL_QR_' + Date.now()
-        })
-      });
+    // Check if there's existing QR data to refresh
+    if (currentQRData.value && transactionId.value) {
+      console.log("🔄 Refreshing existing QR code display...");
       
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log("✅ QR code generated successfully");
-        handlePaymentCreated(result);
-      } else {
-        console.error('❌ Failed to generate QR code:', result.message);
-      }
-    } else {
-      // Just refresh the QR image display - don't create new payment
-      console.log("🔄 Refreshing QR code display...");
+      // Refresh the QR image with a new timestamp to avoid caching
       const qrData = encodeURIComponent(currentQRData.value.qr_string);
-      qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&format=png&margin=10&_t=${Date.now()}`;
+      const timestamp = Date.now();
+      qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&format=png&margin=15&cache=${timestamp}`;
+      
+      console.log("✅ QR code display refreshed successfully");
+    } else {
+      // No existing QR data - user needs to complete booking first
+      console.warn("⚠️ No QR data available. Please complete the booking process first.");
+      alert("Please fill in all guest information and click 'Complete Booking' to generate payment QR code.");
     }
+    
   } catch (error) {
-    console.error('❌ Error generating QR code:', error);
+    console.error('❌ Error generating/refreshing QR code:', error);
   } finally {
     isGeneratingQR.value = false;
   }
@@ -115,40 +103,17 @@ const startAutoRefresh = () => {
   
   qrRefreshInterval.value = setInterval(async () => {
     if (currentQRData.value && selectedPayment.value === 'qr' && !showSuccessModal.value) {
-      console.log("🔄 Auto-refreshing QR code...");
+      console.log("🔄 Auto-refreshing QR code display...");
       
+      // Only refresh the QR image display, don't create new payments
       try {
-        const response = await fetch('http://localhost:8100/api/payments', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            amount: amount.value,
-            merchant_name: merchantName,
-            booking_reference: 'AUTO_REFRESH_' + Date.now()
-          })
-        });
+        const qrData = encodeURIComponent(currentQRData.value.qr_string);
+        const timestamp = Date.now();
+        qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&format=png&margin=15&cache=${timestamp}`;
         
-        const result = await response.json();
-        
-        if (result.success) {
-          // Update QR data but keep the same transaction monitoring
-          const oldTransactionId = transactionId.value;
-          currentQRData.value = result;
-          
-          // Update QR image with new data
-          const qrData = encodeURIComponent(result.qr_string);
-          const timestamp = Date.now();
-          qrImageUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&format=png&margin=15&cache=${timestamp}`;
-          
-          console.log("✅ QR code auto-refreshed successfully");
-        } else {
-          console.error("❌ QR code auto-refresh failed:", result.message);
-        }
+        console.log("✅ QR code display refreshed successfully");
       } catch (error) {
-        console.error("❌ Error during QR code auto-refresh:", error);
+        console.error("❌ Error during QR code display refresh:", error);
       }
     }
   }, 120000); // 2 minutes
@@ -241,62 +206,74 @@ const checkPaymentStatus = async () => {
   try {
     console.log(`🔍 Checking payment status for transaction: ${transactionId.value}`);
 
-    const response = await fetch(
-      `http://localhost:8100/api/payments/${transactionId.value}/status-with-booking`,
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      }
+    const response = await axios.get(
+      `/payments/${transactionId.value}/status-with-booking`
     );
 
-    if (!response.ok) {
-      console.error(`❌ HTTP Error: ${response.status} ${response.statusText}`);
-      return;
-    }
-
-    const data = await response.json();
+    const data = response.data;
     console.log("📊 Payment status response:", data);
 
     if (data.success) {
+      // STRICT CHECK: Only show success modal if payment is actually completed AND verified
       if (data.status === "success" && data.booking_created) {
-        // Payment completed successfully and booking created
-        console.log("🎉 Payment completed successfully and booking created!");
-
-        // Stop checking first to prevent duplicate modals
-        stopAllIntervals();
-
-        // Prepare payment details for the success modal
-        const transaction = data.transaction;
+        // Check if we have valid payment data in the API response (if available)
         const apiResponse = data.api_response;
-        const methodUsed = data.method_used || "unknown";
+        const hasValidPaymentData = !apiResponse || (
+          apiResponse.responseCode === 0 || 
+          apiResponse.responseCode === '0' ||
+          apiResponse.responseCode === '00' || 
+          apiResponse.status === 'COMPLETED' ||
+          apiResponse.status === 'completed' ||
+          apiResponse.transactionStatus === 'SUCCESS' ||
+          apiResponse.transactionStatus === 'success' ||
+          (apiResponse.responseMessage && 
+           (apiResponse.responseMessage.toLowerCase().includes('success') ||
+            apiResponse.responseMessage.toLowerCase().includes('completed')))
+        );
 
-        paymentDetails.value = {
-          transactionId: transaction?.transaction_id || transactionId.value,
-          bakongHash: formatBakongHash(transaction?.qr_md5),
-          bank: "Bakong (NBC)",
-          fromAccount:
-            apiResponse?.fromAccount ||
-            apiResponse?.senderAccount ||
-            apiResponse?.payerName ||
-            "Customer Account",
-          amount: `${transaction?.amount || amount.value} ${
-            transaction?.currency || currency
-          }`,
-          seller: transaction?.merchant_name || merchantName,
-          transactionDate: formatDate(
-            transaction?.updated_at || new Date().toISOString()
-          ),
-          paymentMethod: `KHQR Payment (${methodUsed})`,
-          methodUsed: methodUsed,
-          bookingReference: transaction?.booking_reference || "N/A",
-        };
+        if (hasValidPaymentData) {
+          // Payment completed successfully and booking created with verified payment data
+          console.log("🎉 VERIFIED PAYMENT: Payment completed successfully and booking created!");
 
-        // Show success modal only if not already shown
-        if (!showSuccessModal.value) {
-          showSuccessModal.value = true;
-          console.log(`✅ Payment and booking completed using ${methodUsed} method`);
+          // Stop checking first to prevent duplicate modals
+          stopAllIntervals();
+
+          // Prepare payment details for the success modal
+          const transaction = data.transaction;
+          const methodUsed = data.method_used || "unknown";
+
+          paymentDetails.value = {
+            transactionId: transaction?.transaction_id || transactionId.value,
+            bakongHash: formatBakongHash(transaction?.qr_md5),
+            bank: "Bakong (NBC)",
+            fromAccount:
+              apiResponse?.fromAccount ||
+              apiResponse?.senderAccount ||
+              apiResponse?.payerName ||
+              "Customer Account",
+            amount: `${transaction?.amount || amount.value} ${
+              transaction?.currency || currency
+            }`,
+            seller: transaction?.merchant_name || merchantName,
+            transactionDate: formatDate(
+              transaction?.updated_at || new Date().toISOString()
+            ),
+            paymentMethod: `KHQR Payment (${methodUsed})`,
+            bookingId: data.booking_ids?.[0] || 'N/A',
+            bookingIds: data.booking_ids || [],
+            paymentVerified: hasValidPaymentData,
+            apiResponse: apiResponse,
+            methodUsed: methodUsed,
+            bookingReference: transaction?.booking_reference || "N/A",
+          };
+
+          // Show success modal only if not already shown and payment is verified
+          if (!showSuccessModal.value) {
+            showSuccessModal.value = true;
+            console.log(`✅ PAYMENT VERIFIED: Payment and booking completed using ${methodUsed} method`);
+          }
+        } else {
+          console.log("⚠️ Payment status marked as success but no valid payment data found - keeping status as pending");
         }
       } else if (data.status === "failed") {
         console.log("❌ Payment failed");
@@ -312,6 +289,25 @@ const checkPaymentStatus = async () => {
     }
   } catch (error) {
     console.error("❌ Error checking payment status:", error);
+    
+    // Enhanced error handling for 500 errors
+    if (error.response?.status === 500) {
+      console.error("🚨 Backend server error (500). Details:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        transactionId: transactionId.value,
+        errorMessage: error.response?.data?.message || error.message
+      });
+      
+      // Don't stop intervals for server errors - backend might recover
+      console.log("⏳ Continuing to check status despite server error...");
+    } else if (error.response?.status === 404) {
+      console.error("🔍 Transaction not found (404) - stopping status checks");
+      stopAllIntervals();
+    } else {
+      console.error("🌐 Network or other error:", error.message);
+      // Continue checking for network errors as they might be temporary
+    }
   }
 };
 
@@ -346,22 +342,7 @@ const redirectToHome = () => {
   router.push('/');
 };
 
-// Test function to manually trigger success modal (for debugging)
-const testSuccessModal = () => {
-  paymentDetails.value = {
-    transactionId: "TXN_TEST123",
-    bakongHash: "ABC12345",
-    bank: "Bakong (NBC)",
-    fromAccount: "Test Account",
-    amount: "100 KHR",
-    seller: "Khun Hotel",
-    transactionDate: formatDate(new Date().toISOString()),
-    paymentMethod: "KHQR Payment",
-    methodUsed: "test",
-    bookingReference: "BOOKING_123",
-  };
-  showSuccessModal.value = true;
-};
+// Test function removed - we only show success modal for real payments
 
 // Initialize QR generation when QR payment is selected - removed auto-refresh
 const handlePaymentMethodChange = () => {
@@ -708,8 +689,15 @@ defineExpose({
             >
               <div class="text-center text-gray-500">
                 <QrCode class="h-16 w-16 mx-auto mb-4" />
-                <p>QR Code will appear here</p>
-                <p class="text-sm">Complete booking to generate</p>
+                <p class="font-semibold">QR Code will appear here</p>
+                <p class="text-sm mb-2">Complete booking to generate</p>
+                <div class="text-xs bg-yellow-50 border border-yellow-200 rounded p-2 mt-2">
+                  <p class="text-yellow-700">
+                    👆 Fill in guest information above, then click 
+                    <span class="font-semibold">"Complete Booking"</span> 
+                    to generate payment QR code
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -742,7 +730,7 @@ defineExpose({
               class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
             >
               <QrCode class="h-5 w-5" />
-              {{ isGeneratingQR ? "Generating..." : "Refresh QR Code" }}
+              {{ isGeneratingQR ? "Generating..." : currentQRData ? "Refresh QR Code" : "Generate QR Code" }}
             </button>
 
             <button

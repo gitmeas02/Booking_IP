@@ -564,7 +564,7 @@ const createBooking = async (formData) => {
     }
 
     // Use the payment with booking endpoint
-    const response = await axios.post("payments/with-booking", bookingData);
+    const response = await axios.post("/payments/with-booking", bookingData);
 
     if (response.data && response.data.success) {
       // Pass the transaction data to the form component for QR display
