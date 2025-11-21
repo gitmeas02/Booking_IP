@@ -201,7 +201,7 @@ const router = createRouter({
   routes,
 });
 
-// Navigation guards - FIXED VERSION
+// Navigation guards - OPTIMIZED VERSION
 router.beforeEach(async (to, from, next) => {
   try {
     // Skip auth check for authentication routes to avoid infinite loops
@@ -209,9 +209,47 @@ router.beforeEach(async (to, from, next) => {
       return next();
     }
 
-    const res = await axiosInstance.get('/me');
-    const isAuthenticated = !!res?.data?.user;
-    const userId = res?.data?.user?.id;
+    // Check if user data exists in localStorage (from login)
+    const storedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      // No token, redirect to signin if route requires auth
+      if (to.meta.requiresAuth) {
+        return next('/authentication/signin');
+      }
+      return next();
+    }
+
+    let userData;
+    
+    // Try to use cached user data first
+    if (storedUser) {
+      try {
+        userData = JSON.parse(storedUser);
+      } catch (e) {
+        console.error('Failed to parse stored user data:', e);
+      }
+    }
+
+    // Only fetch from API if no cached data exists
+    // Trust fresh login data to avoid delays
+    if (!userData) {
+      try {
+        const res = await axiosInstance.get('/me');
+        userData = res?.data?.user;
+        
+        // Update localStorage with fresh data
+        if (userData) {
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+      } catch (apiError) {
+        // If API fails but we're not on a protected route, continue
+        console.error('Failed to fetch user data:', apiError);
+      }
+    }
+
+    const isAuthenticated = !!userData;
 
     // If user is authenticated and trying to access signin, redirect to settings
     if (to.path === '/authentication/signin' && isAuthenticated) {
@@ -223,16 +261,11 @@ router.beforeEach(async (to, from, next) => {
       return next('/authentication/signin');
     }
 
-    // Check role-based access
+    // Check role-based access using embedded role data
     if (isAuthenticated && to.meta.roles) {
-      const roleRes = await axiosInstance.get(`/user-roles/${userId}`);
-
-      console.log("printing roleRes")
-      console.log(roleRes)
-      // const userRoles = roleRes.data.roles.map(r => r.name);
-      // const hasAccess = to.meta.roles.some(role => userRoles.includes(role));
-      const hasAccess = to.meta.roles.includes(roleRes.data.current_role);
-      // if()
+      const currentRole = userData.current_role;
+      const hasAccess = to.meta.roles.includes(currentRole);
+      
       if (!hasAccess) {
         return next('/');
       }
@@ -241,6 +274,12 @@ router.beforeEach(async (to, from, next) => {
     next();
   } catch (error) {
     console.warn('Auth check failed:', error);
+    
+    // Clear invalid token/user data on auth failure
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
     
     // If route requires auth but we can't verify, redirect to signin
     if (to.meta.requiresAuth) {

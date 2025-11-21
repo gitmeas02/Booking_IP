@@ -21,8 +21,8 @@
 
 <script setup>
 import Card from '@/components/SettingCard.vue'
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { clearAuth, getCurrentUser } from '@/utils/auth'
+import { onMounted, ref } from 'vue'
 
 const cards = [
   {
@@ -79,34 +79,15 @@ const cards = [
 ]
 
 const user = ref(null)
-const error = ref('')
-const API_BASE_URL = 'http://localhost:8100'
-
-const getUser = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      throw new Error('No token is found')
-    }
-    const response = await axios.get(`${API_BASE_URL}/api/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-    user.value = response.data.user
-  } catch (error) {
-    console.error('Failed to fetch user', error)
-    error.value = 'Failed to fetch user data.'
-  }
-}
 
 const logout = () => {
-  localStorage.removeItem('token')
-  window.location.href = '/login'
+  clearAuth()
+  window.location.href = '/authentication/signin'
 }
 
 onMounted(() => {
-  getUser()
+  // Get user from localStorage - no API call needed
+  user.value = getCurrentUser()
 })
 </script>
 

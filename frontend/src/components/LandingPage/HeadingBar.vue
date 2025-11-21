@@ -475,40 +475,38 @@ const switchRole = async (role) => {
 };
 
 // Fetch user authentication and roles
-const fetchUserData = async () => {
+const fetchUserData = async (forceRefresh = false) => {
   try {
     isLoading.value = true;
     
     // First, try to get user data from localStorage for faster loading
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    if (storedUser && !forceRefresh) {
       try {
         const userData = JSON.parse(storedUser);
         isAuthenticated.value = true;
         roles.value = userData.roles || [];
         currentRole.value = userData.current_role || roles.value[0] || 'user';
         
-        // If we have stored data, load it immediately but still fetch fresh data
-        console.log('Loading user data from cache...');
+        // Use cached data and skip API call for better performance
+        isLoading.value = false;
+        return;
       } catch (e) {
         console.warn('Failed to parse stored user data:', e);
         localStorage.removeItem('user');
       }
     }
     
-    // Then fetch fresh data from API
+    // Only fetch from API if no cached data or forced refresh
     const res = await axiosInstance.get('/me');
     if (res?.data?.user) {
+      const userData = res.data.user;
       isAuthenticated.value = true;
-      roles.value = res.data.roles || [];
-      currentRole.value = res.data.current_role || roles.value[0] || 'user';
+      roles.value = userData.roles || [];
+      currentRole.value = userData.current_role || roles.value[0] || 'user';
       
-      // Update localStorage with fresh data
-      localStorage.setItem('user', JSON.stringify({
-        ...res.data.user,
-        roles: res.data.roles,
-        current_role: res.data.current_role
-      }));
+      // Update localStorage with complete user data (already includes roles and current_role)
+      localStorage.setItem('user', JSON.stringify(userData));
     } else {
       isAuthenticated.value = false;
       roles.value = [];

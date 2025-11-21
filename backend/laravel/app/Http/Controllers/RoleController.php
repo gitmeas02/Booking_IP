@@ -69,15 +69,32 @@ class RoleController extends Controller
         $success = $user->switchToRole($requestedRole);
         
         if ($success) {
-            // Refresh user data
+            // Refresh user data with all relationships
             $user->refresh();
-            $user->load(['roles', 'currentRole']);
+            $user->load(['roles', 'currentRole', 'ownerApplication']);
+            
+            $roles = $user->roles->pluck('name')->toArray();
+            $currentRoleName = $user->getCurrentRoleName();
             
             return response()->json([
                 'success' => true,
-                'current_role' => $user->getCurrentRoleName(),
-                'current_role_id' => $user->current_role_id,
-                'message' => 'Role switched successfully'
+                'message' => 'Role switched successfully',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'display_name' => $user->display_name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'dob' => $user->dob,
+                    'nationality' => $user->nationality,
+                    'gender' => $user->gender,
+                    'address' => $user->address,
+                    'passport' => $user->passport,
+                    'current_role_id' => $user->current_role_id,
+                    'roles' => $roles,
+                    'current_role' => $currentRoleName,
+                    'applications' => $user->ownerApplication,
+                ],
             ]);
         } else {
             return response()->json([

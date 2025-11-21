@@ -60,6 +60,7 @@
 
 <script setup>
 import axiosInstance from '@/axios';
+import { Icon } from '@iconify/vue';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -79,28 +80,32 @@ const handleSignIn = async () => {
       password: password.value,
     });
 
-    const { token, user, roles, current_role, applications } = response.data;
+    const { token, user } = response.data;
     
-    // Store authentication data
+    // User object now contains roles, current_role, and applications
+    // No need to make additional API calls
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify({
-      ...user,
-      roles: roles,
-      current_role: current_role,
-      applications: applications
-    }));
+    localStorage.setItem('user', JSON.stringify(user));
     
     // Set authorization header for future requests
     axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-    // Navigate without page reload for better performance
-    router.push('/setting');
+    // Redirect using window.location for immediate navigation
+    window.location.href = '/setting';
   } catch (err) {
-    console.error('Login failed', err);
+    console.error('Login error:', err);
+    
     if (err.response?.status === 422 || err.response?.status === 401) {
       error.value = err.response.data.message || 'Invalid credentials.';
+    } else if (err.response?.status === 404) {
+      error.value = 'Login endpoint not found. Please ensure the backend server is running.';
+    } else if (err.code === 'ERR_NETWORK') {
+      error.value = 'Network error. Please check your connection and ensure the backend is running on http://localhost:8100';
+      console.error('Network error details:', err.message);
+    } else if (!err.response) {
+      error.value = 'No response from server. Please check if the backend is running.';
     } else {
-      error.value = 'Login failed. Please try again.';
+      error.value = `Login failed: ${err.response?.data?.message || err.message}`;
     }
   } finally {
     loading.value = false;

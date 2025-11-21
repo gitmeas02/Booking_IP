@@ -90,12 +90,21 @@ class User extends Authenticatable
      */
     public function getCurrentRoleName()
     {
+        // Force load currentRole if not already loaded
+        if (!$this->relationLoaded('currentRole')) {
+            $this->load('currentRole');
+        }
+        
         if ($this->currentRole) {
             return $this->currentRole->name;
         }
 
         // Fallback to first available role if no current role is set
-        $firstRole = $this->roles()->first();
+        if (!$this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+        
+        $firstRole = $this->roles->first();
         if ($firstRole) {
             $this->current_role_id = $firstRole->id;
             $this->save();

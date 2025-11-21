@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
-use Hash;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -62,17 +63,43 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('token')->plainTextToken;
-
         // Load relationships to reduce subsequent API calls
         $user->load(['roles', 'currentRole', 'ownerApplication']);
 
+        // Get role information
+        $roles = $user->roles->pluck('name')->toArray();
+        $currentRoleName = $user->getCurrentRoleName();
+        
+        \Log::info('Login response data', [
+            'user_id' => $user->id,
+            'current_role_id' => $user->current_role_id,
+            'current_role_name' => $currentRoleName,
+            'roles' => $roles,
+            'currentRole_loaded' => $user->relationLoaded('currentRole'),
+            'currentRole' => $user->currentRole ? $user->currentRole->name : null,
+        ]);
+        
+        // Create token with role abilities
+        $token = $user->createToken('token', $roles)->plainTextToken;
+
         return response()->json([
-            'user'  => $user,
+            'user'  => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'display_name' => $user->display_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'dob' => $user->dob,
+                'nationality' => $user->nationality,
+                'gender' => $user->gender,
+                'address' => $user->address,
+                'passport' => $user->passport,
+                'current_role_id' => $user->current_role_id,
+                'roles' => $roles,
+                'current_role' => $currentRoleName,
+                'applications' => $user->ownerApplication,
+            ],
             'token'=> $token,
-            'roles' => $user->roles->pluck('name'),
-            'current_role' => $user->getCurrentRoleName(),
-            'applications' => $user->ownerApplication()->get(),
         ]);
     }
     public function me(Request $request)
@@ -81,12 +108,28 @@ class AuthController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
-        $user->load(['roles', 'currentRole']);
+        
+        $user->load(['roles', 'currentRole', 'ownerApplication']);
+        $roles = $user->roles->pluck('name')->toArray();
+        $currentRoleName = $user->getCurrentRoleName();
+        
         return response()->json([
-            'user' => $user,
-            'roles' => $user->roles->pluck('name'),
-            'current_role' => $user->getCurrentRoleName(),
-            'applications' => $user->ownerApplication()->get(),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'display_name' => $user->display_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'dob' => $user->dob,
+                'nationality' => $user->nationality,
+                'gender' => $user->gender,
+                'address' => $user->address,
+                'passport' => $user->passport,
+                'current_role_id' => $user->current_role_id,
+                'roles' => $roles,
+                'current_role' => $currentRoleName,
+                'applications' => $user->ownerApplication,
+            ],
         ]);
     }
 

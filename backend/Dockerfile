@@ -34,20 +34,15 @@ RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage \
     && chmod -R 755 /var/www/bootstrap/cache
 
-# Install PHP dependencies - remove problematic commands
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Install all dependencies including dev (for Faker)
+RUN composer install --optimize-autoloader --no-scripts
 
 # Copy configuration files
 COPY php.ini /usr/local/etc/php/conf.d/custom.ini
-
-# Create startup script without Laravel commands
-RUN echo '#!/bin/sh' > /usr/local/bin/start.sh \
-    && echo 'php-fpm' >> /usr/local/bin/start.sh \
-    && chmod +x /usr/local/bin/start.sh
 
 # Expose port
 EXPOSE 9000
 
 # Start PHP-FPM
-CMD ["/usr/local/bin/start.sh"]
+CMD ["php-fpm"]
 

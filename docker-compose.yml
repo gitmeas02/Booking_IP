@@ -8,8 +8,8 @@ services:
       dockerfile: Dockerfile
     container_name: booking_backend
     volumes:
-      - ./backend/laravel:/var/www/html
-      - ./backend/laravel/storage:/var/www/html/storage
+      - ./backend/laravel:/var/www  # Live sync entire Laravel directory
+      - vendor_data:/var/www/vendor  # Separate volume for vendor
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
@@ -45,14 +45,17 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/app  # Live sync frontend files
+      - /app/node_modules  # Exclude node_modules
     environment:
-      - VITE_API_BASE_URL=http://localhost:8100
+      - VITE_API_BASE_URL=http://localhost:8100/api
+      - CHOKIDAR_USEPOLLING=true  # Enable hot reload
     depends_on:
       - backend
     networks:
       - booking_network
+    stdin_open: true
+    tty: true
 
   # MySQL Database
   mysql:
@@ -114,6 +117,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./backend/laravel:/var/www  # Access Laravel files
     depends_on:
       - backend
       - frontend
@@ -124,6 +128,7 @@ volumes:
   mysql_data:
   redis_data:
   minio_data:
+  vendor_data:  # Add vendor volume
 
 networks:
   booking_network:
