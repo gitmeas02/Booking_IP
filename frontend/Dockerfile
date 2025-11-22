@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3000 5000
 
-# Start the application
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Start both the dev server and json-server
+CMD ["sh", "-c", "npm run server & npm run dev -- --host 0.0.0.0 --port 3000"]

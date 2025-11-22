@@ -142,7 +142,8 @@ export function useCalendarManager() {
     error.value = '';
 
     try {
-      const response = await axios.get('http://localhost:5000/hotels', {
+      const apiUrl = import.meta.env.VITE_JSON_SERVER_URL || 'http://localhost:5000';
+      const response = await axios.get(`${apiUrl}/hotels`, {
         timeout: 10000
       });
 
