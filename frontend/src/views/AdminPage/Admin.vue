@@ -159,31 +159,34 @@
               :title="getDayTooltipWithUnblock(room, day)"
               @click="onDayClickWithUnblock(room, day)"
               @mouseenter="onDayHover(room, day)"
+              style="z-index: 15;"
             >
-              <div class="font-semibold z-22">${{ getDayPrice(room, day) }}</div>
-              <div class="text-xs opacity-75 z-22">{{ getDayStatus(room, day) }}</div>
+              <div class="font-semibold relative" style="z-index: 16;">${{ getDayPrice(room, day) }}</div>
+              <div class="text-xs opacity-75 relative" style="z-index: 16;">{{ getDayStatus(room, day) }}</div>
               
               <!-- Selection indicator -->
               <div 
                 v-if="isDateSelected(room, day)" 
                 :class="selectedRoom._unblockMode ? 'bg-orange-200 bg-opacity-50 border-2 border-orange-400' : 'bg-purple-200 bg-opacity-50 border-2 border-purple-400'"
-                class="absolute inset-0 rounded z-5"
+                class="absolute inset-0 rounded pointer-events-none"
+                style="z-index: 14;"
               ></div>
               
               <!-- Hover indicator for range selection -->
               <div 
                 v-if="isDateInHoverRange(room, day)" 
                 :class="selectedRoom._unblockMode ? 'bg-orange-100 bg-opacity-30 border border-orange-300' : 'bg-purple-100 bg-opacity-30 border border-purple-300'"
-                class="absolute inset-0 rounded z-4"
+                class="absolute inset-0 rounded pointer-events-none"
+                style="z-index: 13;"
               ></div>
             </div>
 
             <!-- Booking and Blocked Bars -->
-            <div class="absolute top-0 left-[250px] w-[calc(100%-250px)] h-full z-10">
+            <div class="absolute top-0 left-[250px] w-[calc(100%-250px)] h-full pointer-events-none" style="z-index: 10;">
               <template v-for="(booking, i) in room.bookings" :key="'booking-' + i">
                 <div
                   v-if="getBookingOffset(booking)"
-                  class="absolute h-8 text-xs font-medium rounded px-2 flex items-center text-white bg-blue-500 booking-bar"
+                  class="absolute h-8 text-xs font-medium rounded px-2 flex items-center text-white bg-blue-500 booking-bar pointer-events-auto"
                   :style="{
                     left: `${getBookingOffset(booking).offset * (100 / monthDays.length)}%`,
                     width: `${getBookingOffset(booking).length * (100 / monthDays.length)}%`,
@@ -201,7 +204,7 @@
               <template v-for="(blockedDate, i) in room.blockedDates" :key="'blocked-' + i">
                 <div
                   v-if="getBlockedOffset(blockedDate)"
-                  class="absolute h-8 text-xs font-medium rounded px-2 flex items-center text-white bg-gray-500 cursor-pointer booking-bar"
+                  class="absolute h-8 text-xs font-medium rounded px-2 flex items-center text-white bg-gray-500 cursor-pointer booking-bar pointer-events-auto"
                   :style="{
                     left: `${getBlockedOffset(blockedDate).offset * (100 / monthDays.length)}%`,
                     width: `${getBlockedOffset(blockedDate).length * (100 / monthDays.length)}%`,
@@ -351,8 +354,8 @@
 </template>
 
 <script setup>
-import { useCalendarManager } from '@/stores/useManagerCalender';
 import ControllDateRoom from '@/components/AdminComponents/ControllDateRoom.vue';
+import { useCalendarManager } from '@/stores/useManagerCalender';
 
 // Initialize the calendar manager composable
 const {

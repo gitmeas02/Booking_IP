@@ -1,5 +1,5 @@
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import axios from 'axios';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 export function useCalendarManager() {
   // Constants
@@ -147,15 +147,22 @@ export function useCalendarManager() {
         timeout: 10000
       });
 
-      rooms.value = response.data.flatMap(hotel =>
+      // Handle both direct array and {hotels: [...]} structure
+      const hotelsData = Array.isArray(response.data) ? response.data : response.data.hotels || [];
+      
+      rooms.value = hotelsData.flatMap(hotel =>
         hotel.rooms?.map(room => ({
           ...room,
           hotel: hotel.name,
           hotelId: hotel.id,
-          bookings: room.bookings || [],
+          bookings: (room.bookings || []).map(b => ({
+            ...b,
+            guestName: b.guestName || b.guest || 'N/A'
+          })),
           blockedDates: room.blockedDates || [],
           price: room.price || [],
-          basePrice: room.basePrice || 0
+          basePrice: room.basePrice || 0,
+          image: room.image || room.images?.map(img => img.images) || []
         })) || []
       );
     } catch (err) {
@@ -306,20 +313,30 @@ export function useCalendarManager() {
   }
 
   function toggleDateSelection(room, dateStr) {
-    if (selectedRoom.value.id !== room.id) return;
+    console.log('🔄 toggleDateSelection called:', { roomId: room.id, date: dateStr });
+    
+    if (selectedRoom.value.id !== room.id) {
+      console.log('⚠️ Room mismatch!');
+      return;
+    }
     
     const date = parseDate(dateStr);
     
     if (isDateBooked(room, date)) {
+      console.log('❌ Cannot select booked date');
       return;
     }
     
     const index = selectedDates.value.indexOf(dateStr);
     if (index > -1) {
+      console.log('➖ Removing date from selection');
       selectedDates.value.splice(index, 1);
     } else {
+      console.log('➕ Adding date to selection');
       selectedDates.value.push(dateStr);
     }
+    
+    console.log('Selected dates:', selectedDates.value);
     
     if (selectedDates.value.length > 0) {
       const sortedDates = [...selectedDates.value].sort();
@@ -578,13 +595,19 @@ export function useCalendarManager() {
 
   // Event handlers
   function onDayClickWithUnblock(room, dateStr) {
+    console.log('🖱️ Day clicked:', { roomId: room.id, date: dateStr, selectionMode: selectionMode.value });
+    
     if (selectionMode.value && selectedRoom.value.id === room.id) {
+      console.log('📋 Selection mode active');
       if (room._unblockMode) {
+        console.log('🔓 Unblock mode');
         toggleDateSelectionUnblock(room, dateStr);
       } else {
+        console.log('🔒 Block mode');
         toggleDateSelection(room, dateStr);
       }
     } else if (!selectionMode.value) {
+      console.log('📝 Opening popup for single date');
       selectedRoom.value = room;
       selectedStartDate.value = dateStr;
       
@@ -595,6 +618,13 @@ export function useCalendarManager() {
       
       selectedPrice.value = getDayPrice(room, dateStr);
       selectedStatus.value = isDateBlocked(room, parseDate(dateStr)) ? 'blocked' : isDateBooked(room, parseDate(dateStr)) ? 'booked' : 'available';
+      
+      console.log('Popup data:', { 
+        startDate: selectedStartDate.value, 
+        endDate: selectedEndDate.value, 
+        price: selectedPrice.value, 
+        status: selectedStatus.value 
+      });
       
       showPopup.value = true;
     }
