@@ -88,7 +88,7 @@ const getUser = async () => {
     if (!token) {
       throw new Error('No token is found')
     }
-    const response = await axios.get(`${API_BASE_URL}/api/me`, {
+    const response = await axios.get(`/api/me`, {
       headers: {
         Authorization: `Bearer ${token}`
       }

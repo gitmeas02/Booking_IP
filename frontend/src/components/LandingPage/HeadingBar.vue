@@ -419,7 +419,7 @@ const switchRole = async (role) => {
 
   try {
     isLoading.value = true;
-    const response = await axiosInstance.post('/switch-role', { role });
+    const response = await axiosInstance.post('/api/switch-role', { role });
     
     if (response.data && response.data.success) {
       currentRole.value = role;
@@ -451,10 +451,10 @@ const switchRole = async (role) => {
 const fetchUserData = async () => {
   try {
     isLoading.value = true;
-    const res = await axiosInstance.get('/me');
+    const res = await axiosInstance.get('api/me');
     if (res?.data?.user) {
       isAuthenticated.value = true;
-      const roleRes = await axiosInstance.get('/user-roles/' + res.data.user.id);
+      const roleRes = await axiosInstance.get('/api/user-roles/' + res.data.user.id);
       if (roleRes?.data?.success) {
         roles.value = roleRes.data.roles.map(r => r.name);
         currentRole.value = roleRes.data.current_role || roles.value[0] || 'user';

@@ -198,7 +198,7 @@ router.beforeEach(async (to, from, next) => {
       return next();
     }
 
-    const res = await axiosInstance.get('/me');
+    const res = await axiosInstance.get('/api/me');
     const isAuthenticated = !!res?.data?.user;
     const userId = res?.data?.user?.id;
 
@@ -214,7 +214,7 @@ router.beforeEach(async (to, from, next) => {
 
     // Check role-based access
     if (isAuthenticated && to.meta.roles) {
-      const roleRes = await axiosInstance.get(`/user-roles/${userId}`);
+      const roleRes = await axiosInstance.get(`/api/user-roles/${userId}`);
 
       console.log("printing roleRes")
       console.log(roleRes)

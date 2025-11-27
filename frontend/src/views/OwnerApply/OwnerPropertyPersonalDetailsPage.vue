@@ -201,8 +201,7 @@ onMounted(async () => {
   console.log("Raw token from localStorage:", token);
   if (token) {
     try {
-      console.log(`Sending GET request to: ${apiBaseUrl}/me with token`);
-      const res = await axios.get(`${apiBaseUrl}/me`, {
+      const res = await axios.get(`/api/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
